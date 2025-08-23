@@ -84,10 +84,11 @@ public class DisruptionRepositoryTests
     }
 
     [Fact]
-    public async Task DisruptionRepository_GetDisruptionAsync_Successful()
+    public async Task DisruptionRepository_GetDisruptionByIdAsync_Successful()
     {
         var disruption = new Disruption
         {
+            Id = Guid.NewGuid(),
             LineId = Guid.NewGuid(),
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
@@ -98,18 +99,18 @@ public class DisruptionRepositoryTests
         await _neasdenDbContext.Disruptions.AddAsync(disruption);
         await _neasdenDbContext.SaveChangesAsync();
 
-        var result = await _disruptionRepository.GetDisruptionAsync(disruption.Id);
+        var result = await _disruptionRepository.GetDisruptionByIdAsync(disruption.Id);
         result.IsSuccess.Should().BeTrue();
 
         result.Value.Should().BeEquivalentTo(disruption);
     }
 
     [Fact]
-    public async Task DisruptionRepository_GetDisruptionAsync_No_Matching_User_Fails()
+    public async Task DisruptionRepository_GetDisruptionByIdAsync_No_Matching_User_Fails()
     {
         var id = Guid.NewGuid();
        
-        var result = await _disruptionRepository.GetDisruptionAsync(id);
+        var result = await _disruptionRepository.GetDisruptionByIdAsync(id);
         result.IsFailure.Should().BeTrue();
 
         result.Error.Should().Be($"Could not find disruption {id} on the database.");

@@ -47,7 +47,7 @@ public class DisruptionRepository
         return Result.Success();
     }
 
-    public async Task<Result<Disruption>> GetDisruptionAsync(Guid id)
+    public async Task<Result<Disruption>> GetDisruptionByIdAsync(Guid id)
     {
         var result = await _neasdenDbContext.Disruptions
             .SingleOrDefaultAsync(x => x.Id == id);
@@ -56,6 +56,6 @@ public class DisruptionRepository
             return Result.Failure<Disruption>($"Could not find disruption {id} on the database.");
         }
 
-        return Result.Success<Disruption>(result);
+        return Result.Success(result);
     }
 }
