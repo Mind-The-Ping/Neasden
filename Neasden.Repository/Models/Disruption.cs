@@ -1,0 +1,11 @@
+﻿namespace Neasden.Repository.Models;
+
+public class Disruption
+{
+    public Guid Id { get; set; }
+    public Guid LineId { get; set; }
+    public Guid StartStationId { get; set; }
+    public Guid EndStationId { get; set; }
+    public required string Description { get; set; }
+    public DateTime DateTime { get; set; }
+}
