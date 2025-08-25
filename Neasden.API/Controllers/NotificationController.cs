@@ -22,7 +22,7 @@ public class NotificationController : ControllerBase
 
     [Authorize]
     [HttpGet("disruption")]
-    public async Task<IActionResult> GetDisruptionById([FromBody] Guid id)
+    public async Task<IActionResult> GetDisruptionById(Guid id)
     {
         var disruption = await _disruptionRepository
             .GetDisruptionByIdAsync(id);
@@ -31,12 +31,12 @@ public class NotificationController : ControllerBase
             return BadRequest(disruption.Error);
         }
        
-        return Ok(disruption);
+        return Ok(disruption.Value);
     }
 
     [Authorize]
-    [HttpGet("notification")]
-    public async Task<IActionResult> GetNotificationById([FromBody] Guid id)
+    [HttpGet("getById")]
+    public async Task<IActionResult> GetNotificationById(Guid id)
     {
         var notification = await _notificationRepository
             .GetNotificationByIdAsync(id);
@@ -49,7 +49,7 @@ public class NotificationController : ControllerBase
             .GetDisruptionSeverityByIdAsync(notification.Value.SeverityId);
 
         if (severity.IsFailure) {
-            return Ok(severity.Error);
+            return BadRequest(severity.Error);
         }
 
         var notificationVal = notification.Value; 
@@ -65,7 +65,7 @@ public class NotificationController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("notificationsByUserId")]
+    [HttpGet("getByUserId")]
     public async Task<IActionResult> GetNotificationsByUserId()
     {
         var subValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -83,6 +83,7 @@ public class NotificationController : ControllerBase
 
         var results = new List<NotificationReturn>();
         var notificationsVal = notifications.Value;
+
         foreach (var notification in notificationsVal)
         {
             var severity = await _disruptionRepository

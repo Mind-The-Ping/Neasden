@@ -16,7 +16,7 @@ public class DisruptionRepositoryTests
     public DisruptionRepositoryTests()
     {
         var options = new DbContextOptionsBuilder<NeasdenDbContext>()
-             .UseNpgsql($"Host=localhost;Port=5434;Database={_databaseName};Username=neasdonUser;Password=password12345")
+             .UseNpgsql($"Host=localhost;Port=5434;Database={_databaseName};Username=neasdenUser;Password=password12345")
              .Options;
 
         _neasdenDbContext = new NeasdenDbContext(options);
