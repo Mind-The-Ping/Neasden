@@ -14,23 +14,27 @@ public class NotificationRepository
     }
 
     public async Task<Result<Guid>> CreateNotificationAsync(
+        Guid id,
         Guid userId,
         Guid lineId,
         Guid disruptionId,
+        Guid severityId,
         Guid startStationId,
         Guid endStationId,
         NotificationSentBy notificationSentBy,
-        DateTime dateTime)
+        DateTime sentTime)
     {
         var notification = new Notification
         {
+            Id = id,
             UserId = userId,
             LineId = lineId,
             DisruptionId = disruptionId,
+            SeverityId = severityId,
             StartStationId = startStationId,
             EndStationId = endStationId,
             NotificationSentBy = notificationSentBy,
-            DateTime = dateTime
+            SentTime = sentTime
         };
 
         try
