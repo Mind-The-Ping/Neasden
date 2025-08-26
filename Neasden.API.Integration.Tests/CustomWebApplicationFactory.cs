@@ -15,7 +15,6 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly string _databaseName = $"testdb_{Guid.NewGuid():N}";
     public NeasdenDbContext DbContext { get; private set; } = null!;
-
     public IConfiguration Configuration { get; private set; } = null!;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)

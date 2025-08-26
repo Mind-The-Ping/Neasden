@@ -108,6 +108,64 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
     [Fact]
     public async Task NotificationController_GetNotificationsByUserId_Successful()
     {
+        var entryCount = 5;
+        var severities = new List<DisruptionSeverity>();
+        var notifications = new List<Notification>();
 
+        for (int i = 0; i < entryCount; i++)
+        {
+            var severity = new DisruptionSeverity
+            {
+                Id = Guid.NewGuid(),
+                DisruptionId = Guid.NewGuid(),
+                StartTime = DateTime.UtcNow,
+                Severity = Severity.Severe
+            };
+
+            var notification = new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = _id,
+                LineId = Guid.NewGuid(),
+                DisruptionId = severity.DisruptionId,
+                StartStationId = Guid.NewGuid(),
+                EndStationId = Guid.NewGuid(),
+                SeverityId = severity.Id,
+                NotificationSentBy = NotificationSentBy.Push,
+                SentTime = DateTime.UtcNow,
+            };
+
+            severities.Add(severity);
+            notifications.Add(notification);
+        }
+
+        await _dbContext.Severitys.AddRangeAsync(severities);
+        await _dbContext.Notifications.AddRangeAsync(notifications);
+        await _dbContext.SaveChangesAsync();
+
+        var response = await _client.GetAsync($"api/notification/getByUserId");
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<List<NotificationReturn>>();
+
+        result.Should().NotBeNull();
+        result.Count.Should().Be(entryCount);
+
+        var expected = notifications
+        .Join(severities, n => n.SeverityId, s => s.Id,
+            (n, s) => new NotificationReturn(
+                n.LineId,
+                n.DisruptionId,
+                n.StartStationId,
+                n.EndStationId,
+                s.Severity,
+                n.NotificationSentBy,
+                n.SentTime))
+        .ToList();
+
+        result.Should().BeEquivalentTo(expected, options => options
+            .WithoutStrictOrdering()
+            .Using<DateTime>(ctx => ctx.Subject.Should().BeCloseTo(ctx.Expectation, TimeSpan.FromSeconds(1)))
+            .WhenTypeIs<DateTime>());
     }
 }
