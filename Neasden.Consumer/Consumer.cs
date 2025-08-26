@@ -4,20 +4,20 @@ using Azure.Messaging.ServiceBus;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
-namespace Neasden.Receiver;
+namespace Neasden.Consumer;
 
-public class Function1
+public class Consumer
 {
-    private readonly ILogger<Function1> _logger;
+    private readonly ILogger<Consumer> _logger;
 
-    public Function1(ILogger<Function1> logger)
+    public Consumer(ILogger<Consumer> logger)
     {
         _logger = logger;
     }
 
-    [Function(nameof(Function1))]
+    [Function(nameof(Consumer))]
     public async Task Run(
-        [ServiceBusTrigger("myqueue", Connection = "")]
+        [ServiceBusTrigger("queue.1", Connection = "ServiceBusConnection")]
         ServiceBusReceivedMessage message,
         ServiceBusMessageActions messageActions)
     {
