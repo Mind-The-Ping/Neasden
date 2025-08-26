@@ -2,6 +2,7 @@
 using Neasden.API.Dto;
 using Neasden.Repository.Database;
 using Neasden.Repository.Models;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
@@ -62,6 +63,25 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
         result.StartTime.Should().BeCloseTo(disruption.StartTime, precision: TimeSpan.FromMilliseconds(10));
     }
 
+
+    [Fact]
+    public async Task NotificationController_Disruption_Does_Not_Exist_Fails()
+    {
+        var id = Guid.NewGuid();
+        var response = await _client.GetAsync($"api/notification/disruption?id={id}");
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var message = await response.Content.ReadAsStringAsync();
+        message.Should().Be($"Could not find disruption {id} on the database.");
+    }
+
+    [Fact]
+    public async Task NotificationController_Disruption_UnAuthorized_Fails()
+    {
+        var response = await _unauthorizedClient.GetAsync($"api/notification/disruption?id={Guid.NewGuid()}");
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
     [Fact]
     public async Task NotificationController_GetNotificationById_Successful()
     {
@@ -103,6 +123,50 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
         result.Severity.Should().Be(severity.Severity);
         result.NotificationSentBy.Should().Be(notification.NotificationSentBy);
         result.SentTime.Should().BeCloseTo(notification.SentTime, precision: TimeSpan.FromMilliseconds(10));
+    }
+  
+    [Fact]
+    public async Task NotificationController_GetNotificationById_Notification_Does_Not_Exist_Fails()
+    {
+        var id = Guid.NewGuid();
+        var response = await _client.GetAsync($"api/notification/getById?id={id}");
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var message = await response.Content.ReadAsStringAsync();
+        message.Should().Be($"Could not find notification {id} on the database.");
+    }
+
+    [Fact]
+    public async Task NotificationController_GetNotificationById_Severity_Does_Not_Exist_Fails()
+    {
+        var notification = new Notification
+        {
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            LineId = Guid.NewGuid(),
+            DisruptionId = Guid.NewGuid(),
+            StartStationId = Guid.NewGuid(),
+            EndStationId = Guid.NewGuid(),
+            SeverityId = Guid.NewGuid(),
+            NotificationSentBy = NotificationSentBy.Push,
+            SentTime = DateTime.UtcNow,
+        };
+
+        await _dbContext.Notifications.AddAsync(notification);
+        await _dbContext.SaveChangesAsync();
+
+        var response = await _client.GetAsync($"api/notification/getById?id={notification.Id}");
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var message = await response.Content.ReadAsStringAsync();
+        message.Should().Be($"Disruption severity {notification.SeverityId} could not be found on the database.");
+    }
+
+    [Fact]
+    public async Task NotificationController_GetNotificationById_UnAuthorized_Fails()
+    {
+        var response = await _unauthorizedClient.GetAsync($"api/notification/getById?id={Guid.NewGuid()}");
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
@@ -167,5 +231,48 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
             .WithoutStrictOrdering()
             .Using<DateTime>(ctx => ctx.Subject.Should().BeCloseTo(ctx.Expectation, TimeSpan.FromSeconds(1)))
             .WhenTypeIs<DateTime>());
+    }
+
+    [Fact]
+    public async Task NotificationController_GetNotificationsByUserId_Notification_Does_Not_Exist_Fails()
+    {
+        var response = await _client.GetAsync($"api/notification/getByUserId");
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var message = await response.Content.ReadAsStringAsync();
+        message.Should().Be($"Could not find notifications for user {_id} on the database.");
+    }
+
+    [Fact]
+    public async Task NotificationController_GetNotificationsByUserId_Severity_Does_Not_Exist_Fails()
+    {
+        var notification = new Notification
+        {
+            Id = Guid.NewGuid(),
+            UserId = _id,
+            LineId = Guid.NewGuid(),
+            DisruptionId = Guid.NewGuid(),
+            StartStationId = Guid.NewGuid(),
+            EndStationId = Guid.NewGuid(),
+            SeverityId = Guid.NewGuid(),
+            NotificationSentBy = NotificationSentBy.Push,
+            SentTime = DateTime.UtcNow,
+        };
+
+        await _dbContext.Notifications.AddAsync(notification);
+        await _dbContext.SaveChangesAsync();
+
+        var response = await _client.GetAsync($"api/notification/getByUserId");
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var message = await response.Content.ReadAsStringAsync();
+        message.Should().Be($"Disruption severity {notification.SeverityId} could not be found on the database.");
+    }
+
+    [Fact]
+    public async Task NotificationController_GetNotificationsByUserId_UnAuthorized_Fails()
+    {
+        var response = await _unauthorizedClient.GetAsync($"api/notification/getByUserId");
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 }

@@ -87,10 +87,10 @@ public class NotificationController : ControllerBase
         foreach (var notification in notificationsVal)
         {
             var severity = await _disruptionRepository
-           .GetDisruptionSeverityByIdAsync(notification.SeverityId);
+                .GetDisruptionSeverityByIdAsync(notification.SeverityId);
 
             if (severity.IsFailure) {
-                return Ok(severity.Error);
+                return BadRequest(severity.Error);
             }
 
             results.Add(new NotificationReturn(
