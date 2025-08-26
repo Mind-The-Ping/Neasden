@@ -7,5 +7,6 @@ public class Disruption
     public Guid StartStationId { get; set; }
     public Guid EndStationId { get; set; }
     public required string Description { get; set; }
-    public DateTime DateTime { get; set; }
+    public DateTime StartTime { get; set; }
+    public DateTime EndTime { get; set; }
 }

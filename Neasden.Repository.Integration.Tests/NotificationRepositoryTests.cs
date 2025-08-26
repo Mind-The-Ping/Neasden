@@ -15,7 +15,7 @@ public class NotificationRepositoryTests
     public NotificationRepositoryTests()
     {
         var options = new DbContextOptionsBuilder<NeasdenDbContext>()
-            .UseNpgsql($"Host=localhost;Port=5434;Database={_databaseName};Username=neasdonUser;Password=password12345")
+            .UseNpgsql($"Host=localhost;Port=5434;Database={_databaseName};Username=neasdenUser;Password=password12345")
             .Options;
 
         _neasdenDbContext = new NeasdenDbContext(options);
@@ -29,22 +29,26 @@ public class NotificationRepositoryTests
     [Fact]
     public async Task NotificationRepository_CreateNotificationAsync_Successful()
     {
+        var id = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var lineId = Guid.NewGuid();
         var disruptionId = Guid.NewGuid();
+        var severityId = Guid.NewGuid();
         var startStationId = Guid.NewGuid();
         var endStationId = Guid.NewGuid();
         var notificationSentBy = NotificationSentBy.Push;
-        var dateTime = DateTime.UtcNow;
+        var sentTime = DateTime.UtcNow;
 
         var result = await _notificationRepository.CreateNotificationAsync(
+            id,
             userId,
             lineId,
             disruptionId,
+            severityId,
             startStationId,
             endStationId,
             notificationSentBy,
-            dateTime);
+            sentTime);
 
         result.IsSuccess.Should().BeTrue();
 
@@ -54,10 +58,11 @@ public class NotificationRepositoryTests
         notification.UserId.Should().Be(userId);
         notification.LineId.Should().Be(lineId);
         notification.DisruptionId.Should().Be(disruptionId);
+        notification.SeverityId.Should().Be(severityId);
         notification.StartStationId.Should().Be(startStationId);
         notification.EndStationId.Should().Be(endStationId);
         notification.NotificationSentBy.Should().Be(notificationSentBy);
-        notification.DateTime.Should().Be(dateTime);
+        notification.SentTime.Should().Be(sentTime);
     }
 
     [Fact]
@@ -65,13 +70,15 @@ public class NotificationRepositoryTests
     {
         var notification = new Notification
         {
+           Id = Guid.NewGuid(),
            UserId = Guid.NewGuid(),
            LineId = Guid.NewGuid(),
            DisruptionId = Guid.NewGuid(),
+           SeverityId = Guid.NewGuid(),
            StartStationId = Guid.NewGuid(),
            EndStationId = Guid.NewGuid(),
            NotificationSentBy = NotificationSentBy.Sms,
-           DateTime = DateTime.UtcNow
+           SentTime = DateTime.UtcNow
         };
 
         await _neasdenDbContext.AddAsync(notification);
@@ -99,24 +106,27 @@ public class NotificationRepositoryTests
     {
         var notification1 = new Notification
         {
+            Id = Guid.NewGuid(),
             UserId = Guid.NewGuid(),
             LineId = Guid.NewGuid(),
             DisruptionId = Guid.NewGuid(),
+            SeverityId = Guid.NewGuid(),
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
             NotificationSentBy = NotificationSentBy.Sms,
-            DateTime = DateTime.UtcNow
+            SentTime = DateTime.UtcNow
         };
 
         var notification2 = new Notification
         {
+            Id = Guid.NewGuid(),
             UserId = Guid.NewGuid(),
             LineId = Guid.NewGuid(),
             DisruptionId = Guid.NewGuid(),
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
             NotificationSentBy = NotificationSentBy.Sms,
-            DateTime = DateTime.UtcNow
+            SentTime = DateTime.UtcNow
         };
 
         await _neasdenDbContext.Notifications.AddAsync(notification1);
