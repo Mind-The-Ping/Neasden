@@ -1,9 +1,0 @@
-{
-  "profiles": {
-    "Neasden.Receiver": {
-      "commandName": "Project",
-      "commandLineArgs": "--port 7284",
-      "launchBrowser": false
-    }
-  }
-}
