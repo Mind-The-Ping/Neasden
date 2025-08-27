@@ -13,7 +13,7 @@ services:
     image: mcr.microsoft.com/azure-messaging/servicebus-emulator:latest
     pull_policy: always
     volumes:
-      - ${CONFIG_PATH}:/Config/config.json:ro
+      - "${CONFIG_PATH}:/ServiceBus_Emulator/ConfigFiles/Config.json"
     ports:
       - "5672:5672"
       - "5300:5300"
