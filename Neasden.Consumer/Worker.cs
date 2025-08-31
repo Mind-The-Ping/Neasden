@@ -10,8 +10,8 @@ public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
     private readonly ServiceBusClient _client;
-    private IServiceProvider _serviceProvider;
-    private readonly List<ServiceBusProcessor> _processors = new();
+    private readonly IServiceProvider _serviceProvider;
+    private readonly List<ServiceBusProcessor> _processors = [];
     private readonly ServiceBusSettings _serviceBusSettings;
 
     public Worker(
@@ -28,20 +28,22 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        while (!stoppingToken.IsCancellationRequested)
+        if (_logger.IsEnabled(LogLevel.Information))
         {
-            if (_logger.IsEnabled(LogLevel.Information))
-            {
-                _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-            }
-
-            await CreateQueueProcessor(_serviceBusSettings.Queues.Disruptions, stoppingToken);
-            await CreateQueueProcessor(_serviceBusSettings.Queues.DisruptionSeverity, stoppingToken);
-            await CreateQueueProcessor(_serviceBusSettings.Queues.DisruptionEndTimes, stoppingToken);
-            await CreateQueueProcessor(_serviceBusSettings.Queues.Notifications, stoppingToken);
-
-            await Task.Delay(Timeout.Infinite, stoppingToken);
+            _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
         }
+
+        await CreateQueueProcessor(_serviceBusSettings.Queues.Disruptions, stoppingToken);
+        await CreateQueueProcessor(_serviceBusSettings.Queues.DisruptionSeverity, stoppingToken);
+        await CreateQueueProcessor(_serviceBusSettings.Queues.Notifications, stoppingToken);
+
+        await CreateTopicProcessor(
+            _serviceBusSettings.Topics.DisruptionEnds.Name,
+            _serviceBusSettings.Topics.DisruptionEnds.Subscription,
+            stoppingToken
+        );
+
+        await Task.Delay(Timeout.Infinite, stoppingToken);
     }
 
     private async Task MessageHandler(ProcessMessageEventArgs args, string queueName)
@@ -54,7 +56,6 @@ public class Worker : BackgroundService
         {
             var q when q == _serviceBusSettings.Queues.Disruptions => await disRepo.AddDisruptionAsync(args.Message.Body),
             var q when q == _serviceBusSettings.Queues.DisruptionSeverity => await disRepo.UpdateDisruptionSeverityAsync(args.Message.Body),
-            var q when q == _serviceBusSettings.Queues.DisruptionEndTimes => await disRepo.AddDisruptionEndTimeAsync(args.Message.Body),
             var q when q == _serviceBusSettings.Queues.Notifications => await notifRepo.AddNotificationAsync(args.Message.Body),
             _ => Result.Failure($"A message was sent in the incorrect format {args.Message}"),
         };
@@ -73,6 +74,25 @@ public class Worker : BackgroundService
 
         processor = _client.CreateProcessor(queueName);
         processor.ProcessMessageAsync += args => MessageHandler(args, queueName);
+        processor.ProcessErrorAsync += ErrorHandler;
+
+        _processors.Add(processor);
+
+        await processor.StartProcessingAsync(stoppingToken);
+    }
+
+    private async Task CreateTopicProcessor(string topicName, string subscriptionName, CancellationToken stoppingToken)
+    {
+        var processor = _client.CreateProcessor(topicName, subscriptionName);
+        processor.ProcessMessageAsync += async args =>
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var disRepo = scope.ServiceProvider.GetRequiredService<DisruptionConsumerRepo>();
+
+            await disRepo.AddDisruptionEndTimeAsync(args.Message.Body);
+            await args.CompleteMessageAsync(args.Message);
+        };
+
         processor.ProcessErrorAsync += ErrorHandler;
 
         _processors.Add(processor);

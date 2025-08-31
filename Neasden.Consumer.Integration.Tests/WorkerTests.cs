@@ -80,7 +80,7 @@ public class WorkerTests
     [Fact]
     public async Task Worker_AddDisruptionEndTimeAsync_Save_Successful()
     {
-        var testObjects = await TestInitalizerAsync("queue.3");
+        var testObjects = await TestInitalizerAsync("topic.1");
         var testDisruption = new Disruption
         {
             Id = Guid.NewGuid(),
@@ -115,7 +115,7 @@ public class WorkerTests
     [Fact]
     public async Task Worker_AddNotificationAsync_Save_Successful()
     {
-        var testObjects = await TestInitalizerAsync("queue.4");
+        var testObjects = await TestInitalizerAsync("queue.3");
         var testNotification = new Notification
         {
             Id = Guid.NewGuid(),
@@ -151,7 +151,7 @@ public class WorkerTests
         saved.SentTime.Should().BeCloseTo(testNotification.SentTime, precision: TimeSpan.FromSeconds(1));
     }
 
-    private async Task<(IHost, ServiceBusSender)> TestInitalizerAsync (string queueName)
+    private async Task<(IHost, ServiceBusSender)> TestInitalizerAsync (string entityName)
     {
         var host = HostFactory.CreateHost(Array.Empty<string>(), forTesting: true);
 
@@ -165,6 +165,6 @@ public class WorkerTests
         await host.StartAsync();
 
         var serviceBusClient = host.Services.GetRequiredService<ServiceBusClient>();
-        return (host, serviceBusClient.CreateSender(queueName));
+        return (host, serviceBusClient.CreateSender(entityName));
     }
 }
