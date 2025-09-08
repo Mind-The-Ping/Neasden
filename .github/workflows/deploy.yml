@@ -42,7 +42,7 @@ jobs:
           name: Neasden.Consumer
           path: ${{env.DOTNET_ROOT}}/Neasden.Consumer
 
-    deploy:
+  deploy:
       runs-on: ubuntu-latest
       needs: build
       permissions:
