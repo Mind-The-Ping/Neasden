@@ -1,0 +1,92 @@
+name: .NET Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  actions: read
+  checks: write
+
+jobs:
+  build:
+    name: .NET Build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+         dotnet-version: '9.x'
+
+    - name: Build projects
+      run: |
+          dotnet build ./Neasden.API/Neasden.API.csproj -c Release
+          dotnet build ./Neasden.Consumer/Neasden.Consumer.csproj -c Release
+
+    - name: Publish projects
+      run: |
+          dotnet publish ./Neasden.API/Neasden.API.csproj -c Release -o ${{env.DOTNET_ROOT}}/Neasden.API /p:DeleteExistingFiles=true
+          dotnet publish ./Neasden.Consumer/Neasden.Consumer.csproj -c Release -o ${{env.DOTNET_ROOT}}/Neasden.Consumer /p:DeleteExistingFiles=true
+
+    - name: Upload API artifact
+      uses: actions/upload-artifact@v4
+      with:
+          name: Neasden.API
+          path: ${{env.DOTNET_ROOT}}/Neasden.API
+    
+    - name: Upload Consumer artifact
+      uses: actions/upload-artifact@v4
+      with:
+          name: Neasden.Consumer
+          path: ${{env.DOTNET_ROOT}}/Neasden.Consumer
+
+    deploy:
+      runs-on: ubuntu-latest
+      needs: build
+      permissions:
+        id-token: write
+        contents: read
+
+      if: github.event_name == 'push'
+      steps:
+        - name: Download Neasden.API artifact
+          uses: actions/download-artifact@v4
+          with:
+            name: Neasden.API
+            path: ./Neasden.API
+
+        - name: Download Neasden.Consumer artifact
+          uses: actions/download-artifact@v4
+          with:
+            name: Neasden.Consumer
+            path: ./Neasden.Consumer
+
+        - name: Login to Azure for Neasden.API
+          uses: azure/login@v2
+          with:
+            client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_92A358569B66448AB2AD150F5E466513 }}
+            tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_1B19828EB75B4E66ACEC09358CBCD81A }}
+            subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C7B2C5C43CD74364B399F53962B303E9 }}
+
+        - name: Deploy Neasden.API
+          uses: azure/webapps-deploy@v3
+          with:
+            app-name: 'neasden'
+            slot-name: 'Production'
+            package: ./Neasden.API
+
+        - name: Login to Azure for Neasden.Consumer
+          uses: azure/login@v2
+          with:
+            client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_81467B3EA7074EDFADC6B5D8EB489FA5 }}
+            tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_8D268FC3154345E198DED0290C09B456 }}
+            subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_7A2071B340234FDFAD03C1815DCB1721 }}
+
+        - name: Deploy Neasden.Consumer
+          uses: azure/webapps-deploy@v3
+          with:
+            app-name: 'neasden-consumer'
+            slot-name: 'Production'
+            package: ./Neasden.Consumer
