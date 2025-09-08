@@ -40,7 +40,8 @@ jobs:
       with:
         version: latest
     - name: Bring up Docker Compose services
-      run: docker compose up -d
+      run: |
+          docker-compose --env-file .env up -d
     - name: Run tests
       run: dotnet test --logger "trx;LogFileName=test-results.trx" --verbosity normal
     - name: Upload test results
