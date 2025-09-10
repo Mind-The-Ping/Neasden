@@ -27,7 +27,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Neasden.API
-          path: ./output
+          path: ./output/Neasden.API
 
   build-consumer:
     name: Build Consumer (Windows)
@@ -46,7 +46,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Neasden.Consumer
-          path: ./output
+          path: ./output/Neasden.Consumer
 
   deploy:
     name: Deploy to Azure
