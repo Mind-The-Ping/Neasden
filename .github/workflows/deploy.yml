@@ -21,13 +21,13 @@ jobs:
           dotnet-version: '9.x'
 
       - name: Build & Publish API
-        run: dotnet publish ./Neasden.API/Neasden.API.csproj -c Release -o ./output
+        run: dotnet publish ./Neasden/Neasden.API.csproj -c Release -o ./output
 
       - name: Upload API artifact
         uses: actions/upload-artifact@v4
         with:
           name: Neasden.API
-          path: ./output
+          path: ./output/Neasden.API
 
   build-consumer:
     name: Build Consumer (Windows)
@@ -40,13 +40,13 @@ jobs:
           dotnet-version: '9.x'
 
       - name: Build & Publish Consumer
-        run: dotnet publish ./Neasden.Consumer/Neasden.Consumer.csproj -c Release -o ./output
+        run: dotnet publish ./Neasden/Neasden.Consumer.csproj -c Release -o ./output
 
       - name: Upload Consumer artifact
         uses: actions/upload-artifact@v4
         with:
           name: Neasden.Consumer
-          path: ./output
+          path: ./output/Neasden.Consumer
 
   deploy:
     name: Deploy to Azure
