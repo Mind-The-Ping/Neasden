@@ -8,6 +8,11 @@ services:
       POSTGRES_PASSWORD: password12345
     ports:
       - "5434:5432"
+  redis:
+    image: redis:latest
+    container_name: stratford-redis
+    ports:
+      - "6382:6379"
   emulator:
     container_name: "servicebus-emulator"
     image: mcr.microsoft.com/azure-messaging/servicebus-emulator:latest
