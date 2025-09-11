@@ -1,5 +1,4 @@
 ﻿using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
 using Neasden.Consumer.Repositories;
 using Neasden.Repository.Options;
 using Neasden.Repository.Redis;
