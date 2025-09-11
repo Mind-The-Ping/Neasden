@@ -29,40 +29,27 @@ public class NotificationRepositoryTests
     [Fact]
     public async Task NotificationRepository_CreateNotificationAsync_Successful()
     {
-        var id = Guid.NewGuid();
-        var userId = Guid.NewGuid();
-        var lineId = Guid.NewGuid();
-        var disruptionId = Guid.NewGuid();
-        var severityId = Guid.NewGuid();
-        var startStationId = Guid.NewGuid();
-        var endStationId = Guid.NewGuid();
-        var notificationSentBy = NotificationSentBy.Push;
-        var sentTime = DateTime.UtcNow;
+        var notification = new Notification()
+        {
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            LineId = Guid.NewGuid(),
+            DisruptionId = Guid.NewGuid(),
+            SeverityId = Guid.NewGuid(),
+            StartStationId = Guid.NewGuid(),
+            EndStationId = Guid.NewGuid(),
+            NotificationSentBy = NotificationSentBy.Push,
+            SentTime = DateTime.UtcNow
+        };
 
-        var result = await _notificationRepository.CreateNotificationAsync(
-            id,
-            userId,
-            lineId,
-            disruptionId,
-            severityId,
-            startStationId,
-            endStationId,
-            notificationSentBy,
-            sentTime);
+        var result = await _notificationRepository.AddNotificationsAsync([notification]);
 
         result.IsSuccess.Should().BeTrue();
 
-        var notification = await _neasdenDbContext.Notifications.SingleOrDefaultAsync(x => x.Id == result.Value);
-        notification.Should().NotBeNull();
+        var notificationSaved = await _neasdenDbContext.Notifications.SingleOrDefaultAsync(x => x.Id == notification.Id);
 
-        notification.UserId.Should().Be(userId);
-        notification.LineId.Should().Be(lineId);
-        notification.DisruptionId.Should().Be(disruptionId);
-        notification.SeverityId.Should().Be(severityId);
-        notification.StartStationId.Should().Be(startStationId);
-        notification.EndStationId.Should().Be(endStationId);
-        notification.NotificationSentBy.Should().Be(notificationSentBy);
-        notification.SentTime.Should().Be(sentTime);
+        notificationSaved.Should().NotBeNull();
+        notificationSaved.Should().Be(notification);
     }
 
     [Fact]

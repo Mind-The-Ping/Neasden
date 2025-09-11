@@ -1,7 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
-using Neasden.Consumer.Models;
-using Neasden.Repository.Models;
-using Neasden.Repository.Repositories;
+using Neasden.Repository.Redis;
+using Neasden.Repository.Redis.Models;
 using System.Text.Json;
 
 namespace Neasden.Consumer.Repositories;
@@ -26,14 +25,7 @@ public class DisruptionConsumerRepo
             return Result.Failure("Disruption message could not be deserialized.");
         }
 
-        var result = await _disruptionRepository.AddDisruptionAsync(
-                 message!.Id,
-                 message.LineId,
-                 message.StartStationId,
-                 message.EndStationId,
-                 message.Description,
-                 message.StartTime);
-
+        var result = await _disruptionRepository.SaveDisruptionAsync(message!);
         return result;
     }
 
@@ -49,12 +41,7 @@ public class DisruptionConsumerRepo
             return Result.Failure("Disruption severity message could not be deserialized.");
         }
 
-        var result = await _disruptionRepository.AddDisruptionSeverityAsync(
-            message!.Id,
-            message.DisruptionId,
-            message.StartTime,
-            message.Severity);
-
+        var result = await _disruptionRepository.SaveDisruptionSeverityAsync(message!);
         return result;
     }
 
@@ -70,9 +57,7 @@ public class DisruptionConsumerRepo
             return Result.Failure("Disruption end time message could not be deserialized.");
         }
 
-        var result = await _disruptionRepository
-            .AddDisruptionEndTimeAsync(message!.Id, message.EndTime);
-
+        var result = await _disruptionRepository.SaveDisruptionEndAsync(message!);
         return result;
     }
 }

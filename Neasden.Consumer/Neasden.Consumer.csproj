@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Neasden.Repository\Neasden.Repository.csproj" />
+    <ProjectReference Include="..\Neasden.Repository.Redis\Neasden.Repository.Redis.csproj" />
   </ItemGroup>
 
 </Project>
