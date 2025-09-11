@@ -13,40 +13,18 @@ public class NotificationRepository
         _neasdenDbContext = neasdenDbContext;
     }
 
-    public async Task<Result<Guid>> CreateNotificationAsync(
-        Guid id,
-        Guid userId,
-        Guid lineId,
-        Guid disruptionId,
-        Guid severityId,
-        Guid startStationId,
-        Guid endStationId,
-        NotificationSentBy notificationSentBy,
-        DateTime sentTime)
+    public async Task<Result> AddNotificationsAsync(IEnumerable<Notification> notifications)
     {
-        var notification = new Notification
-        {
-            Id = id,
-            UserId = userId,
-            LineId = lineId,
-            DisruptionId = disruptionId,
-            SeverityId = severityId,
-            StartStationId = startStationId,
-            EndStationId = endStationId,
-            NotificationSentBy = notificationSentBy,
-            SentTime = sentTime
-        };
-
         try
         {
-            await _neasdenDbContext.Notifications.AddAsync(notification);
+            await _neasdenDbContext.Notifications.AddRangeAsync(notifications);
             await _neasdenDbContext.SaveChangesAsync();
+
+            return Result.Success();
         }
         catch (Exception ex) {
-            return Result.Failure<Guid>($"Database could not save notification for {userId}.");
+            return Result.Failure("Could not save notifications to database.");
         }
-
-        return Result.Success(notification.Id);
     }
 
     public async Task<Result<Notification>> GetNotificationByIdAsync(Guid id)
