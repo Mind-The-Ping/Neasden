@@ -86,6 +86,31 @@ public class NotificationRepositoryTests : IAsyncLifetime
         loadResults.Value.Last().Should().Be(notification2);
     }
 
+    [Fact]
+    public async Task NotificationRepository_Save_Delete_Notification()
+    {
+        var notification = new Notification(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            NotificationSentBy.Sms,
+            DateTime.UtcNow);
+
+        var repository = CreateRepository();
+
+        _ = await repository.SaveNotificationAsync(notification);
+        var deleteResults = await repository.DeleteNotificationsAsync();
+        var loadResults = await repository.GetNotificationsAsync();
+
+        deleteResults.IsSuccess.Should().BeTrue();
+        loadResults.IsFailure.Should().BeTrue();
+        loadResults.Error.Should().Be("No notifications found in Redis.");
+    }
+
     private NotificationRepository CreateRepository()
     {
         var options = Microsoft.Extensions.Options.Options.Create(

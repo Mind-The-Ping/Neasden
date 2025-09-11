@@ -1,7 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Options;
-using Neasden.Repository.Redis.Models;
 using Neasden.Repository.Options;
+using Neasden.Repository.Redis.Models;
 using StackExchange.Redis;
 using System.Text.Json;
 
@@ -127,5 +127,35 @@ public class DisruptionRepository
         .ToList()!;
 
         return Result.Success<IEnumerable<DisruptionEnd>>(disruptionEnds!);
+    }
+
+    public async Task<Result> DeleteDisruptionsAsync()
+    {
+        var listKey = _disruptionKey;
+        var setKey = $"{_disruptionKey}:ids";
+
+        var deleted = await _database.KeyDeleteAsync([listKey, setKey]);
+
+        return deleted > 0
+            ? Result.Success()
+            : Result.Failure("No disruptions found to delete.");
+    }
+
+    public async Task<Result> DeleteDisruptionSeveritiesAsync()
+    {
+        var deleted = await _database.KeyDeleteAsync(_disruptionSeverityKey);
+
+        return deleted
+           ? Result.Success()
+           : Result.Failure("No disruption severties found to delete.");
+    }
+
+    public async Task<Result> DeleteDisruptionEndsAsync()
+    {
+        var deleted = await _database.KeyDeleteAsync(_disruptionEndKey);
+
+        return deleted
+           ? Result.Success()
+           : Result.Failure("No disruption ends found to delete.");
     }
 }

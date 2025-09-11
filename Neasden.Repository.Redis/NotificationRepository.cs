@@ -52,4 +52,13 @@ public class NotificationRepository
 
         return Result.Success<IEnumerable<Notification>>(notifications!);
     }
+
+    public async Task<Result> DeleteNotificationsAsync()
+    {
+        var deleted = await _database.KeyDeleteAsync(_notificationKey);
+
+        return deleted
+           ? Result.Success()
+           : Result.Failure("No notifications found to delete.");
+    }
 }
