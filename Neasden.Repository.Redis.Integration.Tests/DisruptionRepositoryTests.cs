@@ -85,6 +85,32 @@ public class DisruptionRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task DisruptionRepository_Save_Load_Single_When_Same_Sent_Disruption()
+    {
+        var disruption = new Disruption(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "This is a test nerd.",
+            DateTime.UtcNow,
+            DateTime.UtcNow.AddHours(5));
+
+        var repository = CreateRepository();
+
+        var saveResults1 = await repository.SaveDisruptionAsync(disruption);
+        var saveResults2 = await repository.SaveDisruptionAsync(disruption);
+        var loadResults = await repository.GetDisruptionsAsync();
+
+        saveResults1.IsSuccess.Should().BeTrue();
+        saveResults2.IsSuccess.Should().BeTrue();
+        loadResults.IsSuccess.Should().BeTrue();
+
+        loadResults.Value.Count().Should().Be(1);
+        loadResults.Value.First().Should().Be(disruption);
+    }
+
+    [Fact]
     public async Task DisruptionRepository_Save_Load_Single_DisruptionSeverity()
     {
         var disruptinSeverity = new DisruptionSeverity(

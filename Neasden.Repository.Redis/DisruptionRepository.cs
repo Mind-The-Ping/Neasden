@@ -37,6 +37,13 @@ public class DisruptionRepository
             return Result.Failure($"Could not serialize disruption {disruption.Id}.");
         }
 
+        var setKey = $"{_disruptionKey}:ids";
+        var added = await _database.SetAddAsync(setKey, disruption.Id.ToString());
+        
+        if (!added) {
+            return Result.Success();
+        }
+
         var result = await _database.ListRightPushAsync(_disruptionKey, json);
 
         return result > 0
