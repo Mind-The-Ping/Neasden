@@ -1,31 +1,37 @@
 ﻿using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
 using Neasden.Consumer.Repositories;
-using Neasden.Repository.Database;
-using Neasden.Repository.Repositories;
+using Neasden.Repository.Options;
+using Neasden.Repository.Redis;
+using Testcontainers.Redis;
 
 namespace Neasden.Consumer.Unit.Tests;
 
-public class DisruptionConsumerRepoTests
+public class DisruptionConsumerRepoTests : IAsyncLifetime
 {
-    private readonly DisruptionConsumerRepo _repo;
+    private readonly RedisContainer _redisContainer;
 
     public DisruptionConsumerRepoTests()
     {
-        var options = new DbContextOptionsBuilder<NeasdenDbContext>()
-            .UseInMemoryDatabase("TestDb")
-            .Options;
-
-        using var context = new NeasdenDbContext(options);
-        var repository = new DisruptionRepository(context);
-        _repo = new DisruptionConsumerRepo(repository);
+        _redisContainer = new RedisBuilder()
+         .WithImage("redis:7.2")
+         .WithCleanUp(true)
+         .Build();
     }
+
+    public async Task InitializeAsync() =>
+        await _redisContainer.StartAsync();
+
+    public async Task DisposeAsync() =>
+        await _redisContainer.DisposeAsync();
 
     [Fact]
     public async Task DisruptionConsumerRepo_AddDisruptionAsync_Wrong_Fails()
     {
+        var repository = CreateRepository();
+        var repo = new DisruptionConsumerRepo(repository);
+
         var body = new BinaryData([]);
-        var result = await _repo.AddDisruptionAsync(body);
+        var result = await repo.AddDisruptionAsync(body);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be("Disruption message could not be deserialized.");
@@ -34,8 +40,11 @@ public class DisruptionConsumerRepoTests
     [Fact]
     public async Task DisruptionConsumerRepo_UpdateDisruptionSeverityAsync_Wrong_Fails()
     {
+        var repository = CreateRepository();
+        var repo = new DisruptionConsumerRepo(repository);
+
         var body = new BinaryData([]);
-        var result = await _repo.UpdateDisruptionSeverityAsync(body);
+        var result = await repo.UpdateDisruptionSeverityAsync(body);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be("Disruption severity message could not be deserialized.");
@@ -44,10 +53,28 @@ public class DisruptionConsumerRepoTests
     [Fact]
     public async Task DisruptionConsumerRepo_AddDisruptionEndTimeAsync_Wrong_Fails()
     {
+        var repository = CreateRepository();
+        var repo = new DisruptionConsumerRepo(repository);
+
         var body = new BinaryData([]);
-        var result = await _repo.AddDisruptionEndTimeAsync(body);
+        var result = await repo.AddDisruptionEndTimeAsync(body);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be("Disruption end time message could not be deserialized.");
+    }
+
+    private DisruptionRepository CreateRepository()
+    {
+        var options = Microsoft.Extensions.Options.Options.Create(
+          new RedisOptions()
+          {
+              ConnectionString = _redisContainer.GetConnectionString(),
+              DisruptionKey = "disruptions",
+              DisruptionSeverityKey = "disruptionSeveritys",
+              DisruptionEndKey = "disruptionEnds",
+              NotificationKey = "notifications"
+          });
+
+        return new DisruptionRepository(options);
     }
 }

@@ -1,6 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
-using Neasden.Repository.Models;
-using Neasden.Repository.Repositories;
+using Neasden.Repository.Redis;
+using Neasden.Repository.Redis.Models;
 using System.Text.Json;
 
 namespace Neasden.Consumer.Repositories;
@@ -26,17 +26,7 @@ public class NotificationConsumerRepo
             return Result.Failure("Notification message could not be deserialized.");
         }
 
-        var result = await _notificationRepository.CreateNotificationAsync(
-            message!.Id,
-            message.UserId,
-            message.LineId,
-            message.DisruptionId,
-            message.SeverityId,
-            message.StartStationId,
-            message.EndStationId,
-            message.NotificationSentBy,
-            message.SentTime);
-
+        var result = await _notificationRepository.SaveNotificationAsync(message!);
         return result;
     }
 }

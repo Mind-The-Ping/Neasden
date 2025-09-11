@@ -15,12 +15,10 @@ public class DisruptionRepositoryTests : IAsyncLifetime
            .WithImage("redis:7.2")
            .WithCleanUp(true)
            .Build();
-
     }
 
     public async Task InitializeAsync() =>
         await _redisContainer.StartAsync();
-
 
     public async Task DisposeAsync() =>
         await _redisContainer.DisposeAsync();
