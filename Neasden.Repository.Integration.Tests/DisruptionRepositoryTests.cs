@@ -124,7 +124,7 @@ public class DisruptionRepositoryTests
         };
 
         var result = await _disruptionRepository
-            .AddDisruptionSeveritysAsync([disruptionSeverity]);
+            .AddDisruptionSeveritiesAsync([disruptionSeverity]);
 
         result.IsSuccess.Should().BeTrue();
 

@@ -5,8 +5,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Neasden.Consumer.Repositories;
-using Neasden.Repository.Options;
 using Neasden.Repository.Redis;
+using Neasden.Repository.Redis.Options;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 

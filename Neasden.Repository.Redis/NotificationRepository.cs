@@ -1,9 +1,9 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Options;
-using Neasden.Repository.Options;
 using Neasden.Models;
 using StackExchange.Redis;
 using System.Text.Json;
+using Neasden.Repository.Redis.Options;
 
 namespace Neasden.Repository.Redis;
 public class NotificationRepository

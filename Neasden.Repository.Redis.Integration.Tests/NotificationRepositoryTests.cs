@@ -1,6 +1,6 @@
 ﻿using FluentAssertions;
-using Neasden.Repository.Options;
 using Neasden.Models;
+using Neasden.Repository.Redis.Options;
 using Testcontainers.Redis;
 
 namespace Neasden.Repository.Redis.Integration.Tests;

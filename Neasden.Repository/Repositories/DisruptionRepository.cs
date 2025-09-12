@@ -82,7 +82,7 @@ public class DisruptionRepository
         }
     }
 
-    public async Task<Result> AddDisruptionSeveritysAsync(IEnumerable<DisruptionSeverity> disruptionSeverities)
+    public async Task<Result> AddDisruptionSeveritiesAsync(IEnumerable<DisruptionSeverity> disruptionSeverities)
     {
         try
         {
