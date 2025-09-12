@@ -1,7 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Options;
+using Neasden.Models;
 using Neasden.Repository.Options;
-using Neasden.Repository.Redis.Models;
 using StackExchange.Redis;
 using System.Text.Json;
 

@@ -1,4 +1,4 @@
-﻿namespace Neasden.Repository.Models;
+﻿namespace Neasden.Models;
 
 public enum Severity
 {

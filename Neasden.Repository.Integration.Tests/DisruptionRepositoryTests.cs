@@ -1,7 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Neasden.Repository.Database;
-using Neasden.Repository.Models;
+using Neasden.Models;
 using Neasden.Repository.Repositories;
 
 namespace Neasden.Repository.Integration.Tests;

@@ -1,7 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
 using Neasden.Repository.Database;
-using Neasden.Repository.Models;
+using Neasden.Models;
 
 namespace Neasden.Repository.Repositories;
 public class DisruptionRepository

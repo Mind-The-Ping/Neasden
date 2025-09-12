@@ -1,6 +1,6 @@
 ﻿using FluentAssertions;
 using Neasden.Repository.Options;
-using Neasden.Repository.Redis.Models;
+using Neasden.Models;
 using Testcontainers.Redis;
 
 namespace Neasden.Repository.Redis.Integration.Tests;
@@ -27,14 +27,17 @@ public class DisruptionRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task DisruptionRepository_Save_Load_Single_Disruption()
     {
-        var disruption = new Disruption(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            "This is a test nerd.",
-            DateTime.UtcNow,
-            DateTime.UtcNow.AddHours(5));
+
+        var disruption = new Disruption()
+        {
+            Id = Guid.NewGuid(),
+            LineId = Guid.NewGuid(),
+            StartStationId = Guid.NewGuid(),
+            EndStationId = Guid.NewGuid(),
+            Description = "This is a test nerd.",
+            StartTime = DateTime.UtcNow,
+            EndTime = DateTime.UtcNow.AddHours(5)
+        };
 
         var repository = CreateRepository();
 
@@ -45,29 +48,33 @@ public class DisruptionRepositoryTests : IAsyncLifetime
         loadResults.IsSuccess.Should().BeTrue();
 
         loadResults.Value.Count().Should().Be(1);
-        loadResults.Value.First().Should().Be(disruption);
+        loadResults.Value.First().Should().BeEquivalentTo(disruption);
     }
 
     [Fact]
     public async Task DisruptionRepository_Save_Load_Multiple_Disruptions()
     {
-        var disruption1 = new Disruption(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            "This is a test nerd.",
-            DateTime.UtcNow,
-            DateTime.UtcNow.AddHours(5));
+        var disruption1 = new Disruption()
+        {
+            Id = Guid.NewGuid(),
+            LineId = Guid.NewGuid(),
+            StartStationId = Guid.NewGuid(),
+            EndStationId = Guid.NewGuid(),
+            Description = "This is a test nerd.",
+            StartTime = DateTime.UtcNow,
+            EndTime = DateTime.UtcNow.AddHours(5)
+        };
 
-        var disruption2 = new Disruption(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            "This is a test dweeb.",
-            DateTime.UtcNow,
-            DateTime.UtcNow.AddHours(5));
+        var disruption2 = new Disruption()
+        {
+            Id = Guid.NewGuid(),
+            LineId = Guid.NewGuid(),
+            StartStationId = Guid.NewGuid(),
+            EndStationId = Guid.NewGuid(),
+            Description = "This is a test dweeb.",
+            StartTime = DateTime.UtcNow,
+            EndTime = DateTime.UtcNow.AddHours(5)
+        };
 
         var repository = CreateRepository();
 
@@ -80,21 +87,23 @@ public class DisruptionRepositoryTests : IAsyncLifetime
         loadResults.IsSuccess.Should().BeTrue();
 
         loadResults.Value.Count().Should().Be(2);
-        loadResults.Value.First().Should().Be(disruption1);
-        loadResults.Value.Last().Should().Be(disruption2);
+        loadResults.Value.First().Should().BeEquivalentTo(disruption1);
+        loadResults.Value.Last().Should().BeEquivalentTo(disruption2);
     }
 
     [Fact]
     public async Task DisruptionRepository_Save_Load_Single_When_Same_Sent_Disruption()
     {
-        var disruption = new Disruption(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            "This is a test nerd.",
-            DateTime.UtcNow,
-            DateTime.UtcNow.AddHours(5));
+        var disruption = new Disruption()
+        {
+            Id = Guid.NewGuid(),
+            LineId = Guid.NewGuid(),
+            StartStationId = Guid.NewGuid(),
+            EndStationId = Guid.NewGuid(),
+            Description = "This is a test nerd.",
+            StartTime = DateTime.UtcNow,
+            EndTime = DateTime.UtcNow.AddHours(5)
+        };
 
         var repository = CreateRepository();
 
@@ -107,20 +116,22 @@ public class DisruptionRepositoryTests : IAsyncLifetime
         loadResults.IsSuccess.Should().BeTrue();
 
         loadResults.Value.Count().Should().Be(1);
-        loadResults.Value.First().Should().Be(disruption);
+        loadResults.Value.First().Should().BeEquivalentTo(disruption);
     }
 
     [Fact]
     public async Task DisruptionRepository_Save_Delete_Disruption()
     {
-        var disruption = new Disruption(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            "This is a test nerd.",
-            DateTime.UtcNow,
-            DateTime.UtcNow.AddHours(5));
+        var disruption = new Disruption()
+        {
+            Id = Guid.NewGuid(),
+            LineId = Guid.NewGuid(),
+            StartStationId = Guid.NewGuid(),
+            EndStationId = Guid.NewGuid(),
+            Description = "This is a test nerd.",
+            StartTime = DateTime.UtcNow,
+            EndTime = DateTime.UtcNow.AddHours(5)
+        };
 
         var repository = CreateRepository();
 
@@ -136,38 +147,44 @@ public class DisruptionRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task DisruptionRepository_Save_Load_Single_DisruptionSeverity()
     {
-        var disruptinSeverity = new DisruptionSeverity(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            DateTime.UtcNow,
-            Severity.Suspended);
+        var disruptionSeverity = new DisruptionSeverity()
+        {
+            Id = Guid.NewGuid(),
+            DisruptionId = Guid.NewGuid(),
+            StartTime = DateTime.UtcNow,
+            Severity = Severity.Suspended,
+        };
 
         var repository = CreateRepository();
 
-        var saveResults = await repository.SaveDisruptionSeverityAsync(disruptinSeverity);
+        var saveResults = await repository.SaveDisruptionSeverityAsync(disruptionSeverity);
         var loadResults = await repository.GetDisruptionSeveritiesAsync();
 
         saveResults.IsSuccess.Should().BeTrue();
         loadResults.IsSuccess.Should().BeTrue();
 
         loadResults.Value.Count().Should().Be(1);
-        loadResults.Value.First().Should().Be(disruptinSeverity);
+        loadResults.Value.First().Should().BeEquivalentTo(disruptionSeverity);
     }
 
     [Fact]
     public async Task DisruptionRepository_Save_Load_Multiple_DisruptionSeveritys()
     {
-        var disruptionSeverity1 = new DisruptionSeverity(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            DateTime.UtcNow,
-            Severity.Suspended);
+        var disruptionSeverity1 = new DisruptionSeverity()
+        {
+            Id = Guid.NewGuid(),
+            DisruptionId = Guid.NewGuid(),
+            StartTime = DateTime.UtcNow,
+            Severity = Severity.Suspended,
+        };
 
-        var disruptionSeverity2 = new DisruptionSeverity(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            DateTime.UtcNow,
-            Severity.Suspended);
+        var disruptionSeverity2 = new DisruptionSeverity()
+        {
+            Id = Guid.NewGuid(),
+            DisruptionId = Guid.NewGuid(),
+            StartTime = DateTime.UtcNow,
+            Severity = Severity.Suspended,
+        };
 
         var repository = CreateRepository();
 
@@ -180,18 +197,20 @@ public class DisruptionRepositoryTests : IAsyncLifetime
         loadResults.IsSuccess.Should().BeTrue();
 
         loadResults.Value.Count().Should().Be(2);
-        loadResults.Value.First().Should().Be(disruptionSeverity1);
-        loadResults.Value.Last().Should().Be(disruptionSeverity2);
+        loadResults.Value.First().Should().BeEquivalentTo(disruptionSeverity1);
+        loadResults.Value.Last().Should().BeEquivalentTo(disruptionSeverity2);
     }
 
     [Fact]
     public async Task DisruptionRepository_Save_Delete_DisruptionSeverity()
     {
-        var disruptionSeverity = new DisruptionSeverity(
-           Guid.NewGuid(),
-           Guid.NewGuid(),
-           DateTime.UtcNow,
-           Severity.Suspended);
+        var disruptionSeverity = new DisruptionSeverity()
+        {
+            Id = Guid.NewGuid(),
+            DisruptionId = Guid.NewGuid(),
+            StartTime = DateTime.UtcNow,
+            Severity = Severity.Suspended,
+        };
 
         var repository = CreateRepository();
 
@@ -218,7 +237,7 @@ public class DisruptionRepositoryTests : IAsyncLifetime
         loadResults.IsSuccess.Should().BeTrue();
 
         loadResults.Value.Count().Should().Be(1);
-        loadResults.Value.First().Should().Be(disruptionEnd);
+        loadResults.Value.First().Should().BeEquivalentTo(disruptionEnd);
     }
 
     [Fact]
@@ -238,8 +257,8 @@ public class DisruptionRepositoryTests : IAsyncLifetime
         loadResults.IsSuccess.Should().BeTrue();
 
         loadResults.Value.Count().Should().Be(2);
-        loadResults.Value.First().Should().Be(disruptionEnd1);
-        loadResults.Value.Last().Should().Be(disruptionEnd2);
+        loadResults.Value.First().Should().BeEquivalentTo(disruptionEnd1);
+        loadResults.Value.Last().Should().BeEquivalentTo(disruptionEnd2);
     }
 
     [Fact]

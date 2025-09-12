@@ -1,4 +1,4 @@
-﻿using Neasden.Repository.Models;
+﻿using Neasden.Models;
 
 namespace Neasden.API.Dto;
 
