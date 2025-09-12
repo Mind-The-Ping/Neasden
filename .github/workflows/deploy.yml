@@ -123,7 +123,7 @@ jobs:
 
       # Step 5: Build Docker image
       - name: Build Docker image
-        run: docker build -t neasden.azurecr.io/neasden:latest .
+        run: docker build -f Neasden.Saver/Dockerfile -t neasden.azurecr.io/neasden:latest .
 
       # Step 6: Push Docker image
       - name: Push Docker image
