@@ -9,16 +9,18 @@ WORKDIR /src
 
 # Copy only the project file first and restore dependencies
 COPY Neasden.Saver.csproj ./
-RUN dotnet restore ./Neasden.Saver.csproj
+RUN dotnet restore Neasden.Saver.csproj
 
 # Copy the rest of the source code
 COPY . .
 WORKDIR /src/Neasden.Saver
-RUN dotnet build ./Neasden.Saver.csproj -c $BUILD_CONFIGURATION -o /app/build
+
+# Build the project
+RUN dotnet build Neasden.Saver.csproj -c $BUILD_CONFIGURATION -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish ./Neasden.Saver.csproj -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish Neasden.Saver.csproj -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # Final stage
 FROM base AS final
