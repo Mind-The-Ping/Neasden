@@ -1,7 +1,7 @@
 ﻿using FluentAssertions;
 using Neasden.API.Dto;
 using Neasden.Repository.Database;
-using Neasden.Repository.Models;
+using Neasden.Models;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;

@@ -1,7 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Options;
-using Neasden.Repository.Options;
-using Neasden.Repository.Redis.Models;
+using Neasden.Models;
+using Neasden.Repository.Redis.Options;
 using StackExchange.Redis;
 using System.Text.Json;
 
@@ -158,4 +158,13 @@ public class DisruptionRepository
            ? Result.Success()
            : Result.Failure("No disruption ends found to delete.");
     }
+
+    public async Task<long> GetDisruptionCountAsync() =>
+         await _database.SetLengthAsync($"{_disruptionKey}:ids");
+
+    public async Task<long> GetDisruptionSeverityCountAsync() =>
+        await _database.ListLengthAsync(_disruptionSeverityKey);
+
+    public async Task<long> GetDisruptionEndCountAsync() =>
+         await _database.ListLengthAsync(_disruptionEndKey);
 }

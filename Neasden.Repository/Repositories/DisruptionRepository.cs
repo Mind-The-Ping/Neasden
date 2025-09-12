@@ -1,7 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
 using Neasden.Repository.Database;
-using Neasden.Repository.Models;
+using Neasden.Models;
 
 namespace Neasden.Repository.Repositories;
 public class DisruptionRepository
@@ -82,7 +82,7 @@ public class DisruptionRepository
         }
     }
 
-    public async Task<Result> AddDisruptionSeveritysAsync(IEnumerable<DisruptionSeverity> disruptionSeverities)
+    public async Task<Result> AddDisruptionSeveritiesAsync(IEnumerable<DisruptionSeverity> disruptionSeverities)
     {
         try
         {

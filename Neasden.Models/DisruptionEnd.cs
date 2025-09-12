@@ -1,2 +1,3 @@
-﻿namespace Neasden.Repository.Redis.Models;
+﻿namespace Neasden.Models;
+
 public record DisruptionEnd(Guid Id, DateTime EndTime);

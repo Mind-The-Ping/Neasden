@@ -1,6 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using Neasden.Repository.Redis;
-using Neasden.Repository.Redis.Models;
+using Neasden.Models;
 using System.Text.Json;
 
 namespace Neasden.Consumer.Repositories;

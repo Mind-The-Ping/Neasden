@@ -1,4 +1,4 @@
-﻿namespace Neasden.Repository.Options;
+﻿namespace Neasden.Repository.Redis.Options;
 
 public class RedisOptions
 {

@@ -1,6 +1,6 @@
 ﻿using FluentAssertions;
-using Neasden.Repository.Options;
-using Neasden.Repository.Redis.Models;
+using Neasden.Models;
+using Neasden.Repository.Redis.Options;
 using Testcontainers.Redis;
 
 namespace Neasden.Repository.Redis.Integration.Tests;
@@ -25,16 +25,18 @@ public class NotificationRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task NotificationRepository_Save_Load_Single_Notification()
     {
-        var notification = new Notification(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            NotificationSentBy.Sms,
-            DateTime.UtcNow);
+        var notification = new Notification()
+        {
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            LineId = Guid.NewGuid(),
+            DisruptionId = Guid.NewGuid(),
+            StartStationId = Guid.NewGuid(),
+            EndStationId = Guid.NewGuid(),
+            SeverityId = Guid.NewGuid(),
+            NotificationSentBy = NotificationSentBy.Sms,
+            SentTime = DateTime.UtcNow
+        };
 
         var repository = CreateRepository();
 
@@ -44,33 +46,37 @@ public class NotificationRepositoryTests : IAsyncLifetime
         savedResults.IsSuccess.Should().BeTrue();
         loadResults.IsSuccess.Should().BeTrue();
 
-        loadResults.Value.First().Should().Be(notification);
+        loadResults.Value.First().Should().BeEquivalentTo(notification);
     }
 
     [Fact]
     public async Task NotificationRepository_Save_Load_Multiple_Notifications()
     {
-        var notification1 = new Notification(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            NotificationSentBy.Sms,
-            DateTime.UtcNow);
+        var notification1 = new Notification()
+        {
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            LineId = Guid.NewGuid(),
+            DisruptionId = Guid.NewGuid(),
+            StartStationId = Guid.NewGuid(),
+            EndStationId = Guid.NewGuid(),
+            SeverityId = Guid.NewGuid(),
+            NotificationSentBy = NotificationSentBy.Sms,
+            SentTime = DateTime.UtcNow
+        };
 
-        var notification2 = new Notification(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            NotificationSentBy.Sms,
-            DateTime.UtcNow);
+        var notification2 = new Notification()
+        {
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            LineId = Guid.NewGuid(),
+            DisruptionId = Guid.NewGuid(),
+            StartStationId = Guid.NewGuid(),
+            EndStationId = Guid.NewGuid(),
+            SeverityId = Guid.NewGuid(),
+            NotificationSentBy = NotificationSentBy.Sms,
+            SentTime = DateTime.UtcNow
+        };
 
         var repository = CreateRepository();
 
@@ -82,23 +88,25 @@ public class NotificationRepositoryTests : IAsyncLifetime
         savedResults2.IsSuccess.Should().BeTrue();
         loadResults.IsSuccess.Should().BeTrue();
 
-        loadResults.Value.First().Should().Be(notification1);
-        loadResults.Value.Last().Should().Be(notification2);
+        loadResults.Value.First().Should().BeEquivalentTo(notification1);
+        loadResults.Value.Last().Should().BeEquivalentTo(notification2);
     }
 
     [Fact]
     public async Task NotificationRepository_Save_Delete_Notification()
     {
-        var notification = new Notification(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            NotificationSentBy.Sms,
-            DateTime.UtcNow);
+        var notification = new Notification()
+        {
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            LineId = Guid.NewGuid(),
+            DisruptionId = Guid.NewGuid(),
+            StartStationId = Guid.NewGuid(),
+            EndStationId = Guid.NewGuid(),
+            SeverityId = Guid.NewGuid(),
+            NotificationSentBy = NotificationSentBy.Sms,
+            SentTime = DateTime.UtcNow
+        };
 
         var repository = CreateRepository();
 

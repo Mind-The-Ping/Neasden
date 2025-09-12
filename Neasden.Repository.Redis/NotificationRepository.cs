@@ -1,9 +1,9 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Options;
-using Neasden.Repository.Options;
-using Neasden.Repository.Redis.Models;
+using Neasden.Models;
 using StackExchange.Redis;
 using System.Text.Json;
+using Neasden.Repository.Redis.Options;
 
 namespace Neasden.Repository.Redis;
 public class NotificationRepository
@@ -61,4 +61,7 @@ public class NotificationRepository
            ? Result.Success()
            : Result.Failure("No notifications found to delete.");
     }
+
+    public async Task<long> GetNotificationCountAsync() =>
+        await _database.ListLengthAsync(_notificationKey);
 }

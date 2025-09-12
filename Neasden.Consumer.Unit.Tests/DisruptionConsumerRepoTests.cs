@@ -1,6 +1,6 @@
 ﻿using FluentAssertions;
 using Neasden.Consumer.Repositories;
-using Neasden.Repository.Options;
+using Neasden.Repository.Redis.Options;
 using Neasden.Repository.Redis;
 using Testcontainers.Redis;
 

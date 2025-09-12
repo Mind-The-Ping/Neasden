@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Neasden.Repository.Models;
+using Neasden.Models;
 
 namespace Neasden.Repository.Database;
 public class NeasdenDbContext : DbContext
