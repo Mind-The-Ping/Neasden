@@ -158,4 +158,13 @@ public class DisruptionRepository
            ? Result.Success()
            : Result.Failure("No disruption ends found to delete.");
     }
+
+    public async Task<long> GetDisruptionCountAsync() =>
+         await _database.SetLengthAsync($"{_disruptionKey}:ids");
+
+    public async Task<long> GetDisruptionSeverityCountAsync() =>
+        await _database.ListLengthAsync(_disruptionSeverityKey);
+
+    public async Task<long> GetDisruptionEndCountAsync() =>
+         await _database.ListLengthAsync(_disruptionEndKey);
 }

@@ -61,4 +61,7 @@ public class NotificationRepository
            ? Result.Success()
            : Result.Failure("No notifications found to delete.");
     }
+
+    public async Task<long> GetNotificationCountAsync() =>
+        await _database.ListLengthAsync(_notificationKey);
 }
