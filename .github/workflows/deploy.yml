@@ -75,7 +75,7 @@ jobs:
   deploy:
     name: Deploy to Azure
     runs-on: ubuntu-latest
-    needs: [ build-api, build-consumer ]
+    needs: [ build-api ]
     permissions:
       id-token: write
       contents: read
