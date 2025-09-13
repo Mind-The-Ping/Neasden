@@ -9,6 +9,10 @@ permissions:
   actions: read
   checks: write
 
+env:
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: './Neasden.Consumer' # set this to the path to your web app project, defaults to the repository root
+  DOTNET_VERSION: '9.0.x' # set this to the dotnet version to use
+
 jobs:
   build-api:
     name: Build API
@@ -30,30 +34,48 @@ jobs:
           name: Neasden.API
           path: ./output/API
 
-  build-consumer:
+  build-and-deploy-consumer:
     name: Build Consumer (Windows)
     runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
+    permissions:
+      id-token: write #This is required for requesting the JWT
+      contents: read #This is required for actions/checkout
 
-      - name: Setup .NET
+    steps:
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@v4
+
+      - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '9.x'
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Build & Publish Consumer
-        run: dotnet publish ./Neasden.Consumer/Neasden.Consumer.csproj -c Release -o ./output/Consumer
+      - name: 'Resolve Project Dependencies Using Dotnet'
+        shell: pwsh
+        run: |
+          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+          dotnet build --configuration Release --output ./output
+          popd
 
-      - name: Upload Consumer artifact
-        uses: actions/upload-artifact@v4
+      - name: Login to Azure for Neasden.Consumer
+        uses: azure/login@v2
         with:
-          name: Neasden.Consumer
-          path: ./output/Consumer
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_9528E2B23CA24F84B5B41D048863316E }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_CAC05A23993841408CAAC5F020781CA4 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_288C97172BAA4B94B244857C164347F9 }}
+      
+      - name: 'Run Azure Functions Action'
+        uses: Azure/functions-action@v1
+        id: fa
+        with:
+          app-name: 'neasden-consumer'
+          slot-name: 'Production'
+          package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
 
   deploy:
     name: Deploy to Azure
     runs-on: ubuntu-latest
-    needs: [ build-api, build-consumer ]
+    needs: [ build-api ]
     permissions:
       id-token: write
       contents: read
@@ -84,20 +106,6 @@ jobs:
           app-name: 'neasden'
           slot-name: 'Production'
           package: ./output/API
-
-      - name: Login to Azure for Neasden.Consumer
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_9528E2B23CA24F84B5B41D048863316E }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_CAC05A23993841408CAAC5F020781CA4 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_288C97172BAA4B94B244857C164347F9 }}
-
-      - name: Deploy Neasden.Consumer
-        uses: Azure/functions-action@v1
-        with:
-          app-name: 'neasden-consumer'
-          slot-name: 'Production'
-          package: ./output/Consumer
 
   build-and-push:
     runs-on: ubuntu-latest
