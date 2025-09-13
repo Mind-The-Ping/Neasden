@@ -41,18 +41,14 @@ jobs:
         with:
           dotnet-version: '9.x'
 
-      - name: Build Consumer
-        shell: pwsh
-        run: |
-          pushd './Neasden.Consumer'
-          dotnet publish -c Release -o ./output
-          popd
+      - name: Build & Publish Consumer
+        run: dotnet publish ./Neasden.Consumer/Neasden.Consumer.csproj -c Release -o ./output/Consumer
 
       - name: Upload Consumer artifact
         uses: actions/upload-artifact@v4
         with:
           name: Neasden.Consumer
-          path: ./Neasden.Consumer/output
+          path: ./output/Consumer
 
   deploy:
     name: Deploy to Azure
@@ -101,4 +97,31 @@ jobs:
         with:
           app-name: 'neasden-consumer'
           slot-name: 'Production'
-          package: './output/Consumer'
+          package: ./output/Consumer
+
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.x'
+
+      - name: Publish Neasden.Saver
+        run: dotnet publish ./Neasden.Saver/Neasden.Saver.csproj -c Release -o ./output
+
+      - name: Login to Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: neasden.azurecr.io
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build Docker image
+        run: docker build -f Neasden.Saver/Dockerfile -t neasden.azurecr.io/neasden:latest .
+
+      - name: Push Docker image
+        run: docker push neasden.azurecr.io/neasden:latest
