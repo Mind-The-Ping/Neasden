@@ -1,7 +1,8 @@
 ﻿using FluentAssertions;
 using Neasden.Consumer.Repositories;
-using Neasden.Repository.Redis.Options;
 using Neasden.Repository.Redis;
+using Neasden.Repository.Redis.Options;
+using StackExchange.Redis;
 using Testcontainers.Redis;
 
 namespace Neasden.Consumer.Unit.Tests;
@@ -36,7 +37,9 @@ public class NotificationConsumerRepoTests : IAsyncLifetime
                NotificationKey = "notifications"
            });
 
-        var repository = new NotificationRepository(options);
+        var multiplexer = ConnectionMultiplexer.Connect(_redisContainer.GetConnectionString());
+
+        var repository = new NotificationRepository(options, multiplexer);
         var repo = new NotificationConsumerRepo(repository);
 
         var body = new BinaryData([]);

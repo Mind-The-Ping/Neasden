@@ -15,12 +15,12 @@ public class DisruptionRepository
     private readonly string _disruptionEndKey;
     private readonly string _disruptionSeverityKey;
 
-    public DisruptionRepository(IOptions<RedisOptions> options)
+    public DisruptionRepository(
+        IOptions<RedisOptions> options,
+        ConnectionMultiplexer redis)
     {
         var redisOptions = options.Value ??
           throw new ArgumentNullException(nameof(options));
-
-        var redis = ConnectionMultiplexer.Connect(redisOptions.ConnectionString);
 
         _database = redis.GetDatabase();
 

@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Neasden.Models;
 using Neasden.Repository.Database;
 using Neasden.Repository.Redis.Options;
+using StackExchange.Redis;
+using Testcontainers.Redis;
 using PostgresDisruptionRepository = Neasden.Repository.Repositories.DisruptionRepository;
 using PostgresNotificationRepository = Neasden.Repository.Repositories.NotificationRepository;
 using RedisDisruptionRepository = Neasden.Repository.Redis.DisruptionRepository;
@@ -43,8 +45,11 @@ public class SaverTests
         };
 
         var iRedisOptions = Microsoft.Extensions.Options.Options.Create(redisOptions);
-        _redisDisruption = new RedisDisruptionRepository(iRedisOptions);
-        _redisNotification = new RedisNotificationRepository(iRedisOptions);
+
+        var multiplexer = ConnectionMultiplexer.Connect("localhost:6382");
+
+        _redisDisruption = new RedisDisruptionRepository(iRedisOptions, multiplexer);
+        _redisNotification = new RedisNotificationRepository(iRedisOptions, multiplexer);
 
         _postgresDisruption = new PostgresDisruptionRepository(neasdenDbContext);
         _postgresNotification = new PostgresNotificationRepository(neasdenDbContext);
