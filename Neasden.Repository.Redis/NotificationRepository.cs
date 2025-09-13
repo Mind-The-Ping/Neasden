@@ -11,13 +11,10 @@ public class NotificationRepository
     private readonly IDatabase _database;
     private readonly string _notificationKey;
 
-    public NotificationRepository(IOptions<RedisOptions> options)
+    public NotificationRepository(
+        IOptions<RedisOptions> options,
+        ConnectionMultiplexer redis)
     {
-        var redisOptions = options.Value ??
-         throw new ArgumentNullException(nameof(options));
-
-        var redis = ConnectionMultiplexer.Connect(redisOptions.ConnectionString);
-
         _database = redis.GetDatabase();
         _notificationKey = options.Value.NotificationKey;
     }

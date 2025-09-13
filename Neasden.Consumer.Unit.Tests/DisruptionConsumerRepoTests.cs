@@ -1,7 +1,8 @@
 ﻿using FluentAssertions;
 using Neasden.Consumer.Repositories;
-using Neasden.Repository.Redis.Options;
 using Neasden.Repository.Redis;
+using Neasden.Repository.Redis.Options;
+using StackExchange.Redis;
 using Testcontainers.Redis;
 
 namespace Neasden.Consumer.Unit.Tests;
@@ -75,6 +76,8 @@ public class DisruptionConsumerRepoTests : IAsyncLifetime
               NotificationKey = "notifications"
           });
 
-        return new DisruptionRepository(options);
+        var multiplexer = ConnectionMultiplexer.Connect(_redisContainer.GetConnectionString());
+
+        return new DisruptionRepository(options, multiplexer);
     }
 }

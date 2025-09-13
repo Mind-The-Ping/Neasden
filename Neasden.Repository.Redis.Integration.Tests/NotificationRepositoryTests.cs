@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Neasden.Models;
 using Neasden.Repository.Redis.Options;
+using StackExchange.Redis;
 using Testcontainers.Redis;
 
 namespace Neasden.Repository.Redis.Integration.Tests;
@@ -131,6 +132,8 @@ public class NotificationRepositoryTests : IAsyncLifetime
               NotificationKey = "notifications"
           });
 
-        return new NotificationRepository(options);
+        var multiplexer = ConnectionMultiplexer.Connect(_redisContainer.GetConnectionString());
+
+        return new NotificationRepository(options, multiplexer);
     }
 }

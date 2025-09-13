@@ -1,9 +1,10 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Neasden.Repository.Database;
+using Neasden.Repository.Redis.Options;
 using Neasden.Saver;
 using Neasden.Saver.Options;
-using Microsoft.EntityFrameworkCore;
-using Neasden.Repository.Redis.Options;
+using StackExchange.Redis;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -24,6 +25,15 @@ builder.Services.AddOptions<SaverOptions>()
   {
       configuration.GetSection("Saver").Bind(settings);
   });
+
+builder.Services.AddSingleton(sp =>
+{
+    var options = sp.GetRequiredService<IOptions<RedisOptions>>().Value;
+    var configOptions = ConfigurationOptions.Parse(options.ConnectionString);
+    configOptions.AbortOnConnectFail = false;
+
+    return ConnectionMultiplexer.Connect(configOptions);
+});
 
 builder.Services.AddDbContext<NeasdenDbContext>((sp, options) =>
 {
