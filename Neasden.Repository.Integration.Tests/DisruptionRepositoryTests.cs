@@ -46,8 +46,43 @@ public class DisruptionRepositoryTests
 
         var disruptionSaved = _neasdenDbContext.Disruptions.SingleOrDefault(x => x.Id == disruption.Id);
 
-        disruption.Should().NotBeNull();
-        disruptionSaved.Should().Be(disruption);
+        disruptionSaved.Should().NotBeNull();
+        disruptionSaved.Should().BeEquivalentTo(disruption);
+    }
+
+    [Fact]
+    public async Task DisruptionRepository_UpdateDisruptionAsync_Description_Successful()
+    {
+        var disruption = new Disruption()
+        {
+            Id = Guid.NewGuid(),
+            LineId = Guid.NewGuid(),
+            StartStationId = Guid.NewGuid(),
+            EndStationId = Guid.NewGuid(),
+            Description = "Something horrific happened on the District line please bare with us as we clean up the mess.",
+            StartTime = DateTime.UtcNow
+        };
+
+        var result = await _disruptionRepository.AddDisruptionsAsync([disruption]);
+        result.IsSuccess.Should().BeTrue();
+
+        var disruptionButDifferent = new Disruption()
+        {
+            Id = disruption.Id,
+            LineId = disruption.LineId,
+            StartStationId = disruption.StartStationId,
+            EndStationId =  disruption.EndStationId,
+            Description = "Sorry to scared you all, there is no mess please go on with your day.",
+            StartTime = disruption.StartTime
+        };
+
+        var resultButDifferent = await _disruptionRepository.AddDisruptionsAsync([disruptionButDifferent]);
+        result.IsSuccess.Should().BeTrue();
+
+        var disruptionSaved = _neasdenDbContext.Disruptions.SingleOrDefault(x => x.Id == disruptionButDifferent.Id);
+
+        disruptionSaved.Should().NotBeNull();
+        disruptionSaved.Should().BeEquivalentTo(disruptionButDifferent);
     }
 
     [Fact]
@@ -132,7 +167,7 @@ public class DisruptionRepositoryTests
             .SingleOrDefaultAsync(x => x.Id == disruptionSeverity.Id);
 
         disruptionSeveritySaved.Should().NotBeNull();
-        disruptionSeveritySaved.Should().Be(disruptionSeverity);
+        disruptionSeveritySaved.Should().BeEquivalentTo(disruptionSeverity);
     }
 
     [Fact]
