@@ -18,27 +18,31 @@ public class DisruptionRepository
         var disruptionsList = disruptions.ToList();
         var disruptionIds = disruptionsList.Select(d => d.Id).ToList();
 
-        var existingIds = await _neasdenDbContext.Disruptions
+        var existingDisruptions = await _neasdenDbContext.Disruptions
             .Where(x => disruptionIds.Contains(x.Id))
-            .Select(x => x.Id)
-            .ToHashSetAsync();
+            .ToListAsync();
 
-        var newDisruptions = disruptions
-            .Where(x => !existingIds.Contains(x.Id))
-            .ToList();
-
-        if (newDisruptions.Count == 0) {
-            return Result.Success();
+        foreach (var disruption in disruptionsList)
+        {
+            var existing = existingDisruptions.FirstOrDefault(x => x.Id == disruption.Id);
+            if (existing != null)
+            {
+                if (existing.Description != disruption.Description) {
+                    existing.Description = disruption.Description;
+                }
+            }
+            else {
+                await _neasdenDbContext.Disruptions.AddAsync(disruption);
+            }
         }
 
         try
         {
-            await _neasdenDbContext.Disruptions.AddRangeAsync(newDisruptions);
             await _neasdenDbContext.SaveChangesAsync();
-
             return Result.Success();
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             return Result.Failure("Could not save disruptions to database.");
         }
     }
