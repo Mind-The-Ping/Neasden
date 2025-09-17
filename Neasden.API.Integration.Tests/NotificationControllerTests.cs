@@ -100,6 +100,7 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
             SeverityId = severity.Id,
+            DescriptionId = Guid.NewGuid(),
             NotificationSentBy = NotificationSentBy.Push,
             SentTime = DateTime.UtcNow,
         };
@@ -146,6 +147,7 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
             SeverityId = Guid.NewGuid(),
+            DescriptionId = Guid.NewGuid(),
             NotificationSentBy = NotificationSentBy.Push,
             SentTime = DateTime.UtcNow,
         };
@@ -193,6 +195,7 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
                 StartStationId = Guid.NewGuid(),
                 EndStationId = Guid.NewGuid(),
                 SeverityId = severity.Id,
+                DescriptionId = Guid.NewGuid(),
                 NotificationSentBy = NotificationSentBy.Push,
                 SentTime = DateTime.UtcNow,
             };
@@ -253,6 +256,7 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
             SeverityId = Guid.NewGuid(),
+            DescriptionId = Guid.NewGuid(),
             NotificationSentBy = NotificationSentBy.Push,
             SentTime = DateTime.UtcNow,
         };

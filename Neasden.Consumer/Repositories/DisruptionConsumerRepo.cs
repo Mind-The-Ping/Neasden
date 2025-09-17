@@ -60,4 +60,20 @@ public class DisruptionConsumerRepo
         var result = await _disruptionRepository.SaveDisruptionEndAsync(message!);
         return result;
     }
+
+    public async Task<Result> AddDisruptionDescriptionAsync(BinaryData body)
+    {
+        DisruptionDescription? message;
+        try
+        {
+            var json = body.ToArray();
+            message = JsonSerializer.Deserialize<DisruptionDescription>(json);
+        }
+        catch {
+            return Result.Failure("Disruption description message could not be deserialized.");
+        }
+        
+        var result = await _disruptionRepository.SaveDisruptionDescriptionAsync(message!);
+        return result;
+    }
 }

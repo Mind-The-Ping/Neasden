@@ -16,6 +16,7 @@ public class Notification
     public Guid StartStationId { get; set; }
     public Guid EndStationId { get; set; }
     public Guid SeverityId { get; set; }
+    public Guid DescriptionId { get; set; }
     public NotificationSentBy NotificationSentBy { get; set; }
     public DateTime SentTime { get; set; }
 }
