@@ -14,6 +14,7 @@ public class DisruptionRepository
     private readonly string _disruptionKey;
     private readonly string _disruptionEndKey;
     private readonly string _disruptionSeverityKey;
+    private readonly string _descriptionKey;
 
     public DisruptionRepository(
         IOptions<RedisOptions> options,
@@ -25,6 +26,7 @@ public class DisruptionRepository
         _database = redis.GetDatabase();
 
         _disruptionKey = redisOptions.DisruptionKey;
+        _descriptionKey = redisOptions.DescriptionKey;
         _disruptionEndKey = redisOptions.DisruptionEndKey;
         _disruptionSeverityKey = redisOptions.DisruptionSeverityKey;
     }
@@ -81,6 +83,21 @@ public class DisruptionRepository
              : Result.Failure($"Could not save disruption end {disruptionEnd.Id} to Redis.");
     }
 
+    public async Task<Result> SaveDisruptionDescriptionAsync(DisruptionDescription disruptionDescription)
+    {
+        var json = JsonSerializer.Serialize(disruptionDescription);
+
+        if (string.IsNullOrWhiteSpace(json)) {
+            return Result.Failure($"Could not serialize disruption description {disruptionDescription.Id}.");
+        }
+
+        var result = await _database.ListRightPushAsync(_descriptionKey, json);
+
+        return result > 0
+             ? Result.Success()
+             : Result.Failure($"Could not save disruption description {disruptionDescription.Id} to Redis.");
+    }
+
     public async Task<Result<IEnumerable<Disruption>>> GetDisruptionsAsync()
     {
         var values = await _database.ListRangeAsync(_disruptionKey, 0, -1);
@@ -129,6 +146,22 @@ public class DisruptionRepository
         return Result.Success<IEnumerable<DisruptionEnd>>(disruptionEnds!);
     }
 
+    public async Task<Result<IEnumerable<DisruptionDescription>>> GetDisruptionDescriptionsAsync()
+    {
+        var values = await _database.ListRangeAsync(_descriptionKey, 0, -1);
+
+        if (values.Length == 0) {
+            return Result.Failure<IEnumerable<DisruptionDescription>>("No disruption descriptions found in Redis.");
+        }
+
+        var disruptionDescriptions = values
+           .Select(v => JsonSerializer.Deserialize<DisruptionDescription>(v!))
+           .Where(d => d != null)
+           .ToList()!;
+
+        return Result.Success<IEnumerable<DisruptionDescription>>(disruptionDescriptions!);
+    }
+
     public async Task<Result> DeleteDisruptionsAsync()
     {
         var listKey = _disruptionKey;
@@ -159,6 +192,15 @@ public class DisruptionRepository
            : Result.Failure("No disruption ends found to delete.");
     }
 
+    public async Task<Result> DeleteDisruptionDescriptionsAsync()
+    {
+        var deleted = await _database.KeyDeleteAsync(_descriptionKey);
+
+        return deleted
+           ? Result.Success()
+           : Result.Failure("No disruption descriptions found to delete.");
+    }
+
     public async Task<long> GetDisruptionCountAsync() =>
          await _database.SetLengthAsync($"{_disruptionKey}:ids");
 
@@ -167,4 +209,7 @@ public class DisruptionRepository
 
     public async Task<long> GetDisruptionEndCountAsync() =>
          await _database.ListLengthAsync(_disruptionEndKey);
+
+    public async Task<long> GetDisruptionDescriptionCountAsync() =>
+        await _database.ListLengthAsync(_descriptionKey);
 }

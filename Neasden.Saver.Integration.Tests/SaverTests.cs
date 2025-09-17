@@ -4,7 +4,6 @@ using Neasden.Models;
 using Neasden.Repository.Database;
 using Neasden.Repository.Redis.Options;
 using StackExchange.Redis;
-using Testcontainers.Redis;
 using PostgresDisruptionRepository = Neasden.Repository.Repositories.DisruptionRepository;
 using PostgresNotificationRepository = Neasden.Repository.Repositories.NotificationRepository;
 using RedisDisruptionRepository = Neasden.Repository.Redis.DisruptionRepository;
@@ -42,6 +41,7 @@ public class SaverTests
             DisruptionSeverityKey = "disruptionSeverities",
             DisruptionEndKey = "disruptionEnds",
             NotificationKey = "notifications",
+            DescriptionKey = "descriptions"
         };
 
         var iRedisOptions = Microsoft.Extensions.Options.Options.Create(redisOptions);
@@ -70,7 +70,6 @@ public class SaverTests
             LineId = Guid.NewGuid(),
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
-            Description = "This is a test nerd.",
             StartTime = DateTime.UtcNow,
             EndTime = DateTime.UtcNow.AddHours(5)
         };
@@ -123,7 +122,6 @@ public class SaverTests
             LineId = Guid.NewGuid(),
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
-            Description = "This is a test nerd.",
             StartTime = DateTime.UtcNow,
         };
 

@@ -6,7 +6,8 @@ public class NeasdenDbContext : DbContext
 {
     public DbSet<Disruption> Disruptions { get; set; }
     public DbSet<Notification> Notifications { get; set; }
-    public DbSet<DisruptionSeverity> Severitys { get; set; }
+    public DbSet<DisruptionSeverity> Severities { get; set; }
+    public DbSet<DisruptionDescription> Descriptions { get; set; }
     public NeasdenDbContext(DbContextOptions<NeasdenDbContext> options) 
         : base(options) { }
 }

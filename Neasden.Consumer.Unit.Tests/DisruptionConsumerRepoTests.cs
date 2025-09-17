@@ -73,7 +73,8 @@ public class DisruptionConsumerRepoTests : IAsyncLifetime
               DisruptionKey = "disruptions",
               DisruptionSeverityKey = "disruptionSeveritys",
               DisruptionEndKey = "disruptionEnds",
-              NotificationKey = "notifications"
+              NotificationKey = "notifications",
+              DescriptionKey = "descriptions"
           });
 
         var multiplexer = ConnectionMultiplexer.Connect(_redisContainer.GetConnectionString());

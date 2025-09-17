@@ -35,7 +35,6 @@ public class DisruptionRepositoryTests : IAsyncLifetime
             LineId = Guid.NewGuid(),
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
-            Description = "This is a test nerd.",
             StartTime = DateTime.UtcNow,
             EndTime = DateTime.UtcNow.AddHours(5)
         };
@@ -61,7 +60,6 @@ public class DisruptionRepositoryTests : IAsyncLifetime
             LineId = Guid.NewGuid(),
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
-            Description = "This is a test nerd.",
             StartTime = DateTime.UtcNow,
             EndTime = DateTime.UtcNow.AddHours(5)
         };
@@ -72,7 +70,6 @@ public class DisruptionRepositoryTests : IAsyncLifetime
             LineId = Guid.NewGuid(),
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
-            Description = "This is a test dweeb.",
             StartTime = DateTime.UtcNow,
             EndTime = DateTime.UtcNow.AddHours(5)
         };
@@ -101,7 +98,6 @@ public class DisruptionRepositoryTests : IAsyncLifetime
             LineId = Guid.NewGuid(),
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
-            Description = "This is a test nerd.",
             StartTime = DateTime.UtcNow,
             EndTime = DateTime.UtcNow.AddHours(5)
         };
@@ -129,7 +125,6 @@ public class DisruptionRepositoryTests : IAsyncLifetime
             LineId = Guid.NewGuid(),
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
-            Description = "This is a test nerd.",
             StartTime = DateTime.UtcNow,
             EndTime = DateTime.UtcNow.AddHours(5)
         };
@@ -278,6 +273,85 @@ public class DisruptionRepositoryTests : IAsyncLifetime
         loadResults.Error.Should().Be("No disruption ends found in Redis.");
     }
 
+    [Fact]
+    public async Task DisruptionRepository_Save_Load_Single_DisruptionDescription()
+    {
+        var disruptionDescription = new DisruptionDescription
+        {
+            Id = Guid.NewGuid(),
+            DisruptionId = Guid.NewGuid(),
+            Description = "Just a test.",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var repository = CreateRepository();
+
+        var saveResults = await repository.SaveDisruptionDescriptionAsync(disruptionDescription);
+        var loadResults = await repository.GetDisruptionDescriptionsAsync();
+
+        saveResults.IsSuccess.Should().BeTrue();
+        loadResults.IsSuccess.Should().BeTrue();
+
+        loadResults.Value.Count().Should().Be(1);
+        loadResults.Value.First().Should().BeEquivalentTo(disruptionDescription);
+    }
+
+    [Fact]
+    public async Task DisruptionRepository_Save_Load_Multiple_DisruptionDescriptions()
+    {
+        var disruptionDescription1 = new DisruptionDescription
+        {
+            Id = Guid.NewGuid(),
+            DisruptionId = Guid.NewGuid(),
+            Description = "Just a test.",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var disruptionDescription2 = new DisruptionDescription
+        {
+            Id = Guid.NewGuid(),
+            DisruptionId = Guid.NewGuid(),
+            Description = "Just a test.",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var repository = CreateRepository();
+
+        var saveResults1 = await repository.SaveDisruptionDescriptionAsync(disruptionDescription1);
+        var saveResults2 = await repository.SaveDisruptionDescriptionAsync(disruptionDescription2);
+        var loadResults = await repository.GetDisruptionDescriptionsAsync();
+
+        saveResults1.IsSuccess.Should().BeTrue();
+        saveResults2.IsSuccess.Should().BeTrue();
+        loadResults.IsSuccess.Should().BeTrue();
+
+        loadResults.Value.Count().Should().Be(2);
+        loadResults.Value.First().Should().BeEquivalentTo(disruptionDescription1);
+        loadResults.Value.Last().Should().BeEquivalentTo(disruptionDescription2);
+    }
+
+    [Fact]
+    public async Task DisruptionRepository_Save_Delete_DisruptionDescription()
+    {
+        var disruptionDescription = new DisruptionDescription
+        {
+            Id = Guid.NewGuid(),
+            DisruptionId = Guid.NewGuid(),
+            Description = "Just a test.",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var repository = CreateRepository();
+
+        _ = await repository.SaveDisruptionDescriptionAsync(disruptionDescription);
+        var deleteResults = await repository.DeleteDisruptionDescriptionsAsync();
+        var loadResults = await repository.GetDisruptionDescriptionsAsync();
+
+        deleteResults.IsSuccess.Should().BeTrue();
+        loadResults.IsFailure.Should().BeTrue();
+        loadResults.Error.Should().Be("No disruption descriptions found in Redis.");
+    }
+
     private DisruptionRepository CreateRepository()
     {
         var options = Microsoft.Extensions.Options.Options.Create(
@@ -287,7 +361,8 @@ public class DisruptionRepositoryTests : IAsyncLifetime
               DisruptionKey = "disruptions",
               DisruptionSeverityKey = "disruptionSeveritys",
               DisruptionEndKey = "disruptionEnds",
-              NotificationKey = "notifications"
+              NotificationKey = "notifications",
+              DescriptionKey = "descriptions"
           });
 
         var multiplexer = ConnectionMultiplexer.Connect(_redisContainer.GetConnectionString());

@@ -28,64 +28,6 @@ public class DisruptionRepositoryTests
     }
 
     [Fact]
-    public async Task DisruptionRepository_CreateDisruptionAsync_Successful()
-    {
-        var disruption = new Disruption()
-        {
-            Id = Guid.NewGuid(),
-            LineId = Guid.NewGuid(),
-            StartStationId = Guid.NewGuid(),
-            EndStationId = Guid.NewGuid(),
-            Description = "Something horrific happened on the District line please bare with us as we clean up the mess.",
-            StartTime = DateTime.UtcNow
-        };
-
-        var result = await _disruptionRepository.AddDisruptionsAsync([disruption]);
-
-        result.IsSuccess.Should().BeTrue();
-
-        var disruptionSaved = _neasdenDbContext.Disruptions.SingleOrDefault(x => x.Id == disruption.Id);
-
-        disruptionSaved.Should().NotBeNull();
-        disruptionSaved.Should().BeEquivalentTo(disruption);
-    }
-
-    [Fact]
-    public async Task DisruptionRepository_UpdateDisruptionAsync_Description_Successful()
-    {
-        var disruption = new Disruption()
-        {
-            Id = Guid.NewGuid(),
-            LineId = Guid.NewGuid(),
-            StartStationId = Guid.NewGuid(),
-            EndStationId = Guid.NewGuid(),
-            Description = "Something horrific happened on the District line please bare with us as we clean up the mess.",
-            StartTime = DateTime.UtcNow
-        };
-
-        var result = await _disruptionRepository.AddDisruptionsAsync([disruption]);
-        result.IsSuccess.Should().BeTrue();
-
-        var disruptionButDifferent = new Disruption()
-        {
-            Id = disruption.Id,
-            LineId = disruption.LineId,
-            StartStationId = disruption.StartStationId,
-            EndStationId =  disruption.EndStationId,
-            Description = "Sorry to scared you all, there is no mess please go on with your day.",
-            StartTime = disruption.StartTime
-        };
-
-        var resultButDifferent = await _disruptionRepository.AddDisruptionsAsync([disruptionButDifferent]);
-        result.IsSuccess.Should().BeTrue();
-
-        var disruptionSaved = _neasdenDbContext.Disruptions.SingleOrDefault(x => x.Id == disruptionButDifferent.Id);
-
-        disruptionSaved.Should().NotBeNull();
-        disruptionSaved.Should().BeEquivalentTo(disruptionButDifferent);
-    }
-
-    [Fact]
     public async Task DisruptionRepository_GetDisruptionByIdAsync_Successful()
     {
         var disruption = new Disruption
@@ -94,7 +36,6 @@ public class DisruptionRepositoryTests
             LineId = Guid.NewGuid(),
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
-            Description = "Something not human clambered out of the bottom of the Northen line, please stay away.",
             StartTime = DateTime.UtcNow
         };
 
@@ -127,7 +68,6 @@ public class DisruptionRepositoryTests
             LineId = Guid.NewGuid(),
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
-            Description = "Something not human clambered out of the bottom of the Northen line, please stay away.",
             StartTime = DateTime.UtcNow
         };
 
@@ -163,7 +103,7 @@ public class DisruptionRepositoryTests
 
         result.IsSuccess.Should().BeTrue();
 
-        var disruptionSeveritySaved = await _neasdenDbContext.Severitys
+        var disruptionSeveritySaved = await _neasdenDbContext.Severities
             .SingleOrDefaultAsync(x => x.Id == disruptionSeverity.Id);
 
         disruptionSeveritySaved.Should().NotBeNull();
@@ -181,7 +121,7 @@ public class DisruptionRepositoryTests
             StartTime = DateTime.UtcNow
         };
 
-        await _neasdenDbContext.Severitys.AddAsync(severity);
+        await _neasdenDbContext.Severities.AddAsync(severity);
         await _neasdenDbContext.SaveChangesAsync();
 
         var result = await _disruptionRepository.GetDisruptionSeverityByIdAsync(severity.Id);
@@ -198,5 +138,45 @@ public class DisruptionRepositoryTests
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be($"Disruption severity {id} could not be found on the database.");
+    }
+
+    [Fact]
+    public async Task DisruptionRepository_AddDescriptionsAsync_Successful()
+    {
+        var description = new DisruptionDescription
+        {
+            Id = Guid.NewGuid(),
+            DisruptionId = Guid.NewGuid(),
+            Description = "This is a test.",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var result = await _disruptionRepository.AddDescriptionsAsync([description]);
+        result.IsSuccess.Should().BeTrue();
+
+        var record = await _neasdenDbContext.Descriptions.SingleOrDefaultAsync(d => d.Id == description.Id);
+        record.Should().NotBeNull();
+        record.Should().BeEquivalentTo(description);
+    }
+
+    [Fact]
+    public async Task DisruptionRepository_GetDisruptionDescriptionByIdAsync_Successful()
+    {
+        var description = new DisruptionDescription
+        {
+            Id = Guid.NewGuid(),
+            DisruptionId = Guid.NewGuid(),
+            Description = "This is a test.",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _neasdenDbContext.Descriptions.AddAsync(description);
+        await _neasdenDbContext.SaveChangesAsync();
+
+        var result = await _disruptionRepository.GetDisruptionDescriptionByIdAsync(description.Id);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Should().BeEquivalentTo(description);
     }
 }
