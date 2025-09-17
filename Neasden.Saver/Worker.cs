@@ -40,6 +40,7 @@ public class Worker : BackgroundService
             var severityCount = await saver.DisruptionSeverityCountAsnc();
             var endCount = await saver.DisruptionEndCountAsync();
             var notificationCount = await saver.NotificationCountAsync();
+            var descriptionCount = await saver.DisruptionDescriptionCountAsync();
 
             if (disruptionCount >= _options.MaxRecords || lastDrain.Elapsed >= _maxInterval)
                 await DrainWithLogging(saver.DrainDisruptionsAsync, "Disruptions");
@@ -52,6 +53,9 @@ public class Worker : BackgroundService
 
             if (notificationCount >= _options.MaxRecords || lastDrain.Elapsed >= _maxInterval)
                 await DrainWithLogging(saver.DrainNotificationsAsync, "Notifications");
+
+            if (descriptionCount >= _options.MaxRecords || lastDrain.Elapsed >= _maxInterval)
+                await DrainWithLogging(saver.DrainDisruptionDescriptionsAsync, "Disruption Descriptions");
 
             if (disruptionCount >= _options.MaxRecords || 
                 severityCount >= _options.MaxRecords || 
