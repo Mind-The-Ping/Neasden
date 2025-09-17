@@ -42,7 +42,6 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
             LineId = Guid.NewGuid(),
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
-            Description = "Something not human clambered out of the bottom of the Northen line, please stay away.",
             StartTime = DateTime.UtcNow
         };
 
@@ -59,7 +58,6 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
         result.LineId.Should().Be(disruption.LineId);
         result.StartStationId.Should().Be(disruption.StartStationId);
         result.EndStationId.Should().Be(disruption.EndStationId);
-        result.Description.Should().Be(disruption.Description);
         result.StartTime.Should().BeCloseTo(disruption.StartTime, precision: TimeSpan.FromMilliseconds(10));
     }
 
@@ -107,7 +105,7 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
         };
 
         await _dbContext.Notifications.AddAsync(notification);
-        await _dbContext.Severitys.AddAsync(severity);
+        await _dbContext.Severities.AddAsync(severity);
         await _dbContext.SaveChangesAsync();
 
         var response = await _client.GetAsync($"api/notification/getById?id={notification.Id}");
@@ -203,7 +201,7 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
             notifications.Add(notification);
         }
 
-        await _dbContext.Severitys.AddRangeAsync(severities);
+        await _dbContext.Severities.AddRangeAsync(severities);
         await _dbContext.Notifications.AddRangeAsync(notifications);
         await _dbContext.SaveChangesAsync();
 

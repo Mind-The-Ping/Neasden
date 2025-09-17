@@ -15,34 +15,28 @@ public class DisruptionRepository
 
     public async Task<Result> AddDisruptionsAsync(IEnumerable<Disruption> disruptions)
     {
-        var disruptionsList = disruptions.ToList();
-        var disruptionIds = disruptionsList.Select(d => d.Id).ToList();
-
-        var existingDisruptions = await _neasdenDbContext.Disruptions
-            .Where(x => disruptionIds.Contains(x.Id))
-            .ToListAsync();
-
-        foreach (var disruption in disruptionsList)
-        {
-            var existing = existingDisruptions.FirstOrDefault(x => x.Id == disruption.Id);
-            if (existing != null)
-            {
-                if (existing.Description != disruption.Description) {
-                    existing.Description = disruption.Description;
-                }
-            }
-            else {
-                await _neasdenDbContext.Disruptions.AddAsync(disruption);
-            }
-        }
-
         try
         {
-            await _neasdenDbContext.SaveChangesAsync();
+            var newIds = disruptions.Select(d => d.Id).ToList();
+
+            var existingIds = await _neasdenDbContext.Disruptions
+                .Where(d => newIds.Contains(d.Id))
+                .Select(d => d.Id)
+                .ToListAsync();
+
+            var newDisruptions = disruptions
+                .Where(d => !existingIds.Contains(d.Id))
+                .ToList();
+
+            if(newDisruptions.Count != 0)
+            {
+                await _neasdenDbContext.Disruptions.AddRangeAsync(newDisruptions);
+                await _neasdenDbContext.SaveChangesAsync();
+            }
+
             return Result.Success();
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             return Result.Failure("Could not save disruptions to database.");
         }
     }
@@ -90,7 +84,7 @@ public class DisruptionRepository
     {
         try
         {
-            await _neasdenDbContext.Severitys.AddRangeAsync(disruptionSeverities);
+            await _neasdenDbContext.Severities.AddRangeAsync(disruptionSeverities);
             await _neasdenDbContext.SaveChangesAsync();
 
             return Result.Success();
@@ -102,7 +96,7 @@ public class DisruptionRepository
 
     public async Task<Result<DisruptionSeverity>> GetDisruptionSeverityByIdAsync(Guid id)
     {
-        var disruptionSeverity = await _neasdenDbContext.Severitys
+        var disruptionSeverity = await _neasdenDbContext.Severities
            .SingleOrDefaultAsync(x => x.Id == id);
 
         if (disruptionSeverity == null) {
@@ -110,5 +104,33 @@ public class DisruptionRepository
         }
 
         return Result.Success(disruptionSeverity);
+    }
+
+    public async Task<Result> AddDescriptionsAsync(IEnumerable<DisruptionDescription> descriptions)
+    {
+        try
+        {
+            await _neasdenDbContext.Descriptions.AddRangeAsync(descriptions);
+            await _neasdenDbContext.SaveChangesAsync();
+
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure("Could not save descriptions to database.");
+        }
+    }
+
+    public async Task<Result<DisruptionDescription>> GetDisruptionDescriptionByIdAsync(Guid id)
+    {
+        var result = await _neasdenDbContext.Descriptions
+            .SingleOrDefaultAsync(x => x.Id == id);
+
+        if (result is null)
+        {
+            return Result.Failure<DisruptionDescription>($"Could not find description {id} on the database.");
+        }
+
+        return Result.Success(result);
     }
 }
