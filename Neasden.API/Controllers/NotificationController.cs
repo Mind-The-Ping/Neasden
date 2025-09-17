@@ -35,6 +35,20 @@ public class NotificationController : ControllerBase
     }
 
     [Authorize]
+    [HttpGet("description")]
+    public async Task<IActionResult> GetDisurptionDescriptionById(Guid id)
+    {
+        var description = await _disruptionRepository
+            .GetDisruptionDescriptionByIdAsync(id);
+
+        if (description.IsFailure) {
+            return BadRequest(description.Error);
+        }
+
+        return Ok(description.Value);
+    }
+
+    [Authorize]
     [HttpGet("getById")]
     public async Task<IActionResult> GetNotificationById(Guid id)
     {

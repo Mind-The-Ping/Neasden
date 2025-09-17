@@ -172,4 +172,28 @@ public class SaverTests
         record.IsSuccess.Should().BeTrue();
         record.Value.Should().BeEquivalentTo(notification);
     }
+
+    [Fact]
+    public async Task Saver_DrainDescriptionsAsync_Successful()
+    {
+        var description = new DisruptionDescription
+        {
+            Id = Guid.NewGuid(),
+            DisruptionId = Guid.NewGuid(),
+            Description = "Knives Out, Fangs out ??.",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _ = await _redisDisruption.SaveDisruptionDescriptionAsync(description);
+
+        var result = await _saver.DrainDisruptionDescriptionsAsync();
+        var count = await _saver.DisruptionDescriptionCountAsync();
+
+        result.IsSuccess.Should().BeTrue();
+        count.Should().Be(0);
+
+        var record = await _postgresDisruption.GetDisruptionDescriptionByIdAsync(description.Id);
+        record.IsSuccess.Should().BeTrue();
+        record.Value.Should().BeEquivalentTo(description);
+    }
 }

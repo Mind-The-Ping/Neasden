@@ -37,6 +37,9 @@ public class Saver
     public async Task<long> NotificationCountAsync() =>
         await _redisNotification.GetNotificationCountAsync();
 
+    public async Task<long> DisruptionDescriptionCountAsync() =>
+        await _redisDisruption.GetDisruptionDescriptionCountAsync();
+
     public Task<Result> DrainDisruptionsAsync() =>
         DrainAsync(_redisDisruption.GetDisruptionsAsync,
                    _postgresDisruption.AddDisruptionsAsync,
@@ -56,6 +59,11 @@ public class Saver
         DrainAsync(_redisNotification.GetNotificationsAsync,
                    _postgresNotification.AddNotificationsAsync,
                    _redisNotification.DeleteNotificationsAsync);
+
+    public Task<Result> DrainDisruptionDescriptionsAsync() =>
+        DrainAsync(_redisDisruption.GetDisruptionDescriptionsAsync,
+                   _postgresDisruption.AddDescriptionsAsync,
+                   _redisDisruption.DeleteDisruptionDescriptionsAsync);
 
     private static async Task<Result> DrainAsync<T>(
     Func<Task<Result<IEnumerable<T>>>> getFromRedis,

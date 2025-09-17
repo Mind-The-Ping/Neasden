@@ -273,4 +273,37 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
         var response = await _unauthorizedClient.GetAsync($"api/notification/getByUserId");
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
+
+    [Fact]
+    public async Task NotificationController_GetDisurptionDescriptionById_Successful()
+    {
+        var description = new DisruptionDescription
+        {
+            Id = Guid.NewGuid(),
+            DisruptionId = Guid.NewGuid(),
+            Description = "This is still a test my dude.",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _dbContext.Descriptions.AddAsync(description);
+        await _dbContext.SaveChangesAsync();
+
+        var response = await _client.GetAsync($"api/notification/description?id={description.Id}");
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<DisruptionDescription>();
+        
+        result.Should().NotBeNull();
+        result.Id.Should().Be(description.Id);
+        result.DisruptionId.Should().Be(description.DisruptionId);
+        result.Description.Should().Be(description.Description);
+        result.CreatedAt.Should().BeCloseTo(description.CreatedAt, TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
+    public async Task NotificationController_GetDisurptionDescriptionById_UnAuthorized_Fails()
+    {
+        var response = await _unauthorizedClient.GetAsync($"api/notification/description?id={Guid.NewGuid()}");
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
 }
