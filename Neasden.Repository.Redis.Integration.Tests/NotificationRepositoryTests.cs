@@ -35,6 +35,7 @@ public class NotificationRepositoryTests : IAsyncLifetime
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
             SeverityId = Guid.NewGuid(),
+            DescriptionId = Guid.NewGuid(),
             NotificationSentBy = NotificationSentBy.Sms,
             SentTime = DateTime.UtcNow
         };
@@ -62,6 +63,7 @@ public class NotificationRepositoryTests : IAsyncLifetime
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
             SeverityId = Guid.NewGuid(),
+            DescriptionId= Guid.NewGuid(),
             NotificationSentBy = NotificationSentBy.Sms,
             SentTime = DateTime.UtcNow
         };
@@ -75,6 +77,7 @@ public class NotificationRepositoryTests : IAsyncLifetime
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
             SeverityId = Guid.NewGuid(),
+            DescriptionId = Guid.NewGuid(),
             NotificationSentBy = NotificationSentBy.Sms,
             SentTime = DateTime.UtcNow
         };
@@ -105,6 +108,7 @@ public class NotificationRepositoryTests : IAsyncLifetime
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
             SeverityId = Guid.NewGuid(),
+            DescriptionId = Guid.NewGuid(),
             NotificationSentBy = NotificationSentBy.Sms,
             SentTime = DateTime.UtcNow
         };

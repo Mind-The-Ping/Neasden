@@ -74,6 +74,21 @@ public class Consumer
         await messageActions.CompleteMessageAsync(message);
     }
 
+    [Function("DisruptionDescriptionConsumer")]
+    public async Task DisruptionDescriptionHandler(
+      [ServiceBusTrigger("%QueueDisruptionDescriptions%", Connection = "ServiceBusConnection")]
+      ServiceBusReceivedMessage message,
+      ServiceBusMessageActions messageActions)
+    {
+        _logger.LogInformation("Message ID: {id}", message.MessageId);
+        _logger.LogInformation("Message Body: {body}", message.Body);
+        _logger.LogInformation("Message Content-Type: {contentType}", message.ContentType);
+
+        await _disruptionRepo.AddDisruptionEndTimeAsync(message.Body);
+
+        await messageActions.CompleteMessageAsync(message);
+    }
+
     [Function("NotificationConsumer")]
     public async Task NotificationHandler(
       [ServiceBusTrigger("%QueueNotifications%", Connection = "ServiceBusConnection")]

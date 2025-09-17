@@ -64,6 +64,19 @@ public class DisruptionConsumerRepoTests : IAsyncLifetime
         result.Error.Should().Be("Disruption end time message could not be deserialized.");
     }
 
+    [Fact]
+    public async Task DisruptionConsumerRepo_AddDisruptionDescriptionAsync_Wrong_Fails()
+    {
+        var repository = CreateRepository();
+        var repo = new DisruptionConsumerRepo(repository);
+
+        var body = new BinaryData([]);
+        var result = await repo.AddDisruptionDescriptionAsync(body);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be("Disruption description message could not be deserialized.");
+    }
+
     private DisruptionRepository CreateRepository()
     {
         var options = Microsoft.Extensions.Options.Options.Create(
