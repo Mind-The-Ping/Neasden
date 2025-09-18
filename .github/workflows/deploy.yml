@@ -86,6 +86,13 @@ jobs:
         with:
           name: Neasden.API
           path: ./output/API
+      
+      - name: Login to Azure for Neasden.API
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_92A358569B66448AB2AD150F5E466513 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_1B19828EB75B4E66ACEC09358CBCD81A }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C7B2C5C43CD74364B399F53962B303E9 }}
 
       - name: Deploy Neasden.API
         uses: azure/webapps-deploy@v3
