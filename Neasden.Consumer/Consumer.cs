@@ -84,7 +84,7 @@ public class Consumer
         _logger.LogInformation("Message Body: {body}", message.Body);
         _logger.LogInformation("Message Content-Type: {contentType}", message.ContentType);
 
-        await _disruptionRepo.AddDisruptionEndTimeAsync(message.Body);
+        await _disruptionRepo.AddDisruptionDescriptionAsync(message.Body);
 
         await messageActions.CompleteMessageAsync(message);
     }
