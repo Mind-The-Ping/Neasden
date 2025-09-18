@@ -6,11 +6,25 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Neasden.Repository.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "Descriptions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    DisruptionId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Descriptions", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "Disruptions",
                 columns: table => new
@@ -19,7 +33,6 @@ namespace Neasden.Repository.Migrations
                     LineId = table.Column<Guid>(type: "uuid", nullable: false),
                     StartStationId = table.Column<Guid>(type: "uuid", nullable: false),
                     EndStationId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: false),
                     StartTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     EndTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -39,6 +52,7 @@ namespace Neasden.Repository.Migrations
                     StartStationId = table.Column<Guid>(type: "uuid", nullable: false),
                     EndStationId = table.Column<Guid>(type: "uuid", nullable: false),
                     SeverityId = table.Column<Guid>(type: "uuid", nullable: false),
+                    DescriptionId = table.Column<Guid>(type: "uuid", nullable: false),
                     NotificationSentBy = table.Column<int>(type: "integer", nullable: false),
                     SentTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -48,7 +62,7 @@ namespace Neasden.Repository.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Severitys",
+                name: "Severities",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -58,7 +72,7 @@ namespace Neasden.Repository.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Severitys", x => x.Id);
+                    table.PrimaryKey("PK_Severities", x => x.Id);
                 });
         }
 
@@ -66,13 +80,16 @@ namespace Neasden.Repository.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "Descriptions");
+
+            migrationBuilder.DropTable(
                 name: "Disruptions");
 
             migrationBuilder.DropTable(
                 name: "Notifications");
 
             migrationBuilder.DropTable(
-                name: "Severitys");
+                name: "Severities");
         }
     }
 }

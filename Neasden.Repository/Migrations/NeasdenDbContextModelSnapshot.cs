@@ -17,20 +17,16 @@ namespace Neasden.Repository.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.8")
+                .HasAnnotation("ProductVersion", "9.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Neasden.Repository.Models.Disruption", b =>
+            modelBuilder.Entity("Neasden.Models.Disruption", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<Guid>("EndStationId")
                         .HasColumnType("uuid");
@@ -52,7 +48,28 @@ namespace Neasden.Repository.Migrations
                     b.ToTable("Disruptions");
                 });
 
-            modelBuilder.Entity("Neasden.Repository.Models.DisruptionSeverity", b =>
+            modelBuilder.Entity("Neasden.Models.DisruptionDescription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("DisruptionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Descriptions");
+                });
+
+            modelBuilder.Entity("Neasden.Models.DisruptionSeverity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -69,13 +86,16 @@ namespace Neasden.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Severitys");
+                    b.ToTable("Severities");
                 });
 
-            modelBuilder.Entity("Neasden.Repository.Models.Notification", b =>
+            modelBuilder.Entity("Neasden.Models.Notification", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("DescriptionId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("DisruptionId")
