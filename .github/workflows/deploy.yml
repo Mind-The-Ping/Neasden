@@ -127,3 +127,9 @@ jobs:
 
       - name: Push Docker image
         run: docker push neasden.azurecr.io/neasden:latest
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: neasden-saver
+          images: neasden.azurecr.io/neasden:latest
