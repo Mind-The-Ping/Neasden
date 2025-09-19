@@ -142,6 +142,8 @@ jobs:
         uses: azure/container-apps-deploy-action@v1
         with:
           acrName: neasden
+          acrUsername: ${{ secrets.ACR_USERNAME }}
+          acrPassword: ${{ secrets.ACR_PASSWORD }}
           containerAppName: neasden-saver
           resourceGroup: Mind-The-Ping
           imageToDeploy: neasden.azurecr.io/neasden:latest
