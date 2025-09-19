@@ -126,10 +126,10 @@ jobs:
           password: ${{ secrets.ACR_PASSWORD }}
 
       - name: Build Docker image
-        run: docker build -f Neasden.Saver/Dockerfile -t neasden.azurecr.io/neasden:latest .
+        run: docker build -f Neasden.Saver/Dockerfile -t neasden.azurecr.io/neasden:${{ github.sha }} .
 
       - name: Push Docker image
-        run: docker push neasden.azurecr.io/neasden:latest
+        run: docker push neasden.azurecr.io/neasden:${{ github.sha }}
 
       - name: Login to Azure for Neasden Saver
         uses: azure/login@v2
@@ -146,4 +146,4 @@ jobs:
           acrUsername:  ${{ secrets.ACR_USERNAME }}
           acrPassword: ${{ secrets.ACR_PASSWORD }}
           resourceGroup: Mind-The-Ping
-          imageToDeploy: neasden.azurecr.io/neasden:latest
+          imageToDeploy: neasden.azurecr.io/neasden:${{ github.sha }}
