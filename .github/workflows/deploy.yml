@@ -103,6 +103,8 @@ jobs:
 
   build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -128,7 +130,7 @@ jobs:
       - name: Push Docker image
         run: docker push neasden.azurecr.io/neasden:latest
 
-      - name: Login to Azure for Neasden.API
+      - name: Login to Azure for Neasden Saver
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_92A358569B66448AB2AD150F5E466513 }}
