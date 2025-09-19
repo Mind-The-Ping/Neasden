@@ -138,17 +138,12 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_1B19828EB75B4E66ACEC09358CBCD81A }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C7B2C5C43CD74364B399F53962B303E9 }}
       
-      - name: Login to Azure Container Registry
-        uses: azure/docker-login@v1
-        with:
-          login-server: neasden.azurecr.io
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
-      
       - name: Deploy Container App
         uses: azure/container-apps-deploy-action@v1
         with:
           acrName: neasden
           containerAppName: neasden-saver
+          acrUsername:  ${{ secrets.ACR_USERNAME }}
+          acrPassword: ${{ secrets.ACR_PASSWORD }}
           resourceGroup: Mind-The-Ping
           imageToDeploy: neasden.azurecr.io/neasden:latest
