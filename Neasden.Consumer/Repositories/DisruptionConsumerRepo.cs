@@ -2,15 +2,23 @@
 using Neasden.Repository.Redis;
 using Neasden.Models;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 
 namespace Neasden.Consumer.Repositories;
 public class DisruptionConsumerRepo
 {
     public readonly DisruptionRepository _disruptionRepository;
+    public readonly ILogger<DisruptionConsumerRepo> _logger;
 
-    public DisruptionConsumerRepo(DisruptionRepository disruptionRepository)
+    public DisruptionConsumerRepo(
+        DisruptionRepository disruptionRepository, 
+        ILogger<DisruptionConsumerRepo> logger)
     {
-        _disruptionRepository = disruptionRepository;
+        _disruptionRepository = disruptionRepository ?? 
+            throw new ArgumentNullException(nameof(disruptionRepository));
+
+        _logger = logger ?? 
+            throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<Result> AddDisruptionAsync(BinaryData body)
@@ -21,8 +29,12 @@ public class DisruptionConsumerRepo
             var json = body.ToArray();
             message = JsonSerializer.Deserialize<Disruption>(json);
         }
-        catch {
-            return Result.Failure("Disruption message could not be deserialized.");
+        catch 
+        {
+            var errorMessage = "Disruption message could not be deserialized.";
+
+            _logger.LogError(errorMessage);
+            return Result.Failure(errorMessage);
         }
 
         var result = await _disruptionRepository.SaveDisruptionAsync(message!);
@@ -37,8 +49,12 @@ public class DisruptionConsumerRepo
             var json = body.ToArray();
             message = JsonSerializer.Deserialize<DisruptionSeverity>(json);
         }
-        catch {
-            return Result.Failure("Disruption severity message could not be deserialized.");
+        catch 
+        {
+            var errorMessage = "Disruption severity message could not be deserialized.";
+
+            _logger.LogError(errorMessage);
+            return Result.Failure(errorMessage);
         }
 
         var result = await _disruptionRepository.SaveDisruptionSeverityAsync(message!);
@@ -53,8 +69,12 @@ public class DisruptionConsumerRepo
             var json = body.ToArray();
             message = JsonSerializer.Deserialize<DisruptionEnd>(json);
         }
-        catch {
-            return Result.Failure("Disruption end time message could not be deserialized.");
+        catch 
+        {
+            var errorMessage = "Disruption end time message could not be deserialized.";
+
+            _logger.LogError(errorMessage);
+            return Result.Failure(errorMessage);
         }
 
         var result = await _disruptionRepository.SaveDisruptionEndAsync(message!);
@@ -69,8 +89,12 @@ public class DisruptionConsumerRepo
             var json = body.ToArray();
             message = JsonSerializer.Deserialize<DisruptionDescription>(json);
         }
-        catch {
-            return Result.Failure("Disruption description message could not be deserialized.");
+        catch 
+        {
+            var errorMessage = "Disruption description message could not be deserialized.";
+
+            _logger.LogError(errorMessage);
+            return Result.Failure(errorMessage);
         }
         
         var result = await _disruptionRepository.SaveDisruptionDescriptionAsync(message!);

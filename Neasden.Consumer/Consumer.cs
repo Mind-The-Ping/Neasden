@@ -1,4 +1,5 @@
 using Azure.Messaging.ServiceBus;
+using CSharpFunctionalExtensions;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Neasden.Consumer.Repositories;
@@ -39,7 +40,11 @@ public class Consumer
         _logger.LogInformation("Message Body: {body}", message.Body);
         _logger.LogInformation("Message Content-Type: {contentType}", message.ContentType);
 
-        await _disruptionRepo.AddDisruptionAsync(message.Body);
+        var result = await _disruptionRepo.AddDisruptionAsync(message.Body);
+
+        if(result.IsFailure) {
+            return;
+        }
 
         await messageActions.CompleteMessageAsync(message);
     }
@@ -54,7 +59,11 @@ public class Consumer
         _logger.LogInformation("Message Body: {body}", message.Body);
         _logger.LogInformation("Message Content-Type: {contentType}", message.ContentType);
 
-        await _disruptionRepo.UpdateDisruptionSeverityAsync(message.Body);
+        var result = await _disruptionRepo.UpdateDisruptionSeverityAsync(message.Body);
+
+        if (result.IsFailure) {
+            return;
+        }
 
         await messageActions.CompleteMessageAsync(message);
     }
@@ -69,7 +78,11 @@ public class Consumer
         _logger.LogInformation("Message Body: {body}", message.Body);
         _logger.LogInformation("Message Content-Type: {contentType}", message.ContentType);
 
-        await _disruptionRepo.AddDisruptionEndTimeAsync(message.Body);
+        var result = await _disruptionRepo.AddDisruptionEndTimeAsync(message.Body);
+
+        if (result.IsFailure) {
+            return;
+        }
 
         await messageActions.CompleteMessageAsync(message);
     }
@@ -84,7 +97,11 @@ public class Consumer
         _logger.LogInformation("Message Body: {body}", message.Body);
         _logger.LogInformation("Message Content-Type: {contentType}", message.ContentType);
 
-        await _disruptionRepo.AddDisruptionDescriptionAsync(message.Body);
+        var result = await _disruptionRepo.AddDisruptionDescriptionAsync(message.Body);
+
+        if (result.IsFailure) {
+            return;
+        }
 
         await messageActions.CompleteMessageAsync(message);
     }
@@ -99,7 +116,11 @@ public class Consumer
         _logger.LogInformation("Message Body: {body}", message.Body);
         _logger.LogInformation("Message Content-Type: {contentType}", message.ContentType);
 
-        await _notificationRepo.AddNotificationAsync(message.Body);
+        var result = await _notificationRepo.AddNotificationAsync(message.Body);
+
+        if (result.IsFailure) {
+            return;
+        }
 
         await messageActions.CompleteMessageAsync(message);
     }

@@ -70,7 +70,7 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         var message = await response.Content.ReadAsStringAsync();
-        message.Should().Be($"Could not find disruption {id} on the database.");
+        message.Should().Be($"Disruption {id} does not exist on the database.");
     }
 
     [Fact]
@@ -132,7 +132,7 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         var message = await response.Content.ReadAsStringAsync();
-        message.Should().Be($"Could not find notification {id} on the database.");
+        message.Should().Be($"Notification {id} does not exist on this database.");
     }
 
     [Fact]
@@ -159,7 +159,7 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         var message = await response.Content.ReadAsStringAsync();
-        message.Should().Be($"Disruption severity {notification.SeverityId} could not be found on the database.");
+        message.Should().Be($"Disruption severity {notification.SeverityId} does not exist on this database.");
     }
 
     [Fact]
@@ -241,7 +241,7 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         var message = await response.Content.ReadAsStringAsync();
-        message.Should().Be($"Could not find notifications for user {_id} on the database.");
+        message.Should().Be($"Notifications for user {_id} do not exist on the database.");
     }
 
     [Fact]
@@ -268,7 +268,7 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         var message = await response.Content.ReadAsStringAsync();
-        message.Should().Be($"Disruption severity {notification.SeverityId} could not be found on the database.");
+        message.Should().Be($"Disruption severity {notification.SeverityId} does not exist on this database.");
     }
 
     [Fact]

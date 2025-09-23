@@ -2,15 +2,23 @@
 using Microsoft.EntityFrameworkCore;
 using Neasden.Repository.Database;
 using Neasden.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Neasden.Repository.Repositories;
 public class NotificationRepository
 {
     private readonly NeasdenDbContext _neasdenDbContext;
+    private readonly ILogger<NotificationRepository> _logger;
 
-    public NotificationRepository(NeasdenDbContext neasdenDbContext)
+    public NotificationRepository(
+        NeasdenDbContext neasdenDbContext,
+        ILogger<NotificationRepository> logger)
     {
-        _neasdenDbContext = neasdenDbContext;
+        _neasdenDbContext = neasdenDbContext ?? 
+            throw new ArgumentNullException(nameof(neasdenDbContext));
+
+        _logger = logger ?? 
+            throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<Result> AddNotificationsAsync(IEnumerable<Notification> notifications)
@@ -22,8 +30,12 @@ public class NotificationRepository
 
             return Result.Success();
         }
-        catch (Exception ex) {
-            return Result.Failure("Could not save notifications to database.");
+        catch (Exception ex) 
+        {
+            var message = "Could not save notifications to database.";
+
+            _logger.LogError(ex, message);
+            return Result.Failure(message);
         }
     }
 
@@ -32,8 +44,12 @@ public class NotificationRepository
         var result = await _neasdenDbContext.Notifications
             .SingleOrDefaultAsync(x => x.Id == id);
 
-        if (result == null) {
-            return Result.Failure<Notification>($"Could not find notification {id} on the database.");
+        if (result == null) 
+        {
+            var message = $"Notification {id} does not exist on this database.";
+
+            _logger.LogError(message);
+            return Result.Failure<Notification>(message);
         }
         
         return Result.Success(result);
@@ -45,8 +61,12 @@ public class NotificationRepository
             .Where(x => x.UserId == userId)
             .ToListAsync();
 
-        if(result.Count == 0) {
-            return Result.Failure<IEnumerable<Notification>>($"Could not find notifications for user {userId} on the database.");
+        if(result.Count == 0) 
+        {
+            var message = $"Notifications for user {userId} do not exist on the database.";
+
+            _logger.LogError(message);
+            return Result.Failure<IEnumerable<Notification>>(message);
         }
 
         return Result.Success<IEnumerable<Notification>>(result);

@@ -1,6 +1,8 @@
 ﻿using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Neasden.Models;
 using Neasden.Repository.Redis.Options;
+using NSubstitute;
 using StackExchange.Redis;
 using Testcontainers.Redis;
 
@@ -366,7 +368,8 @@ public class DisruptionRepositoryTests : IAsyncLifetime
           });
 
         var multiplexer = ConnectionMultiplexer.Connect(_redisContainer.GetConnectionString());
+        var logger = Substitute.For<ILogger<DisruptionRepository>>();
 
-        return new DisruptionRepository(options, multiplexer);
+        return new DisruptionRepository(options, multiplexer, logger);
     }
 }

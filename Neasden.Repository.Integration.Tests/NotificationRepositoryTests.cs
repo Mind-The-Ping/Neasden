@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Neasden.Repository.Database;
 using Neasden.Models;
 using Neasden.Repository.Repositories;
+using Castle.Core.Logging;
+using Microsoft.Extensions.Logging;
+using NSubstitute;
 
 namespace Neasden.Repository.Integration.Tests;
 public class NotificationRepositoryTests
@@ -23,7 +26,9 @@ public class NotificationRepositoryTests
         _neasdenDbContext.Database.EnsureDeleted();
         _neasdenDbContext.Database.EnsureCreated();
 
-        _notificationRepository = new NotificationRepository(_neasdenDbContext);
+        var logger = Substitute.For<ILogger<NotificationRepository>>();
+
+        _notificationRepository = new NotificationRepository(_neasdenDbContext, logger);
     }
 
     [Fact]
@@ -87,7 +92,7 @@ public class NotificationRepositoryTests
         var result = await _notificationRepository.GetNotificationByIdAsync(id);
         result.IsFailure.Should().BeTrue();
 
-        result.Error.Should().Be($"Could not find notification {id} on the database.");
+        result.Error.Should().Be($"Notification {id} does not exist on this database.");
     }
 
     [Fact]
@@ -140,6 +145,6 @@ public class NotificationRepositoryTests
         var result = await _notificationRepository.GetNotificationsByUserId(userId);
         result.IsFailure.Should().BeTrue();
 
-        result.Error.Should().Be($"Could not find notifications for user {userId} on the database.");
+        result.Error.Should().Be($"Notifications for user {userId} do not exist on the database.");
     }
 }

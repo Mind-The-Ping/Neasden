@@ -1,7 +1,9 @@
 ﻿using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Neasden.Consumer.Repositories;
 using Neasden.Repository.Redis;
 using Neasden.Repository.Redis.Options;
+using NSubstitute;
 using StackExchange.Redis;
 using Testcontainers.Redis;
 
@@ -10,6 +12,7 @@ namespace Neasden.Consumer.Unit.Tests;
 public class DisruptionConsumerRepoTests : IAsyncLifetime
 {
     private readonly RedisContainer _redisContainer;
+    private readonly ILogger<DisruptionConsumerRepo> _logger;
 
     public DisruptionConsumerRepoTests()
     {
@@ -17,6 +20,8 @@ public class DisruptionConsumerRepoTests : IAsyncLifetime
          .WithImage("redis:7.2")
          .WithCleanUp(true)
          .Build();
+
+        _logger = Substitute.For<ILogger<DisruptionConsumerRepo>>();
     }
 
     public async Task InitializeAsync() =>
@@ -29,7 +34,7 @@ public class DisruptionConsumerRepoTests : IAsyncLifetime
     public async Task DisruptionConsumerRepo_AddDisruptionAsync_Wrong_Fails()
     {
         var repository = CreateRepository();
-        var repo = new DisruptionConsumerRepo(repository);
+        var repo = new DisruptionConsumerRepo(repository, _logger);
 
         var body = new BinaryData([]);
         var result = await repo.AddDisruptionAsync(body);
@@ -42,7 +47,7 @@ public class DisruptionConsumerRepoTests : IAsyncLifetime
     public async Task DisruptionConsumerRepo_UpdateDisruptionSeverityAsync_Wrong_Fails()
     {
         var repository = CreateRepository();
-        var repo = new DisruptionConsumerRepo(repository);
+        var repo = new DisruptionConsumerRepo(repository, _logger);
 
         var body = new BinaryData([]);
         var result = await repo.UpdateDisruptionSeverityAsync(body);
@@ -55,7 +60,7 @@ public class DisruptionConsumerRepoTests : IAsyncLifetime
     public async Task DisruptionConsumerRepo_AddDisruptionEndTimeAsync_Wrong_Fails()
     {
         var repository = CreateRepository();
-        var repo = new DisruptionConsumerRepo(repository);
+        var repo = new DisruptionConsumerRepo(repository, _logger);
 
         var body = new BinaryData([]);
         var result = await repo.AddDisruptionEndTimeAsync(body);
@@ -68,7 +73,7 @@ public class DisruptionConsumerRepoTests : IAsyncLifetime
     public async Task DisruptionConsumerRepo_AddDisruptionDescriptionAsync_Wrong_Fails()
     {
         var repository = CreateRepository();
-        var repo = new DisruptionConsumerRepo(repository);
+        var repo = new DisruptionConsumerRepo(repository, _logger);
 
         var body = new BinaryData([]);
         var result = await repo.AddDisruptionDescriptionAsync(body);
@@ -91,7 +96,8 @@ public class DisruptionConsumerRepoTests : IAsyncLifetime
           });
 
         var multiplexer = ConnectionMultiplexer.Connect(_redisContainer.GetConnectionString());
+        var logger = Substitute.For<ILogger<DisruptionRepository>>();
 
-        return new DisruptionRepository(options, multiplexer);
+        return new DisruptionRepository(options, multiplexer, logger);
     }
 }

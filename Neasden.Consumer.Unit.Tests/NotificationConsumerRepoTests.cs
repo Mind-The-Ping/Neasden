@@ -1,7 +1,9 @@
 ﻿using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Neasden.Consumer.Repositories;
 using Neasden.Repository.Redis;
 using Neasden.Repository.Redis.Options;
+using NSubstitute;
 using StackExchange.Redis;
 using Testcontainers.Redis;
 
@@ -39,9 +41,12 @@ public class NotificationConsumerRepoTests : IAsyncLifetime
            });
 
         var multiplexer = ConnectionMultiplexer.Connect(_redisContainer.GetConnectionString());
+        var logger = Substitute.For<ILogger<NotificationRepository>>();
 
-        var repository = new NotificationRepository(options, multiplexer);
-        var repo = new NotificationConsumerRepo(repository);
+        var repository = new NotificationRepository(options, multiplexer, logger);
+        var notificationLogger = Substitute.For<ILogger<NotificationConsumerRepo>>();
+
+        var repo = new NotificationConsumerRepo(repository, notificationLogger);
 
         var body = new BinaryData([]);
         var result = await repo.AddNotificationAsync(body);
