@@ -40,11 +40,7 @@ public class Consumer
         _logger.LogInformation("Message Body: {body}", message.Body);
         _logger.LogInformation("Message Content-Type: {contentType}", message.ContentType);
 
-        var result = await _disruptionRepo.AddDisruptionAsync(message.Body);
-
-        if(result.IsFailure) {
-            return;
-        }
+        await _disruptionRepo.AddDisruptionAsync(message.Body);
 
         await messageActions.CompleteMessageAsync(message);
     }
@@ -59,11 +55,7 @@ public class Consumer
         _logger.LogInformation("Message Body: {body}", message.Body);
         _logger.LogInformation("Message Content-Type: {contentType}", message.ContentType);
 
-        var result = await _disruptionRepo.UpdateDisruptionSeverityAsync(message.Body);
-
-        if (result.IsFailure) {
-            return;
-        }
+        await _disruptionRepo.UpdateDisruptionSeverityAsync(message.Body);
 
         await messageActions.CompleteMessageAsync(message);
     }
@@ -78,11 +70,7 @@ public class Consumer
         _logger.LogInformation("Message Body: {body}", message.Body);
         _logger.LogInformation("Message Content-Type: {contentType}", message.ContentType);
 
-        var result = await _disruptionRepo.AddDisruptionEndTimeAsync(message.Body);
-
-        if (result.IsFailure) {
-            return;
-        }
+        await _disruptionRepo.AddDisruptionEndTimeAsync(message.Body);
 
         await messageActions.CompleteMessageAsync(message);
     }
@@ -97,11 +85,7 @@ public class Consumer
         _logger.LogInformation("Message Body: {body}", message.Body);
         _logger.LogInformation("Message Content-Type: {contentType}", message.ContentType);
 
-        var result = await _disruptionRepo.AddDisruptionDescriptionAsync(message.Body);
-
-        if (result.IsFailure) {
-            return;
-        }
+        await _disruptionRepo.AddDisruptionDescriptionAsync(message.Body);
 
         await messageActions.CompleteMessageAsync(message);
     }
@@ -116,11 +100,7 @@ public class Consumer
         _logger.LogInformation("Message Body: {body}", message.Body);
         _logger.LogInformation("Message Content-Type: {contentType}", message.ContentType);
 
-        var result = await _notificationRepo.AddNotificationAsync(message.Body);
-
-        if (result.IsFailure) {
-            return;
-        }
+        await _notificationRepo.AddNotificationAsync(message.Body);
 
         await messageActions.CompleteMessageAsync(message);
     }
