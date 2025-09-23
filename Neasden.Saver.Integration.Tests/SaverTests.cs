@@ -1,8 +1,11 @@
-﻿using FluentAssertions;
+﻿using Castle.Core.Logging;
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Neasden.Models;
 using Neasden.Repository.Database;
 using Neasden.Repository.Redis.Options;
+using NSubstitute;
 using StackExchange.Redis;
 using PostgresDisruptionRepository = Neasden.Repository.Repositories.DisruptionRepository;
 using PostgresNotificationRepository = Neasden.Repository.Repositories.NotificationRepository;
@@ -48,11 +51,17 @@ public class SaverTests
 
         var multiplexer = ConnectionMultiplexer.Connect("localhost:6382");
 
-        _redisDisruption = new RedisDisruptionRepository(iRedisOptions, multiplexer);
-        _redisNotification = new RedisNotificationRepository(iRedisOptions, multiplexer);
+        var redisDisruptionLogger = Substitute.For<ILogger<RedisDisruptionRepository>>();
+        var redisNotificationLogger = Substitute.For<ILogger<RedisNotificationRepository>>();
 
-        _postgresDisruption = new PostgresDisruptionRepository(neasdenDbContext);
-        _postgresNotification = new PostgresNotificationRepository(neasdenDbContext);
+        _redisDisruption = new RedisDisruptionRepository(iRedisOptions, multiplexer, redisDisruptionLogger);
+        _redisNotification = new RedisNotificationRepository(iRedisOptions, multiplexer, redisNotificationLogger);
+
+        var postgresDisruptionLogger = Substitute.For<ILogger<PostgresDisruptionRepository>>();
+        var postgresNotificationLogger = Substitute.For<ILogger<PostgresNotificationRepository>>();
+
+        _postgresDisruption = new PostgresDisruptionRepository(neasdenDbContext, postgresDisruptionLogger);
+        _postgresNotification = new PostgresNotificationRepository(neasdenDbContext, postgresNotificationLogger);
 
         _saver = new Saver(
             _redisNotification,

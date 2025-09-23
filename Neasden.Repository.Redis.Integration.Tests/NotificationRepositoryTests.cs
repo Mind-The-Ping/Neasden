@@ -1,6 +1,9 @@
-﻿using FluentAssertions;
+﻿using Castle.Core.Logging;
+using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Neasden.Models;
 using Neasden.Repository.Redis.Options;
+using NSubstitute;
 using StackExchange.Redis;
 using Testcontainers.Redis;
 
@@ -138,7 +141,8 @@ public class NotificationRepositoryTests : IAsyncLifetime
           });
 
         var multiplexer = ConnectionMultiplexer.Connect(_redisContainer.GetConnectionString());
+        var logger = Substitute.For<ILogger<NotificationRepository>>();
 
-        return new NotificationRepository(options, multiplexer);
+        return new NotificationRepository(options, multiplexer, logger);
     }
 }

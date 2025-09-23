@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Neasden.Repository.Database;
 using Neasden.Models;
 using Neasden.Repository.Repositories;
+using Microsoft.Extensions.Logging;
+using NSubstitute;
 
 namespace Neasden.Repository.Integration.Tests;
 
@@ -24,7 +26,9 @@ public class DisruptionRepositoryTests
         _neasdenDbContext.Database.EnsureDeleted();
         _neasdenDbContext.Database.EnsureCreated();
 
-        _disruptionRepository = new DisruptionRepository(_neasdenDbContext);
+        var logger = Substitute.For<ILogger<DisruptionRepository>>();
+
+        _disruptionRepository = new DisruptionRepository(_neasdenDbContext, logger);
     }
 
     [Fact]
@@ -56,7 +60,7 @@ public class DisruptionRepositoryTests
         var result = await _disruptionRepository.GetDisruptionByIdAsync(id);
         result.IsFailure.Should().BeTrue();
 
-        result.Error.Should().Be($"Could not find disruption {id} on the database.");
+        result.Error.Should().Be($"Disruption {id} does not exist on the database.");
     }
 
     [Fact]
@@ -137,7 +141,7 @@ public class DisruptionRepositoryTests
         var result = await _disruptionRepository.GetDisruptionSeverityByIdAsync(id);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be($"Disruption severity {id} could not be found on the database.");
+        result.Error.Should().Be($"Disruption severity {id} does not exist on this database.");
     }
 
     [Fact]

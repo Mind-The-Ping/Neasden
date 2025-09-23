@@ -11,26 +11,37 @@ public class NotificationController : ControllerBase
 {
     private readonly NotificationRepository _notificationRepository;
     private readonly DisruptionRepository _disruptionRepository;
+    private readonly ILogger<NotificationController> _logger;
 
     public NotificationController(
         NotificationRepository notificationRepository, 
-        DisruptionRepository disruptionRepository)
+        DisruptionRepository disruptionRepository,
+        ILogger<NotificationController> logger)
     {
-        _disruptionRepository = disruptionRepository;
-        _notificationRepository = notificationRepository;
+        _disruptionRepository = disruptionRepository ?? 
+            throw new ArgumentNullException(nameof(disruptionRepository));
+
+        _notificationRepository = notificationRepository ?? 
+            throw new ArgumentNullException(nameof(notificationRepository));
+
+        _logger = logger ?? 
+            throw new ArgumentNullException(nameof(logger));
     }
 
     [Authorize]
     [HttpGet("disruption")]
     public async Task<IActionResult> GetDisruptionById(Guid id)
     {
+        _logger.LogInformation("Begin retrieving disruption {id}.", id);
+
         var disruption = await _disruptionRepository
             .GetDisruptionByIdAsync(id);
 
         if (disruption.IsFailure) {
             return BadRequest(disruption.Error);
         }
-       
+
+        _logger.LogInformation("Successfully retrieved disruption {id}.", id);
         return Ok(disruption.Value);
     }
 
@@ -38,6 +49,8 @@ public class NotificationController : ControllerBase
     [HttpGet("description")]
     public async Task<IActionResult> GetDisurptionDescriptionById(Guid id)
     {
+        _logger.LogInformation("Begin retrieving disruption description {id}.", id);
+
         var description = await _disruptionRepository
             .GetDisruptionDescriptionByIdAsync(id);
 
@@ -45,6 +58,7 @@ public class NotificationController : ControllerBase
             return BadRequest(description.Error);
         }
 
+        _logger.LogInformation("Successfully retrieved disruption description. {id}.", id);
         return Ok(description.Value);
     }
 
@@ -52,6 +66,8 @@ public class NotificationController : ControllerBase
     [HttpGet("getById")]
     public async Task<IActionResult> GetNotificationById(Guid id)
     {
+        _logger.LogInformation("Begin retrieving notification {id}.", id);
+
         var notification = await _notificationRepository
             .GetNotificationByIdAsync(id);
 
@@ -66,7 +82,9 @@ public class NotificationController : ControllerBase
             return BadRequest(severity.Error);
         }
 
-        var notificationVal = notification.Value; 
+        var notificationVal = notification.Value;
+
+        _logger.LogInformation("Successfully retrieved notification {id}.", id);
 
         return Ok(new NotificationReturn(
             notificationVal.LineId,
@@ -84,9 +102,13 @@ public class NotificationController : ControllerBase
     {
         var subValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (!Guid.TryParse(subValue, out var userId)) {
+        if (!Guid.TryParse(subValue, out var userId)) 
+        {
+            _logger.LogError("{subValue} could not be parsed.", subValue);
             return BadRequest("You need to login to access this endpoint.");
         }
+
+        _logger.LogInformation("Begin retrieving notifications for user {id}.", userId);
 
         var notifications = await _notificationRepository
             .GetNotificationsByUserId(userId);
@@ -116,6 +138,8 @@ public class NotificationController : ControllerBase
             notification.NotificationSentBy,
             notification.SentTime));
         }
+
+        _logger.LogInformation("Successfully retrieved notifications for user {id}.", userId);
 
         return Ok(results);
     }

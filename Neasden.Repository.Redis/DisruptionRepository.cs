@@ -1,4 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Neasden.Models;
 using Neasden.Repository.Redis.Options;
@@ -15,13 +16,19 @@ public class DisruptionRepository
     private readonly string _disruptionEndKey;
     private readonly string _disruptionSeverityKey;
     private readonly string _descriptionKey;
+    private readonly ILogger<DisruptionRepository> _logger;
+
 
     public DisruptionRepository(
         IOptions<RedisOptions> options,
-        ConnectionMultiplexer redis)
+        ConnectionMultiplexer redis,
+        ILogger<DisruptionRepository> logger)
     {
         var redisOptions = options.Value ??
           throw new ArgumentNullException(nameof(options));
+
+        _logger = logger ?? 
+            throw new ArgumentNullException(nameof(logger));
 
         _database = redis.GetDatabase();
 
@@ -35,8 +42,12 @@ public class DisruptionRepository
     {
         var json = JsonSerializer.Serialize(disruption);
 
-        if (string.IsNullOrWhiteSpace(json)) {
-            return Result.Failure($"Could not serialize disruption {disruption.Id}.");
+        if (string.IsNullOrWhiteSpace(json)) 
+        {
+            var message = $"Could not serialize disruption {disruption.Id}.";
+
+            _logger.LogError(message);
+            return Result.Failure(message);
         }
 
         var setKey = $"{_disruptionKey}:ids";
@@ -48,62 +59,102 @@ public class DisruptionRepository
 
         var result = await _database.ListRightPushAsync(_disruptionKey, json);
 
-        return result > 0
-            ? Result.Success()
-            : Result.Failure($"Could not save disruption {disruption.Id} to Redis.");
+        if(result <= 0)
+        {
+            var message = $"Could not save disruption {disruption.Id} to Redis.";
+
+            _logger.LogError(message);
+            return Result.Failure(message);
+        }
+
+        return Result.Success();
     }
 
     public async Task<Result> SaveDisruptionSeverityAsync(DisruptionSeverity disruptionSeverity)
     {
         var json = JsonSerializer.Serialize(disruptionSeverity);
 
-        if (string.IsNullOrWhiteSpace(json)) {
-            return Result.Failure($"Could not serialize disruption severity {disruptionSeverity.Id}.");
+        if (string.IsNullOrWhiteSpace(json)) 
+        {
+            var message = $"Could not serialize disruption severity {disruptionSeverity.Id}.";
+
+            _logger.LogError(message);
+            return Result.Failure(message);
         }
 
         var result = await _database.ListRightPushAsync(_disruptionSeverityKey, json);
 
-        return result > 0
-            ? Result.Success()
-            : Result.Failure($"Could not save disruption severity {disruptionSeverity.Id} to Redis.");
+        if(result <= 0)
+        {
+            var message = $"Could not save disruption severity {disruptionSeverity.Id} to Redis.";
+
+            _logger.LogError(message);
+            return Result.Failure(message);
+        }
+
+        return Result.Success();
     }
 
     public async Task<Result> SaveDisruptionEndAsync(DisruptionEnd disruptionEnd)
     {
         var json = JsonSerializer.Serialize(disruptionEnd);
 
-        if (string.IsNullOrWhiteSpace(json)) {
-            return Result.Failure($"Could not serialize disruption end time {disruptionEnd.Id}.");
+        if (string.IsNullOrWhiteSpace(json)) 
+        {
+            var message = $"Could not serialize disruption end time {disruptionEnd.Id}.";
+
+            _logger.LogError(message);
+            return Result.Failure(message);
         }
 
         var result = await _database.ListRightPushAsync(_disruptionEndKey, json);
 
-        return result > 0
-             ? Result.Success()
-             : Result.Failure($"Could not save disruption end {disruptionEnd.Id} to Redis.");
+        if (result <= 0)
+        {
+            var message = $"Could not save disruption end {disruptionEnd.Id} to Redis.";
+
+            _logger.LogError(message);
+            return Result.Failure(message);
+        }
+
+        return Result.Success();
     }
 
     public async Task<Result> SaveDisruptionDescriptionAsync(DisruptionDescription disruptionDescription)
     {
         var json = JsonSerializer.Serialize(disruptionDescription);
 
-        if (string.IsNullOrWhiteSpace(json)) {
-            return Result.Failure($"Could not serialize disruption description {disruptionDescription.Id}.");
+        if (string.IsNullOrWhiteSpace(json)) 
+        {
+            var message = $"Could not serialize disruption description {disruptionDescription.Id}.";
+
+            _logger.LogError(message);
+            return Result.Failure(message);
         }
 
         var result = await _database.ListRightPushAsync(_descriptionKey, json);
 
-        return result > 0
-             ? Result.Success()
-             : Result.Failure($"Could not save disruption description {disruptionDescription.Id} to Redis.");
+        if(result <= 0)
+        {
+            var message = $"Could not save disruption description {disruptionDescription.Id} to Redis.";
+            
+            _logger.LogError(message);
+            return Result.Failure(message);
+        }
+
+        return Result.Success();
     }
 
     public async Task<Result<IEnumerable<Disruption>>> GetDisruptionsAsync()
     {
         var values = await _database.ListRangeAsync(_disruptionKey, 0, -1);
 
-        if (values.Length == 0) {
-            return Result.Failure<IEnumerable<Disruption>>("No disruptions found in Redis.");
+        if (values.Length == 0) 
+        {
+            var message = "No disruptions found in Redis.";
+
+            _logger.LogError(message);
+            return Result.Failure<IEnumerable<Disruption>>(message);
         }
 
         var disruptions = values
@@ -118,8 +169,12 @@ public class DisruptionRepository
     {
         var values = await _database.ListRangeAsync(_disruptionSeverityKey, 0, -1);
 
-        if (values.Length == 0) {
-            return Result.Failure<IEnumerable<DisruptionSeverity>>("No disruption severities found in Redis.");
+        if (values.Length == 0) 
+        {
+            var message = "No disruption severities found in Redis.";
+
+            _logger.LogError(message);
+            return Result.Failure<IEnumerable<DisruptionSeverity>>(message);
         }
 
         var disruptions = values
@@ -134,8 +189,12 @@ public class DisruptionRepository
     {
         var values = await _database.ListRangeAsync(_disruptionEndKey, 0, -1);
 
-        if (values.Length == 0) {
-            return Result.Failure<IEnumerable<DisruptionEnd>>("No disruption ends found in Redis.");
+        if (values.Length == 0) 
+        {
+            var message = "No disruption ends found in Redis.";
+
+            _logger.LogError(message);
+            return Result.Failure<IEnumerable<DisruptionEnd>>(message);
         }
 
         var disruptionEnds = values
@@ -150,8 +209,12 @@ public class DisruptionRepository
     {
         var values = await _database.ListRangeAsync(_descriptionKey, 0, -1);
 
-        if (values.Length == 0) {
-            return Result.Failure<IEnumerable<DisruptionDescription>>("No disruption descriptions found in Redis.");
+        if (values.Length == 0) 
+        {
+            var message = "No disruption descriptions found in Redis.";
+
+            _logger.LogError(message);
+            return Result.Failure<IEnumerable<DisruptionDescription>>(message);
         }
 
         var disruptionDescriptions = values
@@ -169,36 +232,60 @@ public class DisruptionRepository
 
         var deleted = await _database.KeyDeleteAsync([listKey, setKey]);
 
-        return deleted > 0
-            ? Result.Success()
-            : Result.Failure("No disruptions found to delete.");
+        if(deleted <= 0)
+        {
+            var message = "No disruptions found to delete.";
+
+            _logger.LogError(message);
+            return Result.Failure(message);
+        }
+
+        return Result.Success();
     }
 
     public async Task<Result> DeleteDisruptionSeveritiesAsync()
     {
         var deleted = await _database.KeyDeleteAsync(_disruptionSeverityKey);
 
-        return deleted
-           ? Result.Success()
-           : Result.Failure("No disruption severties found to delete.");
+        if(!deleted)
+        {
+            var message = "No disruption severties found to delete.";
+
+            _logger.LogError(message);
+            return Result.Failure(message);
+        }
+
+        return Result.Success();
     }
 
     public async Task<Result> DeleteDisruptionEndsAsync()
     {
         var deleted = await _database.KeyDeleteAsync(_disruptionEndKey);
 
-        return deleted
-           ? Result.Success()
-           : Result.Failure("No disruption ends found to delete.");
+        if(!deleted)
+        {
+            var message = "No disruption ends found to delete.";
+
+            _logger.LogError(message);
+            return Result.Failure(message);
+        }
+
+        return Result.Success();
     }
 
     public async Task<Result> DeleteDisruptionDescriptionsAsync()
     {
         var deleted = await _database.KeyDeleteAsync(_descriptionKey);
 
-        return deleted
-           ? Result.Success()
-           : Result.Failure("No disruption descriptions found to delete.");
+        if(!deleted)
+        {
+            var message = "No disruption descriptions found to delete.";
+
+            _logger.LogError(message);
+            return Result.Failure(message);
+        }
+
+        return Result.Success();
     }
 
     public async Task<long> GetDisruptionCountAsync() =>

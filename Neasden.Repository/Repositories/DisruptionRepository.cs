@@ -2,15 +2,23 @@
 using Microsoft.EntityFrameworkCore;
 using Neasden.Repository.Database;
 using Neasden.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Neasden.Repository.Repositories;
 public class DisruptionRepository
 {
     private readonly NeasdenDbContext _neasdenDbContext;
+    private readonly ILogger<DisruptionRepository> _logger;
 
-    public DisruptionRepository(NeasdenDbContext neasdenDbContext)
+    public DisruptionRepository(
+        NeasdenDbContext neasdenDbContext,
+        ILogger<DisruptionRepository> logger)
     {
-        _neasdenDbContext = neasdenDbContext;
+        _neasdenDbContext = neasdenDbContext ?? 
+            throw new ArgumentNullException(nameof(neasdenDbContext));
+
+        _logger = logger ?? 
+            throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<Result> AddDisruptionsAsync(IEnumerable<Disruption> disruptions)
@@ -36,8 +44,12 @@ public class DisruptionRepository
 
             return Result.Success();
         }
-        catch (Exception ex) {
-            return Result.Failure("Could not save disruptions to database.");
+        catch (Exception ex) 
+        {
+            var message = "Could not save disruptions to database.";
+
+            _logger.LogError(ex, message);
+            return Result.Failure(message);
         }
     }
 
@@ -46,8 +58,12 @@ public class DisruptionRepository
         var result = await _neasdenDbContext.Disruptions
             .SingleOrDefaultAsync(x => x.Id == id);
 
-        if(result == null) {
-            return Result.Failure<Disruption>($"Could not find disruption {id} on the database.");
+        if(result == null) 
+        {
+            var message = $"Disruption {id} does not exist on the database.";
+
+            _logger.LogError(message);
+            return Result.Failure<Disruption>(message);
         }
 
         return Result.Success(result);
@@ -62,8 +78,12 @@ public class DisruptionRepository
               .Where(d => ids.Contains(d.Id))
               .ToListAsync();
 
-        if (disruptionsToUpdate.Count == 0) {
-            return Result.Failure("No matching disruptions found in the database.");
+        if (disruptionsToUpdate.Count == 0) 
+        {
+            var message = "No matching disruptions found in the database for disruption ends.";
+
+            _logger.LogError(message);
+            return Result.Failure(message);
         }
 
         foreach (var disruption in disruptionsToUpdate) {
@@ -75,8 +95,12 @@ public class DisruptionRepository
             await _neasdenDbContext.SaveChangesAsync();
             return Result.Success();
         }
-        catch (Exception ex) {
-            return Result.Failure("Database could not save disruption end times.");
+        catch (Exception ex) 
+        {
+            var message = "Database could not save disruption end times.";
+
+            _logger.LogError(ex, message);
+            return Result.Failure(message);
         }
     }
 
@@ -89,8 +113,12 @@ public class DisruptionRepository
 
             return Result.Success();
         }
-        catch (Exception ex) {
-            return Result.Failure("Could not save disruption severitys to database.");
+        catch (Exception ex) 
+        {
+            var message = "Could not save disruption severities to database.";
+
+            _logger.LogError(ex, message);
+            return Result.Failure(message);
         }
     }
 
@@ -99,8 +127,12 @@ public class DisruptionRepository
         var disruptionSeverity = await _neasdenDbContext.Severities
            .SingleOrDefaultAsync(x => x.Id == id);
 
-        if (disruptionSeverity == null) {
-            return Result.Failure<DisruptionSeverity>($"Disruption severity {id} could not be found on the database.");
+        if (disruptionSeverity == null) 
+        {
+            var message = $"Disruption severity {id} does not exist on this database.";
+
+            _logger.LogError(message);
+            return Result.Failure<DisruptionSeverity>(message);
         }
 
         return Result.Success(disruptionSeverity);
@@ -117,7 +149,10 @@ public class DisruptionRepository
         }
         catch (Exception ex)
         {
-            return Result.Failure("Could not save descriptions to database.");
+            var message = "Could not save disruption descriptions to database.";
+
+            _logger.LogError(ex, message);
+            return Result.Failure(message);
         }
     }
 
@@ -128,7 +163,10 @@ public class DisruptionRepository
 
         if (result is null)
         {
-            return Result.Failure<DisruptionDescription>($"Could not find description {id} on the database.");
+            var message = $"Disruption description {id} does not exist on this database.";
+
+            _logger.LogError(message);
+            return Result.Failure<DisruptionDescription>(message);
         }
 
         return Result.Success(result);

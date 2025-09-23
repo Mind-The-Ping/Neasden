@@ -76,8 +76,5 @@ public class Worker : BackgroundService
         if (result.IsSuccess) {
             _logger.LogInformation("{name} drained successfully.", name);
         }
-        else {
-            _logger.LogError("Failed to drain {name}: {error}", name, result.Error);
-        }
     }
 }
