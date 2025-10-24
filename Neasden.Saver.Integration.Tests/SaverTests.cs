@@ -167,7 +167,8 @@ public class SaverTests
             SeverityId = Guid.NewGuid(),
             DescriptionId = Guid.NewGuid(),
             NotificationSentBy = NotificationSentBy.Sms,
-            SentTime = DateTime.UtcNow
+            SentTime = DateTime.UtcNow,
+            AffectedStationIds = [Guid.NewGuid(), Guid.NewGuid()]
         };
 
         _ = await _redisNotification.SaveNotificationAsync(notification);

@@ -95,6 +95,10 @@ namespace Neasden.Repository.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.PrimitiveCollection<Guid[]>("AffectedStationIds")
+                        .IsRequired()
+                        .HasColumnType("uuid[]");
+
                     b.Property<Guid>("DescriptionId")
                         .HasColumnType("uuid");
 

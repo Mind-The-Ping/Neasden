@@ -103,6 +103,7 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
             DescriptionId = Guid.NewGuid(),
             NotificationSentBy = NotificationSentBy.Push,
             SentTime = DateTime.UtcNow,
+            AffectedStationIds = [Guid.NewGuid(), Guid.NewGuid()]
         };
 
         await _dbContext.Notifications.AddAsync(notification);
@@ -150,6 +151,7 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
             DescriptionId = Guid.NewGuid(),
             NotificationSentBy = NotificationSentBy.Push,
             SentTime = DateTime.UtcNow,
+            AffectedStationIds = [Guid.NewGuid(), Guid.NewGuid()]
         };
 
         await _dbContext.Notifications.AddAsync(notification);
@@ -198,6 +200,7 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
                 DescriptionId = Guid.NewGuid(),
                 NotificationSentBy = NotificationSentBy.Push,
                 SentTime = DateTime.UtcNow,
+                AffectedStationIds = [Guid.NewGuid(), Guid.NewGuid()]
             };
 
             severities.Add(severity);
@@ -259,6 +262,7 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
             DescriptionId = Guid.NewGuid(),
             NotificationSentBy = NotificationSentBy.Push,
             SentTime = DateTime.UtcNow,
+            AffectedStationIds = [Guid.NewGuid(), Guid.NewGuid()]
         };
 
         await _dbContext.Notifications.AddAsync(notification);

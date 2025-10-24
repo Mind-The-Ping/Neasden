@@ -40,7 +40,8 @@ public class NotificationRepositoryTests : IAsyncLifetime
             SeverityId = Guid.NewGuid(),
             DescriptionId = Guid.NewGuid(),
             NotificationSentBy = NotificationSentBy.Sms,
-            SentTime = DateTime.UtcNow
+            SentTime = DateTime.UtcNow,
+            AffectedStationIds = [Guid.NewGuid(), Guid.NewGuid()]
         };
 
         var repository = CreateRepository();
@@ -68,7 +69,8 @@ public class NotificationRepositoryTests : IAsyncLifetime
             SeverityId = Guid.NewGuid(),
             DescriptionId= Guid.NewGuid(),
             NotificationSentBy = NotificationSentBy.Sms,
-            SentTime = DateTime.UtcNow
+            SentTime = DateTime.UtcNow,
+            AffectedStationIds = [Guid.NewGuid(), Guid.NewGuid()]
         };
 
         var notification2 = new Notification()
@@ -82,7 +84,8 @@ public class NotificationRepositoryTests : IAsyncLifetime
             SeverityId = Guid.NewGuid(),
             DescriptionId = Guid.NewGuid(),
             NotificationSentBy = NotificationSentBy.Sms,
-            SentTime = DateTime.UtcNow
+            SentTime = DateTime.UtcNow,
+            AffectedStationIds = [Guid.NewGuid(), Guid.NewGuid()]
         };
 
         var repository = CreateRepository();
@@ -113,7 +116,8 @@ public class NotificationRepositoryTests : IAsyncLifetime
             SeverityId = Guid.NewGuid(),
             DescriptionId = Guid.NewGuid(),
             NotificationSentBy = NotificationSentBy.Sms,
-            SentTime = DateTime.UtcNow
+            SentTime = DateTime.UtcNow,
+            AffectedStationIds = [Guid.NewGuid(), Guid.NewGuid()]
         };
 
         var repository = CreateRepository();

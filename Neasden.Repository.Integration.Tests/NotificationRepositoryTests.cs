@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Neasden.Repository.Database;
 using Neasden.Models;
 using Neasden.Repository.Repositories;
-using Castle.Core.Logging;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
@@ -45,7 +44,8 @@ public class NotificationRepositoryTests
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
             NotificationSentBy = NotificationSentBy.Push,
-            SentTime = DateTime.UtcNow
+            SentTime = DateTime.UtcNow,
+            AffectedStationIds = [Guid.NewGuid(), Guid.NewGuid()]
         };
 
         var result = await _notificationRepository.AddNotificationsAsync([notification]);
@@ -72,7 +72,8 @@ public class NotificationRepositoryTests
            StartStationId = Guid.NewGuid(),
            EndStationId = Guid.NewGuid(),
            NotificationSentBy = NotificationSentBy.Sms,
-           SentTime = DateTime.UtcNow
+           SentTime = DateTime.UtcNow,
+           AffectedStationIds = [Guid.NewGuid(), Guid.NewGuid()]
         };
 
         await _neasdenDbContext.AddAsync(notification);
@@ -109,7 +110,8 @@ public class NotificationRepositoryTests
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
             NotificationSentBy = NotificationSentBy.Sms,
-            SentTime = DateTime.UtcNow
+            SentTime = DateTime.UtcNow,
+            AffectedStationIds = [Guid.NewGuid(), Guid.NewGuid()]
         };
 
         var notification2 = new Notification
@@ -123,7 +125,8 @@ public class NotificationRepositoryTests
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
             NotificationSentBy = NotificationSentBy.Sms,
-            SentTime = DateTime.UtcNow
+            SentTime = DateTime.UtcNow,
+            AffectedStationIds = [Guid.NewGuid(), Guid.NewGuid()]
         };
 
         await _neasdenDbContext.Notifications.AddAsync(notification1);
