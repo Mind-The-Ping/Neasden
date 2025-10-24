@@ -19,4 +19,5 @@ public class Notification
     public Guid DescriptionId { get; set; }
     public NotificationSentBy NotificationSentBy { get; set; }
     public DateTime SentTime { get; set; }
+    public required IList<Guid> AffectedStationIds { get; set; }
 }
