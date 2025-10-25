@@ -1,6 +1,7 @@
 using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Neasden.API.Options;
 using Neasden.Repository.Database;
 using Neasden.Repository.Repositories;
 using OpenTelemetry.Metrics;
@@ -56,6 +57,12 @@ else
 {
     builder.Logging.AddConsole();
 }
+
+builder.Services.Configure<JwtOptions>(
+   builder.Configuration.GetSection("Jwt"));
+
+builder.Services.Configure<WaterlooOptions>(
+    builder.Configuration.GetSection("Waterloo"));
 
 builder.Services.AddDbContext<NeasdenDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
