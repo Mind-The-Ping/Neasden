@@ -25,8 +25,8 @@ public class TokenProvider
         {
             Expires = DateTime.UtcNow.AddMinutes(_jwtOptions.ExpirationInMinutes),
             SigningCredentials = credentials,
-            Issuer = _jwtOptions.Issuer,
-            Audience = _jwtOptions.Audience,
+            Issuer = _jwtOptions.TokenProviderIssuer,
+            Audience = _jwtOptions.TokenProviderAudience,
         };
 
         var handler = new JsonWebTokenHandler();

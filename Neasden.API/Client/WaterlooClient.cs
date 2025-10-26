@@ -25,8 +25,8 @@ public class WaterlooClient : IWaterlooClient
             throw new ArgumentNullException(nameof(waterlooOptions));
     }
 
-    public async Task<Result<Line>> GetLineById(
-        Guid id, 
+    public async Task<Result<IEnumerable<Line>>> GetLinesById(
+        IEnumerable<Guid> ids, 
         CancellationToken cancellationToken = default)
     {
         try
@@ -34,31 +34,34 @@ public class WaterlooClient : IWaterlooClient
             _httpClient.DefaultRequestHeaders.Authorization =
               new AuthenticationHeaderValue("Bearer", _tokenProvider.CreateToken());
 
-            var url = $"{_waterlooOptions.BaseUrl}/{_waterlooOptions.GetLineById}{id}";
+            var url = $"{_waterlooOptions.BaseUrl}/{_waterlooOptions.GetLinesById}";
 
-            var response = await _httpClient.GetAsync(url, cancellationToken);
+            var response = await _httpClient.PostAsJsonAsync(url, ids, cancellationToken);
             if(response.IsSuccessStatusCode)
             {
-                var line = await response.Content.ReadFromJsonAsync<Line>();
-                return line is null
-                    ? Result.Failure<Line>(
-                        $"Null response for line id: {id}")
-                    : Result.Success(line);
+                var lines = await response.Content.ReadFromJsonAsync<IEnumerable<Line>>
+                    (cancellationToken: cancellationToken);
+
+                if(lines is null || !lines.Any()) {
+                    return Result.Failure<IEnumerable<Line>>($"Response from get lines is empty for ids: {ids}");
+                }
+
+                return Result.Success(lines);
             }
 
             var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            return Result.Failure<Line>(
-                $"Line {id} response failed {response.StatusCode}: {errorContent}");
+            return Result.Failure<IEnumerable<Line>>(
+                $"Lines {ids} response failed {response.StatusCode}: {errorContent}");
         }
         catch (Exception ex)
         {
             return Result
-                .Failure<Line>($"Exception getting line with id: {id} error: {ex.Message}");
+                .Failure<IEnumerable<Line>>($"Exception getting lines with ids: {ids} error: {ex.Message}");
         }
     }
 
-    public async Task<Result<Station>> GetStationById(
-        Guid id, 
+    public async Task<Result<IEnumerable<Station>>> GetStationsById(
+        IEnumerable<Guid> ids, 
         CancellationToken cancellationToken = default)
     {
         try
@@ -66,26 +69,30 @@ public class WaterlooClient : IWaterlooClient
             _httpClient.DefaultRequestHeaders.Authorization =
              new AuthenticationHeaderValue("Bearer", _tokenProvider.CreateToken());
 
-            var url = $"{_waterlooOptions.BaseUrl}/{_waterlooOptions.GetStationById}{id}";
+            var url = $"{_waterlooOptions.BaseUrl}/{_waterlooOptions.GetStationsById}";
 
-            var response = await _httpClient.GetAsync(url, cancellationToken);
+            var response = await _httpClient.PostAsJsonAsync(url, ids, cancellationToken);
             if (response.IsSuccessStatusCode)
             {
-                var line = await response.Content.ReadFromJsonAsync<Station>();
-                return line is null
-                    ? Result.Failure<Station>(
-                        $"Null response for station id: {id}")
-                    : Result.Success(line);
+                var stations = await response.Content.ReadFromJsonAsync<IEnumerable<Station>>
+                    (cancellationToken: cancellationToken);
+
+                if (stations is null || !stations.Any()) {
+                    return Result.Failure<IEnumerable<Station>>($"Response from get stations is empty for ids: {ids}");
+                }
+
+                return Result.Success(stations);
             }
 
             var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            return Result.Failure<Station>(
-                $"Station {id} response failed {response.StatusCode}: {errorContent}");
+
+            return Result.Failure<IEnumerable<Station>>(
+                $"Stations {ids} response failed {response.StatusCode}: {errorContent}");
         }
         catch (Exception ex)
         {
             return Result
-               .Failure<Station>($"Exception getting station with id: {id} error: {ex.Message}");
+               .Failure<IEnumerable<Station>>($"Exception getting stations with ids: {ids} error: {ex.Message}");
         }
     }
 }

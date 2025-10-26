@@ -1,6 +1,7 @@
 using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Neasden.API;
 using Neasden.API.Options;
 using Neasden.Repository.Database;
 using Neasden.Repository.Repositories;
@@ -84,8 +85,10 @@ builder.Services.AddAuthentication("Bearer")
         };
     });
 
+builder.Services.AddScoped<TokenProvider>();
 builder.Services.AddScoped<DisruptionRepository>();
 builder.Services.AddScoped<NotificationRepository>();
+builder.Services.AddScoped<NotificationRetriever>();
 
 builder.Services.AddControllers();
 

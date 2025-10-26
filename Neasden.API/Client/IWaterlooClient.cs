@@ -5,11 +5,11 @@ namespace Neasden.API.Client;
 
 public interface IWaterlooClient
 {
-    public Task<Result<Line>> GetLineById(
-        Guid id, 
+    public Task<Result<IEnumerable<Line>>> GetLinesById(
+        IEnumerable<Guid> ids, 
         CancellationToken cancellationToken = default);
 
-    public Task<Result<Station>> GetStationById(
-        Guid id, 
+    public Task<Result<IEnumerable<Station>>> GetStationsById(
+        IEnumerable<Guid> ids, 
         CancellationToken cancellationToken = default);
 }

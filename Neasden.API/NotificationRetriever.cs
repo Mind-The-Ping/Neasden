@@ -1,7 +1,8 @@
 ﻿using CSharpFunctionalExtensions;
 using Neasden.API.Client;
 using Neasden.API.Dto;
-using Neasden.API.Model;
+using Neasden.Models;
+using Neasden.Repository;
 using Neasden.Repository.Repositories;
 
 namespace Neasden.API;
@@ -32,127 +33,142 @@ public class NotificationRetriever
             throw new ArgumentNullException(nameof(notificationRepository));
     }
 
-    public async Task<Result<NotificationReturn>> GetNotificationAsync(Guid id)
+    public async Task<Result<NotificationReturn>> GetNotificiationAsnyc(
+        Guid id, 
+        CancellationToken cancellationToken = default)
     {
-        var notification = await _notificationRepository
-           .GetNotificationByIdAsync(id);
+        var notification = await _notificationRepository.GetNotificationByIdAsync(id);
 
-        if(notification.IsFailure) 
+        if(notification.IsFailure)
         {
             _logger.LogError(notification.Error);
             return Result.Failure<NotificationReturn>(notification.Error);
         }
 
-        var notificationVal = notification.Value;
-
-        var severity = await _disruptionRepository
-            .GetDisruptionSeverityByIdAsync(notificationVal.SeverityId);
-
-        if (severity.IsFailure)
-        {
-            _logger.LogError(severity.Error);
-            return Result.Failure<NotificationReturn>(severity.Error);
-        }
-
-        var disruption = await _disruptionRepository
-            .GetDisruptionByIdAsync(notificationVal.DisruptionId);
-
-        var disruptionDescription = await _disruptionRepository
-            .GetDisruptionDescriptionByIdAsync(notificationVal.DescriptionId);
-
-        if (disruptionDescription.IsFailure)
-        {
-            _logger.LogError(disruptionDescription.Error);
-            return Result.Failure<NotificationReturn>(disruptionDescription.Error);
-        }
-
-        var line = await _waterlooClient.GetLineById(notificationVal.LineId);
-
-        if (line.IsFailure)
-        {
-            _logger.LogError(line.Error);
-            return Result.Failure<NotificationReturn>(line.Error);
-        }
-
-        var startStation = await _waterlooClient.GetStationById(notificationVal.StartStationId);
-
-        if (startStation.IsFailure)
-        {
-            _logger.LogError(startStation.Error);
-            return Result.Failure<NotificationReturn>(startStation.Error);
-        }
-
-        var endStation = await _waterlooClient.GetStationById(notificationVal.EndStationId);
-
-        if (endStation.IsFailure)
-        {
-            _logger.LogError(endStation.Error);
-            return Result.Failure<NotificationReturn>(endStation.Error);
-        }
-
-        var affectedStations = 
-            new List<Station>(notificationVal.AffectedStationIds.Count);
-
-        foreach (var stationId in notificationVal.AffectedStationIds)
-        {
-            var station = await _waterlooClient.GetStationById(stationId);
-
-            if (station.IsFailure)
-            {
-                _logger.LogError(station.Error);
-                return Result.Failure<NotificationReturn>(station.Error);
-            }
-
-            affectedStations.Add(station.Value);
-        }
-
-        return Result.Success(new NotificationReturn(
-            line.Value,
-            startStation.Value,
-            endStation.Value,
-            affectedStations,
-            severity.Value.Severity,
-            notificationVal.SentTime,
-            disruption.Value.StartTime,
-            disruption.Value.EndTime,
-            disruptionDescription.Value.Description));
+        return await BuildNotificationReturnAsync(notification.Value, cancellationToken);
     }
 
-    public async Task<Result<IEnumerable<NotificationReturn>>> GetNotificationsByUserIdAsync(Guid userId)
+    public async Task<Result<PaginatedResult<NotificationReturn>>> GetNotificationsByUserIdAsync(
+        Guid userId,
+        int page = 1,
+        int pageSize = 20,
+        CancellationToken cancellationToken = default)
     {
-        var notifications = await _notificationRepository
-            .GetNotificationsByUserId(userId);
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 20;
 
-        if (notifications.IsFailure)
+        var pagedNotificationsResult = await _notificationRepository.GetNotificationIdsByUserId(userId, page, pageSize);
+
+        if (pagedNotificationsResult.IsFailure)
         {
-            _logger.LogError(notifications.Error);
-            return Result.Failure<IEnumerable<NotificationReturn>>(notifications.Error);
+            _logger.LogError(pagedNotificationsResult.Error);
+            return Result.Failure<PaginatedResult<NotificationReturn>>(pagedNotificationsResult.Error);
         }
 
-        var results = new List<NotificationReturn>();
-        var notificationsVal = notifications.Value;
+        var notifications = pagedNotificationsResult.Value.Items;
+        if (!notifications.Any()) {
+            return Result.Success(new PaginatedResult<NotificationReturn>(
+                Enumerable.Empty<NotificationReturn>(), 
+                page, 
+                pageSize, 
+                0));
+        }
 
-        foreach (var notification in notificationsVal)
+        var buildTasks = notifications
+            .Select(n => BuildNotificationReturnAsync(n, cancellationToken))
+            .ToList();
+
+        var builtResults = await Task.WhenAll(buildTasks);
+
+        var successfulNotifications = new List<NotificationReturn>();
+
+        foreach(var result in builtResults)
         {
-            var severity = await _disruptionRepository
-                .GetDisruptionSeverityByIdAsync(notification.SeverityId);
+            if(result.IsSuccess) {
+                successfulNotifications.Add(result.Value);
+            }
+            else {
+                _logger.LogWarning("Failed to build notification: {Error}", result.Error);
+            }
+        }
 
-            if (severity.IsFailure)
-            {
-                _logger.LogError(notifications.Error);
-                return Result.Failure<IEnumerable<NotificationReturn>>(notifications.Error);
+        var paginatedResult = new PaginatedResult<NotificationReturn>(
+            successfulNotifications,
+            page,
+            pageSize,
+            pagedNotificationsResult.Value.TotalCount);
+
+        return Result.Success(paginatedResult);
+    }
+
+    private async Task<Result<NotificationReturn>> BuildNotificationReturnAsync(
+        Notification notification, 
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var severityTask = _disruptionRepository.GetDisruptionSeverityByIdAsync(notification.SeverityId);
+            var disruptionTask = _disruptionRepository.GetDisruptionByIdAsync(notification.DisruptionId);
+            var descriptionTask = _disruptionRepository.GetDisruptionDescriptionByIdAsync(notification.DescriptionId);
+
+            var lineTask = _waterlooClient.GetLinesById([notification.LineId], cancellationToken);
+            var startStationTask = _waterlooClient.GetStationsById([notification.StartStationId], cancellationToken);
+            var endStationTask = _waterlooClient.GetStationsById([notification.EndStationId], cancellationToken);
+            var affectedStationsTask = _waterlooClient.GetStationsById(notification.AffectedStationIds, cancellationToken);
+
+            await Task.WhenAll(severityTask, disruptionTask, descriptionTask,
+                               lineTask, startStationTask, endStationTask, affectedStationsTask);
+
+            if (severityTask.Result.IsFailure) {
+                return Result.Failure<NotificationReturn>(severityTask.Result.Error);
             }
 
-            results.Add(new NotificationReturn(
-            notification.LineId,
-            notification.DisruptionId,
-            notification.StartStationId,
-            notification.EndStationId,
-            severity.Value.Severity,
-            notification.NotificationSentBy,
-            notification.SentTime));
-        }
 
-        return Result.Success<IEnumerable<NotificationReturn>>(results);
+            if (disruptionTask.Result.IsFailure) {
+                return Result.Failure<NotificationReturn>(disruptionTask.Result.Error);
+            }
+
+            if (descriptionTask.Result.IsFailure) {
+                return Result.Failure<NotificationReturn>(descriptionTask.Result.Error);
+            }
+
+            if (lineTask.Result.IsFailure) {
+                return Result.Failure<NotificationReturn>(lineTask.Result.Error);
+            }
+
+            if (startStationTask.Result.IsFailure || endStationTask.Result.IsFailure) {
+                return Result.Failure<NotificationReturn>("Failed to fetch start or end station.");
+            }
+
+            if (affectedStationsTask.Result.IsFailure) {
+                return Result.Failure<NotificationReturn>(affectedStationsTask.Result.Error);
+            }
+
+            var line = lineTask.Result.Value.First();
+            var startStation = startStationTask.Result.Value.First();
+            var endStation = endStationTask.Result.Value.First();
+            var affectedStations = affectedStationsTask.Result.Value.ToList();
+
+
+            var notificationReturn = new NotificationReturn(
+               line,
+               startStation,
+               endStation,
+               affectedStations,
+               severityTask.Result.Value.Severity,
+               notification.SentTime,
+               disruptionTask.Result.Value.StartTime,
+               disruptionTask.Result.Value.EndTime,
+               descriptionTask.Result.Value.Description
+           );
+
+            return Result.Success(notificationReturn);
+
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error building NotificationReturn for {notification.Id}");
+            return Result.Failure<NotificationReturn>($"Error building NotificationReturn: {ex.Message}");
+        }
     }
 }
