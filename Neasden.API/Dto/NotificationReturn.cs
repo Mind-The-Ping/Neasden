@@ -5,8 +5,10 @@ namespace Neasden.API.Dto;
 
 public record NotificationReturn(
     Line Line, 
-    Station StartStation,
-    Station EndStation,
+    Station JourneyStartStation,
+    Station JourneyEndStation,
+    Station DisruptionStartStation,
+    Station DisruptionEndStation,
     IEnumerable<Station> AffectedStations,
     Severity Severity,
     DateTime SentDate,

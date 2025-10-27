@@ -112,12 +112,12 @@ public class NotificationRetriever
             var descriptionTask = _disruptionRepository.GetDisruptionDescriptionByIdAsync(notification.DescriptionId);
 
             var lineTask = _waterlooClient.GetLinesById([notification.LineId], cancellationToken);
-            var startStationTask = _waterlooClient.GetStationsById([notification.StartStationId], cancellationToken);
-            var endStationTask = _waterlooClient.GetStationsById([notification.EndStationId], cancellationToken);
+            var journeyStartStationTask = _waterlooClient.GetStationsById([notification.StartStationId], cancellationToken);
+            var journeyEndStationTask = _waterlooClient.GetStationsById([notification.EndStationId], cancellationToken);
             var affectedStationsTask = _waterlooClient.GetStationsById(notification.AffectedStationIds, cancellationToken);
 
             await Task.WhenAll(severityTask, disruptionTask, descriptionTask,
-                               lineTask, startStationTask, endStationTask, affectedStationsTask);
+                               lineTask, journeyStartStationTask, journeyEndStationTask, affectedStationsTask);
 
             if (severityTask.Result.IsFailure) {
                 return Result.Failure<NotificationReturn>(severityTask.Result.Error);
@@ -136,24 +136,40 @@ public class NotificationRetriever
                 return Result.Failure<NotificationReturn>(lineTask.Result.Error);
             }
 
-            if (startStationTask.Result.IsFailure || endStationTask.Result.IsFailure) {
-                return Result.Failure<NotificationReturn>("Failed to fetch start or end station.");
+            if (journeyStartStationTask.Result.IsFailure || journeyStartStationTask.Result.IsFailure) {
+                return Result.Failure<NotificationReturn>("Failed to fetch start or end station for the journey.");
             }
 
             if (affectedStationsTask.Result.IsFailure) {
                 return Result.Failure<NotificationReturn>(affectedStationsTask.Result.Error);
             }
 
+            
+            var disruption = disruptionTask.Result.Value;
+
+            var disruptionStartStationTask = _waterlooClient.GetStationsById([disruption.StartStationId], cancellationToken);
+            var disruptionEndStationTask = _waterlooClient.GetStationsById([disruption.EndStationId], cancellationToken);
+
+            await Task.WhenAll(disruptionStartStationTask, disruptionEndStationTask);
+
+            if (disruptionStartStationTask.Result.IsFailure || disruptionEndStationTask.Result.IsFailure) {
+                return Result.Failure<NotificationReturn>("Failed to fetch start or end station for disruption.");
+            }
+
             var line = lineTask.Result.Value.First();
-            var startStation = startStationTask.Result.Value.First();
-            var endStation = endStationTask.Result.Value.First();
+            var journeyStartStation = journeyStartStationTask.Result.Value.First();
+            var journeyEndStation = journeyEndStationTask.Result.Value.First();
+            var disruptionStartStation = disruptionStartStationTask.Result.Value.First();
+            var disruptionEndStation = disruptionEndStationTask.Result.Value.First();
             var affectedStations = affectedStationsTask.Result.Value.ToList();
 
 
             var notificationReturn = new NotificationReturn(
                line,
-               startStation,
-               endStation,
+               journeyStartStation,
+               journeyEndStation,
+               disruptionStartStation,
+               disruptionEndStation,
                affectedStations,
                severityTask.Result.Value.Severity,
                notification.SentTime,

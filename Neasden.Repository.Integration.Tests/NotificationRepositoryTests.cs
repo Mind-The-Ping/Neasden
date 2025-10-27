@@ -97,57 +97,91 @@ public class NotificationRepositoryTests
     }
 
     [Fact]
-    public async Task NotificationRepository_GetNotificationByUserIdAsync_Successful()
+    public async Task NotificationRepository_GetNotificationByUserIdAsync_Defaults_Successful()
     {
-        var notification1 = new Notification
-        {
-            Id = Guid.NewGuid(),
-            UserId = Guid.NewGuid(),
-            LineId = Guid.NewGuid(),
-            DisruptionId = Guid.NewGuid(),
-            SeverityId = Guid.NewGuid(),
-            DescriptionId = Guid.NewGuid(),
-            StartStationId = Guid.NewGuid(),
-            EndStationId = Guid.NewGuid(),
-            NotificationSentBy = NotificationSentBy.Sms,
-            SentTime = DateTime.UtcNow,
-            AffectedStationIds = [Guid.NewGuid(), Guid.NewGuid()]
-        };
+        var userId = Guid.NewGuid();
+        var notifications = GenerateNotifications(userId, 20);
 
-        var notification2 = new Notification
-        {
-            Id = Guid.NewGuid(),
-            UserId = Guid.NewGuid(),
-            LineId = Guid.NewGuid(),
-            DisruptionId = Guid.NewGuid(),
-            SeverityId = Guid.NewGuid(),
-            DescriptionId = Guid.NewGuid(),
-            StartStationId = Guid.NewGuid(),
-            EndStationId = Guid.NewGuid(),
-            NotificationSentBy = NotificationSentBy.Sms,
-            SentTime = DateTime.UtcNow,
-            AffectedStationIds = [Guid.NewGuid(), Guid.NewGuid()]
-        };
-
-        await _neasdenDbContext.Notifications.AddAsync(notification1);
-        await _neasdenDbContext.Notifications.AddAsync(notification2);
+        await _neasdenDbContext.Notifications.AddRangeAsync(notifications);
         await _neasdenDbContext.SaveChangesAsync();
 
-        var result = await _notificationRepository.GetNotificationsByUserId(notification1.UserId);
-        result.IsSuccess.Should().BeTrue();
+        var result = await _notificationRepository.GetNotificationIdsByUserId(userId);
 
-        result.Value.Count().Should().Be(1);
-        result.Value.First().Should().BeEquivalentTo(notification1);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Page.Should().Be(1);
+        result.Value.PageSize.Should().Be(20);
+        result.Value.TotalPages.Should().Be(1);
+        result.Value.HasNextPage.Should().BeFalse();
+        result.Value.HasPreviousPage.Should().BeFalse();
+        result.Value.TotalCount.Should().Be(20);
+        result.Value.Items.Should().BeEquivalentTo(notifications);
     }
 
     [Fact]
-    public async Task NotificationRepository_GetNotificationByUserIdAsync_No_Matching_User_Fails()
+    public async Task NotificationRepository_GetNotificationByUserIdAsync_Middle_Page()
     {
         var userId = Guid.NewGuid();
+        var notifications = GenerateNotifications(userId, 100);
 
-        var result = await _notificationRepository.GetNotificationsByUserId(userId);
+        await _neasdenDbContext.Notifications.AddRangeAsync(notifications);
+        await _neasdenDbContext.SaveChangesAsync();
+
+        var result = await _notificationRepository.GetNotificationIdsByUserId(userId, 3, 25);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Page.Should().Be(3);
+        result.Value.PageSize.Should().Be(25);
+        result.Value.TotalPages.Should().Be(4);
+        result.Value.HasNextPage.Should().BeTrue();
+        result.Value.HasPreviousPage.Should().BeTrue();
+        result.Value.TotalCount.Should().Be(100);
+
+        var expected = notifications
+            .OrderByDescending(x => x.SentTime)
+            .Skip((result.Value.Page - 1) * result.Value.PageSize)
+            .Take(result.Value.PageSize)
+            .ToList();
+
+        result.Value.Items.Should().BeEquivalentTo(expected);
+    }
+
+    [Fact]
+    public async Task NotificationRepository_GetNotificationByUserIdAsync_No_Notifications_Fails()
+    {
+        var userId = Guid.NewGuid();
+        var notifications = GenerateNotifications(userId, 20);
+
+        var result = await _notificationRepository.GetNotificationIdsByUserId(userId, 3, 25);
+
         result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be($"Notification ids for user {userId} do not exist on the database.");
+    }
 
-        result.Error.Should().Be($"Notifications for user {userId} do not exist on the database.");
+    private List<Notification> GenerateNotifications(Guid userId, int number)
+    {
+        var notifications = new List<Notification>(number);
+        var random = new Random();
+
+        for (int i = 0; i < number; i++)
+        {
+            var notification = new Notification()
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                LineId = Guid.NewGuid(),
+                DisruptionId = Guid.NewGuid(),
+                StartStationId = Guid.NewGuid(),
+                EndStationId = Guid.NewGuid(),
+                SeverityId = Guid.NewGuid(),
+                DescriptionId = Guid.NewGuid(),
+                NotificationSentBy = (NotificationSentBy)random.Next(Enum.GetValues(typeof(NotificationSentBy)).Length),
+                SentTime = DateTime.UtcNow.AddMinutes(-random.Next(0, 60 * 24 * 30)),
+                AffectedStationIds = [.. Enumerable.Range(0, random.Next(1, 5)).Select(_ => Guid.NewGuid())]
+            };
+
+            notifications.Add(notification);
+        }
+
+        return notifications;
     }
 }

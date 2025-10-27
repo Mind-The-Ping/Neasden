@@ -55,23 +55,6 @@ public class NotificationRepository
         return Result.Success(result);
     }
 
-    public async Task<Result<IEnumerable<Notification>>> GetNotificationsByUserId(Guid userId)
-    {
-        var result = await _neasdenDbContext.Notifications
-            .Where(x => x.UserId == userId)
-            .ToListAsync();
-
-        if(result.Count == 0) 
-        {
-            var message = $"Notifications for user {userId} do not exist on the database.";
-
-            _logger.LogError(message);
-            return Result.Failure<IEnumerable<Notification>>(message);
-        }
-
-        return Result.Success<IEnumerable<Notification>>(result);
-    }
-
     public async Task<Result<PaginatedResult<Notification>>> GetNotificationIdsByUserId(
         Guid userId, 
         int page = 1, 
