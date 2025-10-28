@@ -1,12 +1,17 @@
-﻿using Neasden.Models;
+﻿using Neasden.API.Model;
+using Neasden.Models;
 
 namespace Neasden.API.Dto;
 
 public record NotificationReturn(
-    Guid LineId, 
-    Guid DisruptionId, 
-    Guid StartStationId,
-    Guid EndStationId,
+    Line Line, 
+    Station JourneyStartStation,
+    Station JourneyEndStation,
+    Station DisruptionStartStation,
+    Station DisruptionEndStation,
+    IEnumerable<Station> AffectedStations,
     Severity Severity,
-    NotificationSentBy NotificationSentBy,
-    DateTime SentTime);
+    DateTime SentDate,
+    DateTime DisruptionStart,
+    DateTime DisruptionEnd,
+    string DisruptionDescription);

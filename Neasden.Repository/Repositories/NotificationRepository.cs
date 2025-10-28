@@ -55,20 +55,35 @@ public class NotificationRepository
         return Result.Success(result);
     }
 
-    public async Task<Result<IEnumerable<Notification>>> GetNotificationsByUserId(Guid userId)
+    public async Task<Result<PaginatedResult<Notification>>> GetNotificationIdsByUserId(
+        Guid userId, 
+        int page = 1, 
+        int pageSize = 20)
     {
-        var result = await _neasdenDbContext.Notifications
-            .Where(x => x.UserId == userId)
-            .ToListAsync();
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 20;
 
-        if(result.Count == 0) 
+        var query = _neasdenDbContext.Notifications
+           .Where(x => x.UserId == userId)
+           .OrderByDescending(x => x.SentTime);
+
+        var totalCount = await query.CountAsync();
+
+        if (totalCount == 0)
         {
-            var message = $"Notifications for user {userId} do not exist on the database.";
-
-            _logger.LogError(message);
-            return Result.Failure<IEnumerable<Notification>>(message);
+            return Result.Success(new PaginatedResult<Notification>(
+               Enumerable.Empty<Notification>(),
+               page,
+               pageSize,
+               0));
         }
 
-        return Result.Success<IEnumerable<Notification>>(result);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var result = new PaginatedResult<Notification>(items, page, pageSize, totalCount);
+        return Result.Success(result);
     }
 }
