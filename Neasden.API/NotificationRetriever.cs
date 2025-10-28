@@ -107,29 +107,32 @@ public class NotificationRetriever
     {
         try
         {
-            var severityTask = _disruptionRepository.GetDisruptionSeverityByIdAsync(notification.SeverityId);
-            var disruptionTask = _disruptionRepository.GetDisruptionByIdAsync(notification.DisruptionId);
-            var descriptionTask = _disruptionRepository.GetDisruptionDescriptionByIdAsync(notification.DescriptionId);
-
             var lineTask = _waterlooClient.GetLinesById([notification.LineId], cancellationToken);
             var journeyStartStationTask = _waterlooClient.GetStationsById([notification.StartStationId], cancellationToken);
             var journeyEndStationTask = _waterlooClient.GetStationsById([notification.EndStationId], cancellationToken);
             var affectedStationsTask = _waterlooClient.GetStationsById(notification.AffectedStationIds, cancellationToken);
 
-            await Task.WhenAll(severityTask, disruptionTask, descriptionTask,
-                               lineTask, journeyStartStationTask, journeyEndStationTask, affectedStationsTask);
+            await Task.WhenAll(lineTask, journeyStartStationTask, journeyEndStationTask, affectedStationsTask);
 
-            if (severityTask.Result.IsFailure) {
-                return Result.Failure<NotificationReturn>(severityTask.Result.Error);
+            var severity = await _disruptionRepository.GetDisruptionSeverityByIdAsync(notification.SeverityId);
+
+            if (severity.IsFailure) {
+                return Result.Failure<NotificationReturn>(severity.Error);
             }
 
-
-            if (disruptionTask.Result.IsFailure) {
-                return Result.Failure<NotificationReturn>(disruptionTask.Result.Error);
+            var disruption = await _disruptionRepository.GetDisruptionByIdAsync(notification.DisruptionId);
+            if (disruption.IsFailure) {
+                return Result.Failure<NotificationReturn>(disruption.Error);
             }
 
-            if (descriptionTask.Result.IsFailure) {
-                return Result.Failure<NotificationReturn>(descriptionTask.Result.Error);
+            if (severity.IsFailure) {
+                return Result.Failure<NotificationReturn>(severity.Error);
+            }
+
+            var description = await _disruptionRepository.GetDisruptionDescriptionByIdAsync(notification.DescriptionId);
+
+            if (description.IsFailure) {
+                return Result.Failure<NotificationReturn>(description.Error);
             }
 
             if (lineTask.Result.IsFailure) {
@@ -144,11 +147,8 @@ public class NotificationRetriever
                 return Result.Failure<NotificationReturn>(affectedStationsTask.Result.Error);
             }
 
-            
-            var disruption = disruptionTask.Result.Value;
-
-            var disruptionStartStationTask = _waterlooClient.GetStationsById([disruption.StartStationId], cancellationToken);
-            var disruptionEndStationTask = _waterlooClient.GetStationsById([disruption.EndStationId], cancellationToken);
+            var disruptionStartStationTask = _waterlooClient.GetStationsById([disruption.Value.StartStationId], cancellationToken);
+            var disruptionEndStationTask = _waterlooClient.GetStationsById([disruption.Value.EndStationId], cancellationToken);
 
             await Task.WhenAll(disruptionStartStationTask, disruptionEndStationTask);
 
@@ -171,11 +171,11 @@ public class NotificationRetriever
                disruptionStartStation,
                disruptionEndStation,
                affectedStations,
-               severityTask.Result.Value.Severity,
+               severity.Value.Severity,
                notification.SentTime,
-               disruptionTask.Result.Value.StartTime,
-               disruptionTask.Result.Value.EndTime,
-               descriptionTask.Result.Value.Description
+               disruption.Value.StartTime,
+               disruption.Value.EndTime,
+               description.Value.Description
            );
 
             return Result.Success(notificationReturn);

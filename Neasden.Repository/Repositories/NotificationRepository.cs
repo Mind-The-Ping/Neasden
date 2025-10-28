@@ -71,10 +71,11 @@ public class NotificationRepository
 
         if (totalCount == 0)
         {
-            var message = $"Notification ids for user {userId} do not exist on the database.";
-
-            _logger.LogError(message);
-            return Result.Failure<PaginatedResult<Notification>>(message);
+            return Result.Success(new PaginatedResult<Notification>(
+               Enumerable.Empty<Notification>(),
+               page,
+               pageSize,
+               0));
         }
 
         var items = await query

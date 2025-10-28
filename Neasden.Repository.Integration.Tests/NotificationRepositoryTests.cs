@@ -146,15 +146,20 @@ public class NotificationRepositoryTests
     }
 
     [Fact]
-    public async Task NotificationRepository_GetNotificationByUserIdAsync_No_Notifications_Fails()
+    public async Task NotificationRepository_GetNotificationByUserIdAsync_No_Notifications_Successful()
     {
         var userId = Guid.NewGuid();
         var notifications = GenerateNotifications(userId, 20);
 
-        var result = await _notificationRepository.GetNotificationIdsByUserId(userId, 3, 25);
+        var result = await _notificationRepository.GetNotificationIdsByUserId(userId);
 
-        result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be($"Notification ids for user {userId} do not exist on the database.");
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Page.Should().Be(1);
+        result.Value.PageSize.Should().Be(20);
+        result.Value.TotalPages.Should().Be(0);
+        result.Value.HasNextPage.Should().BeFalse();
+        result.Value.HasPreviousPage.Should().BeFalse();
+        result.Value.TotalCount.Should().Be(0);
     }
 
     private List<Notification> GenerateNotifications(Guid userId, int number)
