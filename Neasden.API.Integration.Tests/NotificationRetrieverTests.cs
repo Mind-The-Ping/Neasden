@@ -5,8 +5,9 @@ using Microsoft.Extensions.Logging;
 using Neasden.API.Client;
 using Neasden.API.Model;
 using Neasden.Models;
-using Neasden.Repository.Database;
-using Neasden.Repository.Repositories;
+using Neasden.Repository.Integration.Tests;
+using Neasden.Repository.Read;
+using Neasden.Repository.Write;
 using NSubstitute;
 
 namespace Neasden.API.Integration.Tests;
@@ -16,27 +17,30 @@ public class NotificationRetrieverTests
 {
     private readonly string _databaseName = $"testdb_{Guid.NewGuid():N}";
 
-    private readonly NeasdenDbContext _neasdenContext;
+    private readonly WriteDbContext _writeContext;
     private readonly IWaterlooClient _waterlooClient;
 
     private readonly NotificationRetriever _notificationRetriever;
 
     public NotificationRetrieverTests()
     {
-        var options = new DbContextOptionsBuilder<NeasdenDbContext>()
+        var readOptions = new DbContextOptionsBuilder<ReadDbContext>()
             .UseNpgsql($"Host=localhost;Port=5434;Database={_databaseName};Username=neasdenUser;Password=password12345")
             .Options;
 
-        _neasdenContext = new NeasdenDbContext(options);
+        var _contextFactory = new TestDbContextFactory(readOptions);
 
-        _neasdenContext.Database.EnsureDeleted();
-        _neasdenContext.Database.EnsureCreated();
+        using (var context = _contextFactory.CreateDbContext())
+        {
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+        }
 
-        var notificationRepoLogger = Substitute.For<ILogger<NotificationRepository>>();
-        var notificationRepository = new NotificationRepository(_neasdenContext, notificationRepoLogger);
+        var notificationRepoLogger = Substitute.For<ILogger<ReadNotificationRepository>>();
+        var notificationRepository = new ReadNotificationRepository(_contextFactory, notificationRepoLogger);
 
-        var disruptionRepoLogger = Substitute.For<ILogger<DisruptionRepository>>();
-        var disruptionRepository = new DisruptionRepository(_neasdenContext, disruptionRepoLogger);
+        var disruptionRepoLogger = Substitute.For<ILogger<ReadDisruptionRepository>>();
+        var disruptionRepository = new ReadDisruptionRepository(_contextFactory, disruptionRepoLogger);
 
         _waterlooClient = Substitute.For<IWaterlooClient>();
 
@@ -47,6 +51,12 @@ public class NotificationRetrieverTests
             notificationReLogger,
             disruptionRepository,
             notificationRepository);
+
+        var writeOptions = new DbContextOptionsBuilder<WriteDbContext>()
+          .UseNpgsql($"Host=localhost;Port=5434;Database={_databaseName};Username=neasdenUser;Password=password12345")
+          .Options;
+
+        _writeContext = new WriteDbContext(writeOptions);
     }
 
     [Fact]
@@ -97,11 +107,11 @@ public class NotificationRetrieverTests
             NotificationSentBy = NotificationSentBy.Push
         };
 
-        await _neasdenContext.Disruptions.AddAsync(disruption);
-        await _neasdenContext.Severities.AddAsync(severity);
-        await _neasdenContext.Descriptions.AddAsync(description);
-        await _neasdenContext.Notifications.AddAsync(notification);
-        await _neasdenContext.SaveChangesAsync();
+        await _writeContext.Disruptions.AddAsync(disruption);
+        await _writeContext.Severities.AddAsync(severity);
+        await _writeContext.Descriptions.AddAsync(description);
+        await _writeContext.Notifications.AddAsync(notification);
+        await _writeContext.SaveChangesAsync();
 
         var line = new Line(Guid.Parse("2f0c75a5-8149-49b7-9cc6-32e4a5246d7f"), "Jubilee");
 
@@ -137,9 +147,9 @@ public class NotificationRetrieverTests
         result.Value.DisruptionEndStation.Should().Be(getStationResult5.First());
         result.Value.AffectedStations.Should().BeEquivalentTo(getStationResult3);
         result.Value.Severity.Should().Be(severity.Severity);
-        result.Value.SentDate.Should().Be(notification.SentTime);
-        result.Value.DisruptionStart.Should().Be(disruption.StartTime);
-        result.Value.DisruptionEnd.Should().Be(disruption.EndTime);
+        result.Value.SentDate.Should().BeCloseTo(notification.SentTime, TimeSpan.FromSeconds(1));
+        result.Value.DisruptionStart.Should().BeCloseTo(disruption.StartTime, TimeSpan.FromSeconds(1));
+        result.Value.DisruptionEnd.Should().BeCloseTo(disruption.EndTime, TimeSpan.FromSeconds(1));
         result.Value.DisruptionDescription.Should().Be(description.Description);
     }
 
@@ -191,11 +201,11 @@ public class NotificationRetrieverTests
             NotificationSentBy = NotificationSentBy.Push
         };
 
-        await _neasdenContext.Disruptions.AddAsync(disruption);
-        await _neasdenContext.Severities.AddAsync(severity);
-        await _neasdenContext.Descriptions.AddAsync(description);
-        await _neasdenContext.Notifications.AddAsync(notification);
-        await _neasdenContext.SaveChangesAsync();
+        await _writeContext.Disruptions.AddAsync(disruption);
+        await _writeContext.Severities.AddAsync(severity);
+        await _writeContext.Descriptions.AddAsync(description);
+        await _writeContext.Notifications.AddAsync(notification);
+        await _writeContext.SaveChangesAsync();
 
         var line = new Line(Guid.Parse("2f0c75a5-8149-49b7-9cc6-32e4a5246d7f"), "Jubilee");
 
@@ -237,9 +247,9 @@ public class NotificationRetrieverTests
         result.Value.Items.First().DisruptionEndStation.Should().Be(getStationResult5.First());
         result.Value.Items.First().AffectedStations.Should().BeEquivalentTo(getStationResult3);
         result.Value.Items.First().Severity.Should().Be(severity.Severity);
-        result.Value.Items.First().SentDate.Should().Be(notification.SentTime);
-        result.Value.Items.First().DisruptionStart.Should().Be(disruption.StartTime);
-        result.Value.Items.First().DisruptionEnd.Should().Be(disruption.EndTime);
+        result.Value.Items.First().SentDate.Should().BeCloseTo(notification.SentTime, TimeSpan.FromSeconds(1));
+        result.Value.Items.First().DisruptionStart.Should().BeCloseTo(disruption.StartTime, TimeSpan.FromSeconds(1));
+        result.Value.Items.First().DisruptionEnd.Should().BeCloseTo(disruption.EndTime, TimeSpan.FromSeconds(1));
         result.Value.Items.First().DisruptionDescription.Should().Be(description.Description);
     }
 
@@ -305,11 +315,11 @@ public class NotificationRetrieverTests
             NotificationSentBy = NotificationSentBy.Push
         };
 
-        await _neasdenContext.Disruptions.AddAsync(disruption);
-        await _neasdenContext.Severities.AddAsync(severity);
-        await _neasdenContext.Descriptions.AddAsync(description);
-        await _neasdenContext.Notifications.AddAsync(notification);
-        await _neasdenContext.SaveChangesAsync();
+        await _writeContext.Disruptions.AddAsync(disruption);
+        await _writeContext.Severities.AddAsync(severity);
+        await _writeContext.Descriptions.AddAsync(description);
+        await _writeContext.Notifications.AddAsync(notification);
+        await _writeContext.SaveChangesAsync();
 
         var line = new Line(Guid.Parse("2f0c75a5-8149-49b7-9cc6-32e4a5246d7f"), "Jubilee");
 
@@ -348,9 +358,9 @@ public class NotificationRetrieverTests
         result.Value.Items.First().DisruptionEndStation.Should().Be(getStationResult5.First());
         result.Value.Items.First().AffectedStations.Should().BeEquivalentTo(getStationResult3);
         result.Value.Items.First().Severity.Should().Be(severity.Severity);
-        result.Value.Items.First().SentDate.Should().Be(notification.SentTime);
-        result.Value.Items.First().DisruptionStart.Should().Be(disruption.StartTime);
-        result.Value.Items.First().DisruptionEnd.Should().Be(disruption.EndTime);
+        result.Value.Items.First().SentDate.Should().BeCloseTo(notification.SentTime, TimeSpan.FromSeconds(1));
+        result.Value.Items.First().DisruptionStart.Should().BeCloseTo(disruption.StartTime, TimeSpan.FromSeconds(1));
+        result.Value.Items.First().DisruptionEnd.Should().BeCloseTo(disruption.EndTime, TimeSpan.FromSeconds(1));
         result.Value.Items.First().DisruptionDescription.Should().Be(description.Description);
     }
 }

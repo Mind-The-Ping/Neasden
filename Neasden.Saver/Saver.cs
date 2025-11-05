@@ -1,8 +1,8 @@
 ﻿namespace Neasden.Saver;
 
 using CSharpFunctionalExtensions;
-using PostgresDisruptionRepository = Repository.Repositories.DisruptionRepository;
-using PostgresNotificationRepository = Repository.Repositories.NotificationRepository;
+using PostgresDisruptionRepository = Repository.Write.WriteDisruptionRepository;
+using PostgresNotificationRepository = Repository.Write.WriteNotificationRepository;
 using RedisDisruptionRepository = Repository.Redis.DisruptionRepository;
 using RedisNotificationRepository = Repository.Redis.NotificationRepository;
 

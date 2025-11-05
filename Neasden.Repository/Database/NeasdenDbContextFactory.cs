@@ -1,20 +1,21 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+using Neasden.Repository.Write;
 
 namespace Neasden.Repository.Database;
-public class NeasdenDbContextFactory : IDesignTimeDbContextFactory<NeasdenDbContext>
+public class NeasdenDbContextFactory : IDesignTimeDbContextFactory<WriteDbContext>
 {
-    public NeasdenDbContext CreateDbContext(string[] args)
+    public WriteDbContext CreateDbContext(string[] args)
     {
         var configuration = new ConfigurationBuilder()
           .SetBasePath(Directory.GetCurrentDirectory())
           .AddJsonFile("appsettings.json")
           .Build();
 
-        var optionsBuilder = new DbContextOptionsBuilder<NeasdenDbContext>();
+        var optionsBuilder = new DbContextOptionsBuilder<WriteDbContext>();
         optionsBuilder.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
 
-        return new NeasdenDbContext(optionsBuilder.Options);
+        return new WriteDbContext(optionsBuilder.Options);
     }
 }

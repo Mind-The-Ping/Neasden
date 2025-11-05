@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Neasden.Repository.Database;
 using Neasden.Repository.Redis.Options;
+using Neasden.Repository.Write;
 using Neasden.Saver;
 using Neasden.Saver.Options;
 using OpenTelemetry.Metrics;
@@ -82,14 +83,14 @@ builder.Services.AddSingleton(sp =>
     return ConnectionMultiplexer.Connect(configOptions);
 });
 
-builder.Services.AddDbContext<NeasdenDbContext>((sp, options) =>
+builder.Services.AddDbContext<WriteDbContext>((sp, options) =>
 {
     var postgresOptions = sp.GetRequiredService<IOptions<PostgresOptions>>().Value;
     options.UseNpgsql(postgresOptions.ConnectionString);
 });
 
-builder.Services.AddScoped<Neasden.Repository.Repositories.DisruptionRepository>();
-builder.Services.AddScoped<Neasden.Repository.Repositories.NotificationRepository>();
+builder.Services.AddScoped<WriteDisruptionRepository>();
+builder.Services.AddScoped<WriteNotificationRepository>();
 builder.Services.AddScoped<Neasden.Repository.Redis.DisruptionRepository>();
 builder.Services.AddScoped<Neasden.Repository.Redis.NotificationRepository>();
 builder.Services.AddScoped<Saver>();

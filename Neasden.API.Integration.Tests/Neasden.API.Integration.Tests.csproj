@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Neasden.API\Neasden.API.csproj" />
+    <ProjectReference Include="..\Neasden.Repository.Integration.Tests\Neasden.Repository.Integration.Tests.csproj" />
   </ItemGroup>
 
   <ItemGroup>

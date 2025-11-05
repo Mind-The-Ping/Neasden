@@ -1,13 +1,13 @@
 ﻿using CSharpFunctionalExtensions;
 using FluentAssertions;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Neasden.API.Client;
 using Neasden.API.Model;
 using Neasden.Models;
-using Neasden.Repository.Database;
+using Neasden.Repository.Write;
 using NSubstitute;
-using OpenTelemetry.Trace;
 using System.Net;
 using System.Net.Http.Headers;
 
@@ -18,7 +18,7 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
     private readonly Guid _id = Guid.NewGuid();
     private readonly HttpClient _client;
     private readonly HttpClient _unauthorizedClient;
-    private readonly NeasdenDbContext _neasdenContext;
+    private readonly WriteDbContext _writeContext;
     private readonly IWaterlooClient _waterlooClient;
 
     public NotificationControllerTests(CustomWebApplicationFactory factory)
@@ -47,7 +47,11 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
 
         _unauthorizedClient = factory.CreateClient();
 
-        _neasdenContext = factory.DbContext;
+        var options = new DbContextOptionsBuilder<WriteDbContext>()
+            .UseNpgsql($"Host=localhost;Port=5434;Database={factory.databaseName};Username=neasdenUser;Password=password12345")
+            .Options;
+
+        _writeContext = new WriteDbContext(options);
     }
 
     [Fact]
@@ -98,11 +102,11 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
             NotificationSentBy = NotificationSentBy.Push
         };
 
-        await _neasdenContext.Disruptions.AddAsync(disruption);
-        await _neasdenContext.Severities.AddAsync(severity);
-        await _neasdenContext.Descriptions.AddAsync(description);
-        await _neasdenContext.Notifications.AddAsync(notification);
-        await _neasdenContext.SaveChangesAsync();
+        await _writeContext.Disruptions.AddAsync(disruption);
+        await _writeContext.Severities.AddAsync(severity);
+        await _writeContext.Descriptions.AddAsync(description);
+        await _writeContext.Notifications.AddAsync(notification);
+        await _writeContext.SaveChangesAsync();
 
         var line = new Line(Guid.Parse("2f0c75a5-8149-49b7-9cc6-32e4a5246d7f"), "Jubilee");
 
@@ -187,11 +191,11 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
             NotificationSentBy = NotificationSentBy.Push
         };
 
-        await _neasdenContext.Disruptions.AddAsync(disruption);
-        await _neasdenContext.Severities.AddAsync(severity);
-        await _neasdenContext.Descriptions.AddAsync(description);
-        await _neasdenContext.Notifications.AddAsync(notification);
-        await _neasdenContext.SaveChangesAsync();
+        await _writeContext.Disruptions.AddAsync(disruption);
+        await _writeContext.Severities.AddAsync(severity);
+        await _writeContext.Descriptions.AddAsync(description);
+        await _writeContext.Notifications.AddAsync(notification);
+        await _writeContext.SaveChangesAsync();
 
         var line = new Line(Guid.Parse("2f0c75a5-8149-49b7-9cc6-32e4a5246d7f"), "Jubilee");
 
@@ -276,11 +280,11 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
             NotificationSentBy = NotificationSentBy.Push
         };
 
-        await _neasdenContext.Disruptions.AddAsync(disruption);
-        await _neasdenContext.Severities.AddAsync(severity);
-        await _neasdenContext.Descriptions.AddAsync(description);
-        await _neasdenContext.Notifications.AddAsync(notification);
-        await _neasdenContext.SaveChangesAsync();
+        await _writeContext.Disruptions.AddAsync(disruption);
+        await _writeContext.Severities.AddAsync(severity);
+        await _writeContext.Descriptions.AddAsync(description);
+        await _writeContext.Notifications.AddAsync(notification);
+        await _writeContext.SaveChangesAsync();
 
         var line = new Line(Guid.Parse("2f0c75a5-8149-49b7-9cc6-32e4a5246d7f"), "Jubilee");
 
@@ -319,7 +323,7 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
 
     public void Dispose()
     {
-        _neasdenContext.Database.EnsureDeleted();
-        _neasdenContext.Database.EnsureCreated();
+        _writeContext.Database.EnsureDeleted();
+        _writeContext.Database.EnsureCreated();
     }
 }

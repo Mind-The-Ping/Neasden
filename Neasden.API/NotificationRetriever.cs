@@ -3,7 +3,7 @@ using Neasden.API.Client;
 using Neasden.API.Dto;
 using Neasden.Models;
 using Neasden.Repository;
-using Neasden.Repository.Repositories;
+using Neasden.Repository.Read;
 
 namespace Neasden.API;
 
@@ -11,14 +11,14 @@ public class NotificationRetriever
 {
     private readonly IWaterlooClient _waterlooClient;
     private readonly ILogger<NotificationRetriever> _logger;
-    private readonly DisruptionRepository _disruptionRepository;
-    private readonly NotificationRepository _notificationRepository;
+    private readonly ReadDisruptionRepository _disruptionRepository;
+    private readonly ReadNotificationRepository _notificationRepository;
 
     public NotificationRetriever(
         IWaterlooClient waterlooClient,
         ILogger<NotificationRetriever> logger,
-        DisruptionRepository disruptionRepository,
-        NotificationRepository notificationRepository)
+        ReadDisruptionRepository disruptionRepository,
+        ReadNotificationRepository notificationRepository)
     {
         _waterlooClient = waterlooClient ??
             throw new ArgumentNullException(nameof(waterlooClient));

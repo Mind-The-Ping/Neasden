@@ -4,13 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Neasden.Repository.Database;
+using Neasden.Repository.Write;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace Neasden.Repository.Migrations
 {
-    [DbContext(typeof(NeasdenDbContext))]
+    [DbContext(typeof(WriteDbContext))]
     partial class NeasdenDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
