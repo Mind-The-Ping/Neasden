@@ -55,7 +55,7 @@ public class NotificationRepository
         return Result.Success(result);
     }
 
-    public async Task<Result<PaginatedResult<Notification>>> GetNotificationIdsByUserId(
+    public async Task<Result<PaginatedResult<Notification>>> GetNotificationIdsByUserIdAsync(
         Guid userId, 
         int page = 1, 
         int pageSize = 20)
@@ -72,7 +72,7 @@ public class NotificationRepository
         if (totalCount == 0)
         {
             return Result.Success(new PaginatedResult<Notification>(
-               Enumerable.Empty<Notification>(),
+               [],
                page,
                pageSize,
                0));
@@ -84,6 +84,32 @@ public class NotificationRepository
             .ToListAsync();
 
         var result = new PaginatedResult<Notification>(items, page, pageSize, totalCount);
+        return Result.Success(result);
+    }
+
+    public async Task<Result<PaginatedResult<Notification>>> GetNotificationIdsByUserIdLatestAsync(Guid userId, DateTime lastChecked)
+    {
+        var query = _neasdenDbContext.Notifications
+           .Where(x => x.UserId == userId);
+
+        var totalCount = await query.CountAsync();
+
+        var newItemsQuery = query
+           .Where(x => x.SentTime > lastChecked)
+           .OrderByDescending(x => x.SentTime);
+
+        var newItems = await newItemsQuery.ToListAsync();
+
+        if (newItems.Count == 0)
+        {
+            return Result.Success(new PaginatedResult<Notification>(
+                [],
+                1,
+                0,
+                totalCount
+            ));
+        }
+        var result = new PaginatedResult<Notification>(newItems, 1, newItems.Count, totalCount);
         return Result.Success(result);
     }
 }

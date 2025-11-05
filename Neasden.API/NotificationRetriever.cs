@@ -57,7 +57,7 @@ public class NotificationRetriever
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 20;
 
-        var pagedNotificationsResult = await _notificationRepository.GetNotificationIdsByUserId(userId, page, pageSize);
+        var pagedNotificationsResult = await _notificationRepository.GetNotificationIdsByUserIdAsync(userId, page, pageSize);
 
         if (pagedNotificationsResult.IsFailure)
         {
@@ -88,7 +88,7 @@ public class NotificationRetriever
                 successfulNotifications.Add(result.Value);
             }
             else {
-                _logger.LogWarning("Failed to build notification: {Error}", result.Error);
+                _logger.LogWarning("Failed to build paginated notification: {Error}", result.Error);
             }
         }
 
@@ -96,6 +96,56 @@ public class NotificationRetriever
             successfulNotifications,
             page,
             pageSize,
+            pagedNotificationsResult.Value.TotalCount);
+
+        return Result.Success(paginatedResult);
+    }
+
+    public async Task<Result<PaginatedResult<NotificationReturn>>> GetNotificationsByUserLatestIdAsync(
+       Guid userId,
+       DateTime lastChecked,
+       CancellationToken cancellationToken = default)
+    {
+        var pagedNotificationsResult = await _notificationRepository.GetNotificationIdsByUserIdLatestAsync(userId, lastChecked);
+
+        if (pagedNotificationsResult.IsFailure)
+        {
+            _logger.LogError(pagedNotificationsResult.Error);
+            return Result.Failure<PaginatedResult<NotificationReturn>>(pagedNotificationsResult.Error);
+        }
+
+        var notifications = pagedNotificationsResult.Value.Items;
+        if (!notifications.Any())
+        {
+            return Result.Success(new PaginatedResult<NotificationReturn>(
+                [],
+                1,
+                0,
+                0));
+        }
+
+        var buildTasks = notifications
+           .Select(n => BuildNotificationReturnAsync(n, cancellationToken))
+           .ToList();
+
+        var builtResults = await Task.WhenAll(buildTasks);
+
+        var successfulNotifications = new List<NotificationReturn>();
+
+        foreach (var result in builtResults)
+        {
+            if (result.IsSuccess) {
+                successfulNotifications.Add(result.Value);
+            }
+            else {
+                _logger.LogWarning("Failed to build latest notifications: {Error}", result.Error);
+            }
+        }
+
+        var paginatedResult = new PaginatedResult<NotificationReturn>(
+            successfulNotifications,
+            1,
+            pagedNotificationsResult.Value.Items.Count(),
             pagedNotificationsResult.Value.TotalCount);
 
         return Result.Success(paginatedResult);

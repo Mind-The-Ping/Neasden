@@ -71,4 +71,41 @@ public class NotificationController : ControllerBase
 
         return Ok(notifications.Value);
     }
+
+    [Authorize]
+    [HttpGet("getByUserIdLatest")]
+    public async Task<IActionResult> GetNotificationsByUserIdLatest(
+        [FromQuery] DateTime lastChecked,
+        CancellationToken cancellationToken = default)
+    {
+        var subValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!Guid.TryParse(subValue, out var userId))
+        {
+            _logger.LogError("{subValue} could not be parsed.", subValue);
+            return BadRequest("You need to login to access this endpoint.");
+        }
+
+        if(lastChecked.Kind == DateTimeKind.Unspecified) {
+            lastChecked = DateTime.SpecifyKind(lastChecked, DateTimeKind.Utc);
+        }
+        else if(lastChecked.Kind == DateTimeKind.Local) {
+            lastChecked = lastChecked.ToUniversalTime();
+        }
+
+        var notifications = await _notificationRetriever.GetNotificationsByUserLatestIdAsync(
+                userId,
+                lastChecked,
+                cancellationToken);
+
+        if (notifications.IsFailure)
+        {
+            _logger.LogError("Failed to retrieve latest notifications for user {UserId}: {Error}",
+                userId, notifications.Error);
+
+            return BadRequest(notifications.Error);
+        }
+
+        return Ok(notifications.Value);
+    }
 }
