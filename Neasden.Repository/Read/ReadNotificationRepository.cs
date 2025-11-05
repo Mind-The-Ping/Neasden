@@ -1,69 +1,49 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
-using Neasden.Repository.Database;
-using Neasden.Models;
 using Microsoft.Extensions.Logging;
+using Neasden.Models;
 
-namespace Neasden.Repository.Repositories;
-public class NotificationRepository
+namespace Neasden.Repository.Read;
+public class ReadNotificationRepository
 {
-    private readonly NeasdenDbContext _neasdenDbContext;
-    private readonly ILogger<NotificationRepository> _logger;
+    private readonly ILogger<ReadNotificationRepository> _logger;
+    private readonly IDbContextFactory<ReadDbContext> _contextFactory;
 
-    public NotificationRepository(
-        NeasdenDbContext neasdenDbContext,
-        ILogger<NotificationRepository> logger)
+    public ReadNotificationRepository(
+        IDbContextFactory<ReadDbContext> contextFactory,
+        ILogger<ReadNotificationRepository> logger)
     {
-        _neasdenDbContext = neasdenDbContext ?? 
-            throw new ArgumentNullException(nameof(neasdenDbContext));
-
-        _logger = logger ?? 
-            throw new ArgumentNullException(nameof(logger));
-    }
-
-    public async Task<Result> AddNotificationsAsync(IEnumerable<Notification> notifications)
-    {
-        try
-        {
-            await _neasdenDbContext.Notifications.AddRangeAsync(notifications);
-            await _neasdenDbContext.SaveChangesAsync();
-
-            return Result.Success();
-        }
-        catch (Exception ex) 
-        {
-            var message = "Could not save notifications to database.";
-
-            _logger.LogError(ex, message);
-            return Result.Failure(message);
-        }
+        _contextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<Result<Notification>> GetNotificationByIdAsync(Guid id)
     {
-        var result = await _neasdenDbContext.Notifications
+        await using var context = _contextFactory.CreateDbContext();
+        var result = await context.Notifications
             .SingleOrDefaultAsync(x => x.Id == id);
 
-        if (result == null) 
+        if (result == null)
         {
             var message = $"Notification {id} does not exist on this database.";
 
             _logger.LogError(message);
             return Result.Failure<Notification>(message);
         }
-        
+
         return Result.Success(result);
     }
 
     public async Task<Result<PaginatedResult<Notification>>> GetNotificationIdsByUserIdAsync(
-        Guid userId, 
-        int page = 1, 
+        Guid userId,
+        int page = 1,
         int pageSize = 20)
     {
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 20;
 
-        var query = _neasdenDbContext.Notifications
+        await using var context = _contextFactory.CreateDbContext();
+        var query = context.Notifications
            .Where(x => x.UserId == userId)
            .OrderByDescending(x => x.SentTime);
 
@@ -89,7 +69,8 @@ public class NotificationRepository
 
     public async Task<Result<PaginatedResult<Notification>>> GetNotificationIdsByUserIdLatestAsync(Guid userId, DateTime lastChecked)
     {
-        var query = _neasdenDbContext.Notifications
+        await using var context = _contextFactory.CreateDbContext();
+        var query = context.Notifications
            .Where(x => x.UserId == userId);
 
         var totalCount = await query.CountAsync();

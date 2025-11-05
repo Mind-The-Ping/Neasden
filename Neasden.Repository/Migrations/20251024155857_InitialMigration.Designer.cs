@@ -5,13 +5,14 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Neasden.Repository.Database;
+using Neasden.Repository.Write;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace Neasden.Repository.Migrations
 {
-    [DbContext(typeof(NeasdenDbContext))]
+    [DbContext(typeof(WriteDbContext))]
     [Migration("20251024155857_InitialMigration")]
     partial class InitialMigration
     {

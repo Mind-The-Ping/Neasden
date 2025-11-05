@@ -1,14 +1,13 @@
-﻿using Castle.Core.Logging;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Neasden.Models;
-using Neasden.Repository.Database;
 using Neasden.Repository.Redis.Options;
 using NSubstitute;
 using StackExchange.Redis;
-using PostgresDisruptionRepository = Neasden.Repository.Repositories.DisruptionRepository;
-using PostgresNotificationRepository = Neasden.Repository.Repositories.NotificationRepository;
+using Neasden.Repository.Write;
+using PostgresDisruptionRepository = Neasden.Repository.Write.WriteDisruptionRepository;
+using PostgresNotificationRepository = Neasden.Repository.Write.WriteNotificationRepository;
 using RedisDisruptionRepository = Neasden.Repository.Redis.DisruptionRepository;
 using RedisNotificationRepository = Neasden.Repository.Redis.NotificationRepository;
 
@@ -18,6 +17,7 @@ public class SaverTests
 {
     private readonly string _databaseName = $"testdb_{Guid.NewGuid():N}";
 
+    private readonly WriteDbContext _context;
     private readonly Saver _saver;
 
     private readonly RedisNotificationRepository _redisNotification;
@@ -28,14 +28,14 @@ public class SaverTests
 
     public SaverTests()
     {
-        var options = new DbContextOptionsBuilder<NeasdenDbContext>()
+        var options = new DbContextOptionsBuilder<WriteDbContext>()
             .UseNpgsql($"Host=localhost;Port=5434;Database={_databaseName};Username=neasdenUser;Password=password12345")
             .Options;
 
-        var neasdenDbContext = new NeasdenDbContext(options);
+        _context = new WriteDbContext(options);
 
-        neasdenDbContext.Database.EnsureDeleted();
-        neasdenDbContext.Database.EnsureCreated();
+        _context.Database.EnsureDeleted();
+        _context.Database.EnsureCreated();
 
         var redisOptions = new RedisOptions()
         {
@@ -60,8 +60,8 @@ public class SaverTests
         var postgresDisruptionLogger = Substitute.For<ILogger<PostgresDisruptionRepository>>();
         var postgresNotificationLogger = Substitute.For<ILogger<PostgresNotificationRepository>>();
 
-        _postgresDisruption = new PostgresDisruptionRepository(neasdenDbContext, postgresDisruptionLogger);
-        _postgresNotification = new PostgresNotificationRepository(neasdenDbContext, postgresNotificationLogger);
+        _postgresDisruption = new PostgresDisruptionRepository(_context, postgresDisruptionLogger);
+        _postgresNotification = new PostgresNotificationRepository(_context, postgresNotificationLogger);
 
         _saver = new Saver(
             _redisNotification,
@@ -91,10 +91,8 @@ public class SaverTests
         result.IsSuccess.Should().BeTrue();
         count.Should().Be(0); 
 
-        var record = await _postgresDisruption.GetDisruptionByIdAsync(disruption.Id);
-
-        record.IsSuccess.Should().BeTrue();
-        record.Value.Should().BeEquivalentTo(disruption);
+        var record = await _context.Disruptions.FirstOrDefaultAsync(x => x.Id == disruption.Id);
+        record.Should().BeEquivalentTo(disruption);
     }
 
     [Fact]
@@ -116,10 +114,8 @@ public class SaverTests
         result.IsSuccess.Should().BeTrue();
         count.Should().Be(0);
 
-        var record = await _postgresDisruption.GetDisruptionSeverityByIdAsync(disruptionSeverity.Id);
-
-        record.IsSuccess.Should().BeTrue();
-        record.Value.Should().BeEquivalentTo(disruptionSeverity);
+        var record = await _context.Severities.FirstOrDefaultAsync(x => x.Id == disruptionSeverity.Id);
+        record.Should().BeEquivalentTo(disruptionSeverity);
     }
 
     [Fact]
@@ -148,9 +144,8 @@ public class SaverTests
         result.IsSuccess.Should().BeTrue();
         count.Should().Be(0);
 
-        var record = await _postgresDisruption.GetDisruptionByIdAsync(disruption.Id);
-        record.IsSuccess.Should().BeTrue();
-        record.Value.EndTime.Should().Be(endTime);
+        var record = await _context.Disruptions.FirstOrDefaultAsync(x => x.Id == disruption.Id);
+        record.EndTime.Should().Be(endTime);
     }
 
     [Fact]
@@ -179,9 +174,8 @@ public class SaverTests
         result.IsSuccess.Should().BeTrue();
         count.Should().Be(0);
 
-        var record = await _postgresNotification.GetNotificationByIdAsync(notification.Id);
-        record.IsSuccess.Should().BeTrue();
-        record.Value.Should().BeEquivalentTo(notification);
+        var record = await _context.Notifications.FirstOrDefaultAsync(x => x.Id == notification.Id);
+        record.Should().BeEquivalentTo(notification);
     }
 
     [Fact]
@@ -203,8 +197,7 @@ public class SaverTests
         result.IsSuccess.Should().BeTrue();
         count.Should().Be(0);
 
-        var record = await _postgresDisruption.GetDisruptionDescriptionByIdAsync(description.Id);
-        record.IsSuccess.Should().BeTrue();
-        record.Value.Should().BeEquivalentTo(description);
+        var record = await _context.Descriptions.FirstOrDefaultAsync(x => x.Id == description.Id);
+        record.Should().BeEquivalentTo(description);
     }
 }
