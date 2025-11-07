@@ -2,8 +2,8 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Neasden.Repository.Database;
 using Neasden.Repository.Write;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Neasden.Repository.Migrations
 {
     [DbContext(typeof(WriteDbContext))]
-    partial class NeasdenDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251107141806_InitialMigration")]
+    partial class InitialMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -62,9 +64,6 @@ namespace Neasden.Repository.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("DisruptionId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
                     b.ToTable("Descriptions");
@@ -74,9 +73,6 @@ namespace Neasden.Repository.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("DisruptionId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Severity")

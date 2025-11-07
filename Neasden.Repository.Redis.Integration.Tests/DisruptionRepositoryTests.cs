@@ -148,7 +148,6 @@ public class DisruptionRepositoryTests : IAsyncLifetime
         var disruptionSeverity = new DisruptionSeverity()
         {
             Id = Guid.NewGuid(),
-            DisruptionId = Guid.NewGuid(),
             StartTime = DateTime.UtcNow,
             Severity = Severity.Suspended,
         };
@@ -171,7 +170,6 @@ public class DisruptionRepositoryTests : IAsyncLifetime
         var disruptionSeverity1 = new DisruptionSeverity()
         {
             Id = Guid.NewGuid(),
-            DisruptionId = Guid.NewGuid(),
             StartTime = DateTime.UtcNow,
             Severity = Severity.Suspended,
         };
@@ -179,7 +177,6 @@ public class DisruptionRepositoryTests : IAsyncLifetime
         var disruptionSeverity2 = new DisruptionSeverity()
         {
             Id = Guid.NewGuid(),
-            DisruptionId = Guid.NewGuid(),
             StartTime = DateTime.UtcNow,
             Severity = Severity.Suspended,
         };
@@ -205,7 +202,6 @@ public class DisruptionRepositoryTests : IAsyncLifetime
         var disruptionSeverity = new DisruptionSeverity()
         {
             Id = Guid.NewGuid(),
-            DisruptionId = Guid.NewGuid(),
             StartTime = DateTime.UtcNow,
             Severity = Severity.Suspended,
         };
@@ -281,7 +277,6 @@ public class DisruptionRepositoryTests : IAsyncLifetime
         var disruptionDescription = new DisruptionDescription
         {
             Id = Guid.NewGuid(),
-            DisruptionId = Guid.NewGuid(),
             Description = "Just a test.",
             CreatedAt = DateTime.UtcNow
         };
@@ -304,7 +299,6 @@ public class DisruptionRepositoryTests : IAsyncLifetime
         var disruptionDescription1 = new DisruptionDescription
         {
             Id = Guid.NewGuid(),
-            DisruptionId = Guid.NewGuid(),
             Description = "Just a test.",
             CreatedAt = DateTime.UtcNow
         };
@@ -312,7 +306,6 @@ public class DisruptionRepositoryTests : IAsyncLifetime
         var disruptionDescription2 = new DisruptionDescription
         {
             Id = Guid.NewGuid(),
-            DisruptionId = Guid.NewGuid(),
             Description = "Just a test.",
             CreatedAt = DateTime.UtcNow
         };
@@ -338,7 +331,6 @@ public class DisruptionRepositoryTests : IAsyncLifetime
         var disruptionDescription = new DisruptionDescription
         {
             Id = Guid.NewGuid(),
-            DisruptionId = Guid.NewGuid(),
             Description = "Just a test.",
             CreatedAt = DateTime.UtcNow
         };

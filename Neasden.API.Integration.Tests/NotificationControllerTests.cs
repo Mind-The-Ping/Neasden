@@ -70,7 +70,6 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
         var severity = new DisruptionSeverity()
         {
             Id = Guid.NewGuid(),
-            DisruptionId = disruption.Id,
             StartTime = disruption.StartTime,
             Severity = Severity.Severe
         };
@@ -78,7 +77,6 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
         var description = new DisruptionDescription()
         {
             Id = Guid.NewGuid(),
-            DisruptionId = disruption.Id,
             Description = "Something bad happened I guess ??"
         };
 
@@ -159,7 +157,6 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
         var severity = new DisruptionSeverity()
         {
             Id = Guid.NewGuid(),
-            DisruptionId = disruption.Id,
             StartTime = disruption.StartTime,
             Severity = Severity.Severe
         };
@@ -167,7 +164,6 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
         var description = new DisruptionDescription()
         {
             Id = Guid.NewGuid(),
-            DisruptionId = disruption.Id,
             Description = "Something bad happened I guess ??"
         };
 
@@ -248,7 +244,6 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
         var severity = new DisruptionSeverity()
         {
             Id = Guid.NewGuid(),
-            DisruptionId = disruption.Id,
             StartTime = disruption.StartTime,
             Severity = Severity.Severe
         };
@@ -256,7 +251,6 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
         var description = new DisruptionDescription()
         {
             Id = Guid.NewGuid(),
-            DisruptionId = disruption.Id,
             Description = "Something bad happened I guess ??"
         };
 
