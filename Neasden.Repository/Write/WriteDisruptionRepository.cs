@@ -117,6 +117,8 @@ public class WriteDisruptionRepository
 
             var newOnes = descriptions
                 .Where(d => !existingIds.Contains(d.Id))
+                .GroupBy(d => d.Id)
+                .Select(g => g.First())
                 .ToList();
 
             if (newOnes.Count > 0)
