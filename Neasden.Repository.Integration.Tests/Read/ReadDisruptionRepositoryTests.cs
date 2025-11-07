@@ -81,7 +81,6 @@ public class ReadDisruptionRepositoryTests
         var severity = new DisruptionSeverity
         {
             Id = Guid.NewGuid(),
-            DisruptionId = Guid.NewGuid(),
             Severity = Severity.Minor,
             StartTime = DateTime.UtcNow
         };
@@ -93,7 +92,6 @@ public class ReadDisruptionRepositoryTests
         result.IsSuccess.Should().BeTrue();
 
         result.Value.Id.Should().Be(severity.Id);
-        result.Value.DisruptionId.Should().Be(severity.DisruptionId);
         result.Value.Severity.Should().Be(severity.Severity);
         result.Value.StartTime.Should().BeCloseTo(severity.StartTime, TimeSpan.FromSeconds(1));
     }
@@ -114,7 +112,6 @@ public class ReadDisruptionRepositoryTests
         var description = new DisruptionDescription
         {
             Id = Guid.NewGuid(),
-            DisruptionId = Guid.NewGuid(),
             Description = "This is a test.",
             CreatedAt = DateTime.UtcNow
         };
@@ -128,7 +125,6 @@ public class ReadDisruptionRepositoryTests
         result.Value.Should().NotBeNull();
 
         result.Value.Id.Should().Be(description.Id);
-        result.Value.DisruptionId.Should().Be(description.DisruptionId);
         result.Value.Description.Should().Be(description.Description);
         result.Value.CreatedAt.Should().BeCloseTo(description.CreatedAt, TimeSpan.FromSeconds(1));
     }

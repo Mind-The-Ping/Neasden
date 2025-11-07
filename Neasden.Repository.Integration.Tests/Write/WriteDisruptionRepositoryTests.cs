@@ -64,7 +64,6 @@ public class WriteDisruptionRepositoryTests
         var disruptionSeverity = new DisruptionSeverity()
         {
             Id = Guid.NewGuid(),
-            DisruptionId = Guid.NewGuid(),
             StartTime = DateTime.UtcNow,
             Severity = Severity.Minor
         };
@@ -87,7 +86,6 @@ public class WriteDisruptionRepositoryTests
         var description = new DisruptionDescription
         {
             Id = Guid.NewGuid(),
-            DisruptionId = Guid.NewGuid(),
             Description = "This is a test.",
             CreatedAt = DateTime.UtcNow
         };
@@ -98,5 +96,33 @@ public class WriteDisruptionRepositoryTests
         var record = await _context.Descriptions.SingleOrDefaultAsync(d => d.Id == description.Id);
         record.Should().NotBeNull();
         record.Should().BeEquivalentTo(description);
+    }
+
+    [Fact]
+    public async Task WriteDisruptionRepository_AddDescriptionsAsync_Only_New_Successful()
+    {
+        var description1 = new DisruptionDescription
+        {
+            Id = Guid.NewGuid(),
+            Description = "This is a test.",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _context.Descriptions.AddAsync(description1);
+        await _context.SaveChangesAsync();
+
+        var description2 = new DisruptionDescription
+        {
+            Id = Guid.NewGuid(),
+            Description = "This is a test 2.",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var result = await _repository.AddDescriptionsAsync([description1, description2]);
+        result.IsSuccess.Should().BeTrue();
+
+        var records = _context.Descriptions.ToList();
+        records.Count.Should().Be(2);
+        records.Should().BeEquivalentTo([description1, description2]);
     }
 }

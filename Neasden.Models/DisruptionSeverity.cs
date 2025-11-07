@@ -12,7 +12,6 @@ public enum Severity
 public class DisruptionSeverity
 {
     public Guid Id { get; set; }
-    public Guid DisruptionId { get; set; }
     public DateTime StartTime { get; set; }
     public Severity Severity { get; set; }
 }

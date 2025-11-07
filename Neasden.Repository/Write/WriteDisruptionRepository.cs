@@ -109,8 +109,20 @@ public class WriteDisruptionRepository
     {
         try
         {
-            await _context.Descriptions.AddRangeAsync(descriptions);
-            await _context.SaveChangesAsync();
+            var existingIds = await _context.Descriptions
+                .Where(d => descriptions.Select(x => x.Id).Contains(d.Id))
+                .Select(d => d.Id)
+                .ToListAsync();
+
+            var newOnes = descriptions
+                .Where(d => !existingIds.Contains(d.Id))
+                .ToList();
+
+            if (newOnes.Count > 0)
+            {
+                await _context.Descriptions.AddRangeAsync(newOnes);
+                await _context.SaveChangesAsync();
+            }
 
             return Result.Success();
         }

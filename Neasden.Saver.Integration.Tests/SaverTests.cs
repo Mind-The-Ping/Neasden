@@ -101,7 +101,6 @@ public class SaverTests
         var disruptionSeverity = new DisruptionSeverity()
         {
             Id = Guid.NewGuid(),
-            DisruptionId = Guid.NewGuid(),
             StartTime = DateTime.UtcNow,
             Severity = Severity.Suspended,
         };
@@ -184,7 +183,6 @@ public class SaverTests
         var description = new DisruptionDescription
         {
             Id = Guid.NewGuid(),
-            DisruptionId = Guid.NewGuid(),
             Description = "Knives Out, Fangs out ??.",
             CreatedAt = DateTime.UtcNow
         };

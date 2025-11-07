@@ -75,7 +75,6 @@ public class NotificationRetrieverTests
         var severity = new DisruptionSeverity()
         {
             Id = Guid.NewGuid(),
-            DisruptionId = disruption.Id,
             StartTime = disruption.StartTime,
             Severity = Severity.Severe
         };
@@ -83,7 +82,6 @@ public class NotificationRetrieverTests
         var description = new DisruptionDescription()
         {
             Id = Guid.NewGuid(),
-            DisruptionId = disruption.Id,
             Description = "Something bad happened I guess ??"
         };
 
@@ -169,7 +167,6 @@ public class NotificationRetrieverTests
         var severity = new DisruptionSeverity()
         {
             Id = Guid.NewGuid(),
-            DisruptionId = disruption.Id,
             StartTime = disruption.StartTime,
             Severity = Severity.Severe
         };
@@ -177,7 +174,6 @@ public class NotificationRetrieverTests
         var description = new DisruptionDescription()
         {
             Id = Guid.NewGuid(),
-            DisruptionId = disruption.Id,
             Description = "Something bad happened I guess ??"
         };
 
@@ -283,7 +279,6 @@ public class NotificationRetrieverTests
         var severity = new DisruptionSeverity()
         {
             Id = Guid.NewGuid(),
-            DisruptionId = disruption.Id,
             StartTime = disruption.StartTime,
             Severity = Severity.Severe
         };
@@ -291,7 +286,6 @@ public class NotificationRetrieverTests
         var description = new DisruptionDescription()
         {
             Id = Guid.NewGuid(),
-            DisruptionId = disruption.Id,
             Description = "Something bad happened I guess ??"
         };
 
