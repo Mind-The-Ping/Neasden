@@ -110,6 +110,7 @@ public class WriteDisruptionRepository
         try
         {
             var existingIds = await _context.Descriptions
+                .AsNoTracking()
                 .Where(d => descriptions.Select(x => x.Id).Contains(d.Id))
                 .Select(d => d.Id)
                 .ToListAsync();
