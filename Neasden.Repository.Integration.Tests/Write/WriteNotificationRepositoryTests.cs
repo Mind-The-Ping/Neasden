@@ -42,7 +42,6 @@ public class WriteNotificationRepositoryTests
             DescriptionId = Guid.NewGuid(),
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
-            NotificationSentBy = NotificationSentBy.Push,
             SentTime = DateTime.UtcNow,
             AffectedStationIds = [Guid.NewGuid(), Guid.NewGuid()]
         };

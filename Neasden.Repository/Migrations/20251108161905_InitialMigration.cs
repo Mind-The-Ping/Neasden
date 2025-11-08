@@ -52,7 +52,6 @@ namespace Neasden.Repository.Migrations
                     EndStationId = table.Column<Guid>(type: "uuid", nullable: false),
                     SeverityId = table.Column<Guid>(type: "uuid", nullable: false),
                     DescriptionId = table.Column<Guid>(type: "uuid", nullable: false),
-                    NotificationSentBy = table.Column<int>(type: "integer", nullable: false),
                     SentTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     AffectedStationIds = table.Column<Guid[]>(type: "uuid[]", nullable: false)
                 },

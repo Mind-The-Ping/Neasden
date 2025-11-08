@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Neasden.Repository.Migrations
 {
     [DbContext(typeof(WriteDbContext))]
-    [Migration("20251107141806_InitialMigration")]
+    [Migration("20251108161905_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
@@ -107,9 +107,6 @@ namespace Neasden.Repository.Migrations
 
                     b.Property<Guid>("LineId")
                         .HasColumnType("uuid");
-
-                    b.Property<int>("NotificationSentBy")
-                        .HasColumnType("integer");
 
                     b.Property<DateTime>("SentTime")
                         .HasColumnType("timestamp with time zone");

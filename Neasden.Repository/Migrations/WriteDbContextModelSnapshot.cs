@@ -105,9 +105,6 @@ namespace Neasden.Repository.Migrations
                     b.Property<Guid>("LineId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("NotificationSentBy")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime>("SentTime")
                         .HasColumnType("timestamp with time zone");
 

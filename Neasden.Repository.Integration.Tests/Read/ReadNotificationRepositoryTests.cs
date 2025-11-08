@@ -52,7 +52,6 @@ public class ReadNotificationRepositoryTests
             DescriptionId = Guid.NewGuid(),
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
-            NotificationSentBy = NotificationSentBy.Sms,
             SentTime = DateTime.UtcNow,
             AffectedStationIds = [Guid.NewGuid(), Guid.NewGuid()]
         };
@@ -71,7 +70,6 @@ public class ReadNotificationRepositoryTests
         result.Value.DescriptionId.Should().Be(notification.DescriptionId);
         result.Value.StartStationId.Should().Be(notification.StartStationId);
         result.Value.EndStationId.Should().Be(notification.EndStationId);
-        result.Value.NotificationSentBy.Should().Be(notification.NotificationSentBy);
         result.Value.SentTime.Should().BeCloseTo(notification.SentTime, TimeSpan.FromSeconds(1));
     }
 
@@ -167,7 +165,6 @@ public class ReadNotificationRepositoryTests
             DescriptionId = Guid.NewGuid(),
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
-            NotificationSentBy = NotificationSentBy.Sms,
             SentTime = DateTime.UtcNow,
             AffectedStationIds = [Guid.NewGuid(), Guid.NewGuid()]
         };
@@ -201,7 +198,6 @@ public class ReadNotificationRepositoryTests
             DescriptionId = Guid.NewGuid(),
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
-            NotificationSentBy = NotificationSentBy.Sms,
             SentTime = DateTime.UtcNow.AddHours(-2),
             AffectedStationIds = [Guid.NewGuid(), Guid.NewGuid()]
         };
@@ -216,7 +212,6 @@ public class ReadNotificationRepositoryTests
             DescriptionId = Guid.NewGuid(),
             StartStationId = Guid.NewGuid(),
             EndStationId = Guid.NewGuid(),
-            NotificationSentBy = NotificationSentBy.Sms,
             SentTime = DateTime.UtcNow.AddHours(1),
             AffectedStationIds = [Guid.NewGuid(), Guid.NewGuid()]
         };
@@ -267,7 +262,6 @@ public class ReadNotificationRepositoryTests
                 EndStationId = Guid.NewGuid(),
                 SeverityId = Guid.NewGuid(),
                 DescriptionId = Guid.NewGuid(),
-                NotificationSentBy = (NotificationSentBy)random.Next(Enum.GetValues(typeof(NotificationSentBy)).Length),
                 SentTime = DateTime.UtcNow.AddMinutes(-random.Next(0, 60 * 24 * 30)),
                 AffectedStationIds = [.. Enumerable.Range(0, random.Next(1, 5)).Select(_ => Guid.NewGuid())]
             };
