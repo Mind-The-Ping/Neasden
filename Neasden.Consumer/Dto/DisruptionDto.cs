@@ -8,4 +8,5 @@ public record DisruptionDto(
     Guid EndStationId,
     Severity Severity,
     Guid SeverityId,
-    Guid DescriptionId);
+    Guid DescriptionId,
+    DateTime StartTime);

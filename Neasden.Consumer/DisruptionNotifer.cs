@@ -4,6 +4,7 @@ using Neasden.Consumer.Dto;
 using Neasden.Consumer.Repositories;
 using Neasden.Library.Clients;
 using Neasden.Models;
+using Neasden.Repository.Write;
 
 namespace Neasden.Consumer;
 public class DisruptionNotifer
@@ -12,11 +13,13 @@ public class DisruptionNotifer
     private readonly IWaterlooClient _waterlooClient;
     private readonly IStratfordClient _stratfordClient;
     private readonly IUserNotifiedRepository _userNotifiedRepository;
+    private readonly WriteNotificationRepository _notificationRepository;
 
     public DisruptionNotifer(
         IWaterlooClient waterlooClient,
         IStratfordClient stratfordClient,
-        IUserNotifiedRepository userNotifiedRepository)
+        IUserNotifiedRepository userNotifiedRepository,
+        WriteNotificationRepository notificationRepository)
     {
         _waterlooClient = waterlooClient ?? 
             throw new ArgumentNullException(nameof(waterlooClient));
@@ -26,6 +29,9 @@ public class DisruptionNotifer
 
         _userNotifiedRepository = userNotifiedRepository ??
             throw new ArgumentNullException(nameof(userNotifiedRepository));
+
+        _notificationRepository = notificationRepository ??
+            throw new ArgumentNullException(nameof(notificationRepository));
 
         _londonTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/London");
     }
@@ -105,6 +111,8 @@ public class DisruptionNotifer
         }
 
         var finalUsersToNotify = usersToNotify.Values.ToList();
+
+        //await _notificationRepository.AddNotificationsAsync()
 
         return errors.Count != 0
             ? Result.Failure(string.Join("; ", errors))
