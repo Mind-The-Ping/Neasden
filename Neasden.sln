@@ -31,6 +31,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neasden.Saver.Integration.T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neasden.Library", "Neasden.Library\Neasden.Library.csproj", "{5CA2E6CD-C496-4FB4-8C1B-445C179C8C91}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neasden.Consumer.Integration.Tests", "Neasden.Consumer.Integration.Tests\Neasden.Consumer.Integration.Tests.csproj", "{148A5096-7A7E-416B-95CC-995CCF406290}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +87,10 @@ Global
 		{5CA2E6CD-C496-4FB4-8C1B-445C179C8C91}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5CA2E6CD-C496-4FB4-8C1B-445C179C8C91}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5CA2E6CD-C496-4FB4-8C1B-445C179C8C91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{148A5096-7A7E-416B-95CC-995CCF406290}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{148A5096-7A7E-416B-95CC-995CCF406290}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{148A5096-7A7E-416B-95CC-995CCF406290}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{148A5096-7A7E-416B-95CC-995CCF406290}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -102,6 +108,7 @@ Global
 		{A0EBEED7-84B7-474C-90BC-60B4101E7F49} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{988208D2-BBFD-45C1-B820-4918B145A265} = {6B0A24E4-2A41-4AE6-8DAE-54F25A52617C}
 		{5CA2E6CD-C496-4FB4-8C1B-445C179C8C91} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{148A5096-7A7E-416B-95CC-995CCF406290} = {6B0A24E4-2A41-4AE6-8DAE-54F25A52617C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {331E0C07-693E-4847-980E-C67C819D68C4}
