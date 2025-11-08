@@ -1,12 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Neasden.Repository.Read;
 
-namespace Neasden.Repository.Integration.Tests;
-public class TestDbContextFactory : IDbContextFactory<ReadDbContext>
+namespace Neasden.Repository.Integration.Tests.Read;
+public class TestReadDbContextFactory : IDbContextFactory<ReadDbContext>
 {
     private readonly DbContextOptions<ReadDbContext> _options;
 
-    public TestDbContextFactory(DbContextOptions<ReadDbContext> options)
+    public TestReadDbContextFactory(DbContextOptions<ReadDbContext> options)
     {
         _options = options;
     }

@@ -20,7 +20,7 @@ public class ReadNotificationRepositoryTests
             .UseNpgsql($"Host=localhost;Port=5434;Database={_databaseName};Username=neasdenUser;Password=password12345")
             .Options;
 
-        var _contextFactory = new TestDbContextFactory(readOptions);
+        var _contextFactory = new TestReadDbContextFactory(readOptions);
 
         using (var context = _contextFactory.CreateDbContext())
         {

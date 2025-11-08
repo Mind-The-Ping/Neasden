@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Neasden.Library.Clients;
 using Neasden.Models;
-using Neasden.Repository.Integration.Tests;
+using Neasden.Repository.Integration.Tests.Read;
 using Neasden.Repository.Read;
 using Neasden.Repository.Write;
 using NSubstitute;
@@ -27,7 +27,7 @@ public class NotificationRetrieverTests
             .UseNpgsql($"Host=localhost;Port=5434;Database={_databaseName};Username=neasdenUser;Password=password12345")
             .Options;
 
-        var _contextFactory = new TestDbContextFactory(readOptions);
+        var _contextFactory = new TestReadDbContextFactory(readOptions);
 
         using (var context = _contextFactory.CreateDbContext())
         {

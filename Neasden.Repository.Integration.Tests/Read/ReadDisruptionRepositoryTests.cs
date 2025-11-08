@@ -20,9 +20,9 @@ public class ReadDisruptionRepositoryTests
             .UseNpgsql($"Host=localhost;Port=5434;Database={_databaseName};Username=neasdenUser;Password=password12345")
             .Options;
 
-        var _contextFactory = new TestDbContextFactory(readOptions);
+        var contextFactory = new TestReadDbContextFactory(readOptions);
 
-        using (var context = _contextFactory.CreateDbContext())
+        using (var context = contextFactory.CreateDbContext())
         {
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
@@ -30,7 +30,7 @@ public class ReadDisruptionRepositoryTests
 
         var logger = Substitute.For<ILogger<ReadDisruptionRepository>>();
 
-        _repository = new ReadDisruptionRepository(_contextFactory, logger);
+        _repository = new ReadDisruptionRepository(contextFactory, logger);
 
         var writeOptions = new DbContextOptionsBuilder<WriteDbContext>()
            .UseNpgsql($"Host=localhost;Port=5434;Database={_databaseName};Username=neasdenUser;Password=password12345")
