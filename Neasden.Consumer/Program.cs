@@ -28,6 +28,9 @@ builder.Services.Configure<WaterlooOptions>(
 builder.Services.Configure<StratfordOptions>(
    builder.Configuration.GetSection("Stratford"));
 
+builder.Services.Configure<ServiceBusOptions>(
+    builder.Configuration.GetSection("ServiceBus"));
+
 builder.Services.AddDbContextFactory<WriteDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -45,7 +48,8 @@ builder.Services.AddScoped<TokenProvider>();
 builder.Services.AddScoped<IWaterlooClient, WaterlooClient>();
 builder.Services.AddScoped<IStratfordClient, StratfordClient>();
 builder.Services.AddScoped<IUserNotifiedRepository, UserNotifiedRepository>();
-builder.Services.AddScoped<DisruptionNotifer>();
+builder.Services.AddScoped<NotificationPublisher>();
+builder.Services.AddScoped<DisruptionNotifier>();
 builder.Services.AddScoped<WriteDisruptionRepository>();
 builder.Services.AddScoped<WriteNotificationRepository>();
 

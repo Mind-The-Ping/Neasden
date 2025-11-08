@@ -19,12 +19,12 @@ public enum SaveType
 public class Consumer
 {
     private readonly ILogger<Consumer> _logger;
-    private readonly DisruptionNotifer _notifer;
+    private readonly DisruptionNotifier _notifer;
     private readonly WriteDisruptionRepository _writeDisruptionRepository;
 
     public Consumer(
         ILogger<Consumer> logger,
-        DisruptionNotifer notifer,
+        DisruptionNotifier notifer,
         WriteDisruptionRepository writeDisruptionRepository)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));

@@ -7,19 +7,21 @@ using Neasden.Models;
 using Neasden.Repository.Write;
 
 namespace Neasden.Consumer;
-public class DisruptionNotifer
+public class DisruptionNotifier
 {
     private readonly TimeZoneInfo _londonTimeZone;
     private readonly IWaterlooClient _waterlooClient;
     private readonly IStratfordClient _stratfordClient;
     private readonly IUserNotifiedRepository _userNotifiedRepository;
     private readonly WriteNotificationRepository _notificationRepository;
+    private readonly NotificationPublisher _notificationPublisher;
 
-    public DisruptionNotifer(
+    public DisruptionNotifier(
         IWaterlooClient waterlooClient,
         IStratfordClient stratfordClient,
         IUserNotifiedRepository userNotifiedRepository,
-        WriteNotificationRepository notificationRepository)
+        WriteNotificationRepository notificationRepository,
+        NotificationPublisher notificationPublisher)
     {
         _waterlooClient = waterlooClient ?? 
             throw new ArgumentNullException(nameof(waterlooClient));
@@ -32,6 +34,9 @@ public class DisruptionNotifer
 
         _notificationRepository = notificationRepository ??
             throw new ArgumentNullException(nameof(notificationRepository));
+
+        _notificationPublisher = notificationPublisher ??
+            throw new ArgumentNullException(nameof(notificationPublisher));
 
         _londonTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/London");
     }
@@ -111,11 +116,47 @@ public class DisruptionNotifer
         }
 
         var finalUsersToNotify = usersToNotify.Values.ToList();
+        var notifications = NotificationsCreate(disruption, finalUsersToNotify);
 
-        //await _notificationRepository.AddNotificationsAsync()
+        var notificationAdd = await _notificationRepository.AddNotificationsAsync(notifications);
+        if(notificationAdd.IsFailure) 
+        {
+            errors.Add($"Failed to add notifications, Error: {notificationAdd.Error}");
+            return Result.Failure(string.Join("; ", errors));
+        }
+
+        await _notificationPublisher.PublishAsync(notifications);
 
         return errors.Count != 0
             ? Result.Failure(string.Join("; ", errors))
             : Result.Success();
+    }
+
+    private static List<Notification> NotificationsCreate(
+        DisruptionDto disruptionDto,
+        IEnumerable<User> users)
+    {
+        var notifications = new List<Notification>();
+
+        foreach (var user in users)
+        {
+            var notification = new Notification()
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                LineId = disruptionDto.Line.Id,
+                DisruptionId = disruptionDto.Id,
+                StartStationId = user.StartStation.Id,
+                EndStationId = user.EndStation.Id,
+                SeverityId = disruptionDto.SeverityId,
+                DescriptionId = disruptionDto.DescriptionId,
+                SentTime = DateTime.UtcNow,
+                AffectedStationIds = [.. user.AffectedStations.Select(x => x.Id)],
+            };
+
+            notifications.Add(notification);
+        }
+
+        return notifications;
     }
 }
