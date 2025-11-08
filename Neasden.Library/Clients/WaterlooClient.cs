@@ -1,10 +1,13 @@
 ﻿using CSharpFunctionalExtensions;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
-using Neasden.API.Model;
+using Neasden.API;
 using Neasden.API.Options;
+using Neasden.Models;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 
-namespace Neasden.API.Client;
+namespace Neasden.Library.Clients;
 
 public class WaterlooClient : IWaterlooClient
 {
@@ -93,6 +96,54 @@ public class WaterlooClient : IWaterlooClient
         {
             return Result
                .Failure<IEnumerable<Station>>($"Exception getting stations with ids: {ids} error: {ex.Message}");
+        }
+    }
+
+    public async Task<Result<IEnumerable<AffectedUser>>> GetAffectedUsersAsync(
+        Guid line,
+        Guid startStation,
+        Guid endStation,
+        Severity severity,
+        TimeOnly time,
+        DayOfWeek queryDay,
+        CancellationToken cancellationToken = default)
+    {
+        _httpClient.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", _tokenProvider.CreateToken());
+
+        var url = QueryHelpers.AddQueryString(
+             $"{_waterlooOptions.BaseUrl}/{_waterlooOptions.AffectedUsers}",
+             new Dictionary<string, string?>
+             {
+                 ["LineId"] = line.ToString(),
+                 ["StartStationId"] = startStation.ToString(),
+                 ["EndStationId"] = endStation.ToString(),
+                 ["QueryTime"] = time.ToString("HH:mm"),
+                 ["QueryDay"] = queryDay.ToString(),
+                 ["Serverity"] = severity.ToString()
+             });
+
+        try
+        {
+            var response = await _httpClient.GetAsync(url, cancellationToken);
+            if (response.IsSuccessStatusCode)
+            {
+                var affectedUsers = await response.Content.ReadFromJsonAsync<IEnumerable<AffectedUser>>();
+                return affectedUsers is null
+                     ? Result.Failure<IEnumerable<AffectedUser>>(
+                         $"Null response from {startStation} to {endStation}")
+                     : Result.Success(affectedUsers);
+            }
+
+            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            return Result.Failure<IEnumerable<AffectedUser>>(
+                $"Affected user response failed {response.StatusCode}: {errorContent}");
+        }
+        catch (Exception ex)
+        {
+            return Result
+                .Failure<IEnumerable<AffectedUser>>($"Exception getting affected users from: {startStation} to {endStation} " +
+                $": {ex.Message}");
         }
     }
 }

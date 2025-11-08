@@ -2,8 +2,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Neasden.API.Client;
-using Neasden.API.Model;
+using Neasden.Library.Clients;
 using Neasden.Models;
 using Neasden.Repository.Integration.Tests;
 using Neasden.Repository.Read;

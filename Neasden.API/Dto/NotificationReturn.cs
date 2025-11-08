@@ -1,5 +1,4 @@
-﻿using Neasden.API.Model;
-using Neasden.Models;
+﻿using Neasden.Models;
 
 namespace Neasden.API.Dto;
 
