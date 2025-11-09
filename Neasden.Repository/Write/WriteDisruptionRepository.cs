@@ -6,134 +6,117 @@ using Neasden.Models;
 namespace Neasden.Repository.Write;
 public class WriteDisruptionRepository
 {
-    private readonly WriteDbContext _context;
     private readonly ILogger<WriteDisruptionRepository> _logger;
+    private readonly IDbContextFactory<WriteDbContext> _contextFactory;
 
     public WriteDisruptionRepository(
-        WriteDbContext context,
-        ILogger<WriteDisruptionRepository> logger)
+        ILogger<WriteDisruptionRepository> logger,
+                IDbContextFactory<WriteDbContext> contextFactory)
     {
-        _context = context ??
-            throw new ArgumentNullException(nameof(context));
-
         _logger = logger ??
             throw new ArgumentNullException(nameof(logger));
+        _contextFactory = contextFactory ??
+            throw new ArgumentNullException(nameof(contextFactory));
     }
 
-    public async Task<Result> AddDisruptionsAsync(IEnumerable<Disruption> disruptions)
+    public async Task<Result> AddDisruptionAsync(Disruption disruption)
     {
+        await using var context = _contextFactory.CreateDbContext();
+
+        if (context.Disruptions.Contains(disruption)) {
+            return Result.Success();
+        }
+
         try
         {
-            var newIds = disruptions.Select(d => d.Id).ToList();
-
-            var existingIds = await _context.Disruptions
-                .Where(d => newIds.Contains(d.Id))
-                .Select(d => d.Id)
-                .ToListAsync();
-
-            var newDisruptions = disruptions
-                .Where(d => !existingIds.Contains(d.Id))
-                .ToList();
-
-            if (newDisruptions.Count != 0)
-            {
-                await _context.Disruptions.AddRangeAsync(newDisruptions);
-                await _context.SaveChangesAsync();
-            }
+            await context.Disruptions.AddAsync(disruption);
+            await context.SaveChangesAsync();
 
             return Result.Success();
         }
-        catch (Exception ex)
+        catch (Exception ex) 
         {
-            var message = "Could not save disruptions to database.";
+            var message = $"Could not save disruption {disruption.Id}. error: {ex.Message}";
 
-            _logger.LogError(ex, message);
+            _logger.LogError(message);
             return Result.Failure(message);
         }
     }
 
-    public async Task<Result> AddDisruptionEndTimesAsync(IEnumerable<DisruptionEnd> disruptionEnds)
+    public async Task<Result> AddDisruptionEndTimeAsync(DisruptionEnd disruptionEnd)
     {
-        var endTimesDict = disruptionEnds.ToDictionary(d => d.Id, d => d.EndTime);
-        var ids = endTimesDict.Keys.ToList();
+        await using var context = _contextFactory.CreateDbContext();
 
-        var disruptionsToUpdate = await _context.Disruptions
-              .Where(d => ids.Contains(d.Id))
-              .ToListAsync();
+        var disruption = await context.Disruptions
+           .SingleOrDefaultAsync(x => x.Id == disruptionEnd.Id);
 
-        if (disruptionsToUpdate.Count == 0)
+        if (disruption == null)
         {
-            var message = "No matching disruptions found in the database for disruption ends.";
+            var message = $"Disruption {disruptionEnd.Id} does not exist on the database to save end.";
 
             _logger.LogError(message);
             return Result.Failure(message);
         }
 
-        foreach (var disruption in disruptionsToUpdate) {
-            disruption.EndTime = endTimesDict[disruption.Id];
-        }
-
         try
         {
-            await _context.SaveChangesAsync();
+            disruption.EndTime = disruptionEnd.EndTime;
+            await context.SaveChangesAsync();
+
             return Result.Success();
         }
         catch (Exception ex)
         {
-            var message = "Database could not save disruption end times.";
+            var message = $"Could not save disruption end time for {disruption.Id}. error: {ex.Message}";
 
-            _logger.LogError(ex, message);
+            _logger.LogError(message);
             return Result.Failure(message);
         }
     }
 
-    public async Task<Result> AddDisruptionSeveritiesAsync(IEnumerable<DisruptionSeverity> disruptionSeverities)
+    public async Task<Result> AddDisruptionSeverityAsync(DisruptionSeverity disruptionSeverity)
     {
+        await using var context = _contextFactory.CreateDbContext();
+
+        if (context.Severities.Contains(disruptionSeverity)) {
+            return Result.Success();
+        }
+
         try
         {
-            await _context.Severities.AddRangeAsync(disruptionSeverities);
-            await _context.SaveChangesAsync();
+            await context.Severities.AddAsync(disruptionSeverity);
+            await context.SaveChangesAsync();
 
             return Result.Success();
         }
         catch (Exception ex)
         {
-            var message = "Could not save disruption severities to database.";
+            var message = $"Could not save disruption severity {disruptionSeverity.Id}. error: {ex.Message}";
 
-            _logger.LogError(ex, message);
+            _logger.LogError(message);
             return Result.Failure(message);
         }
     }
 
-    public async Task<Result> AddDescriptionsAsync(IEnumerable<DisruptionDescription> descriptions)
+    public async Task<Result> AddDescriptionAsync(DisruptionDescription description)
     {
+        await using var context = _contextFactory.CreateDbContext();
+        if (context.Descriptions.Contains(description)) {
+            return Result.Success();
+        }
+
         try
         {
-            var existingIds = await _context.Descriptions
-                .AsNoTracking()
-                .Where(d => descriptions.Select(x => x.Id).Contains(d.Id))
-                .Select(d => d.Id)
-                .ToListAsync();
-
-            var newOnes = descriptions
-                .Where(d => !existingIds.Contains(d.Id))
-                .GroupBy(d => d.Id)
-                .Select(g => g.First())
-                .ToList();
-
-            if (newOnes.Count > 0)
-            {
-                await _context.Descriptions.AddRangeAsync(newOnes);
-                await _context.SaveChangesAsync();
-            }
+            await context.Descriptions.AddAsync(description);
+            await context.SaveChangesAsync();
 
             return Result.Success();
         }
         catch (Exception ex)
         {
-            var message = "Could not save disruption descriptions to database.";
+            var message = $"Could not save disruption description {description.Id}. error: {ex.Message}";
 
-            _logger.LogError(ex, message);
+            _logger.LogError(message);
             return Result.Failure(message);
         }
     }

@@ -1,6 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
-using Neasden.API.Client;
 using Neasden.API.Dto;
+using Neasden.Library.Clients;
 using Neasden.Models;
 using Neasden.Repository;
 using Neasden.Repository.Read;

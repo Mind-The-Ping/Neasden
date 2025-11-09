@@ -2,10 +2,9 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Neasden.API.Client;
-using Neasden.API.Model;
+using Neasden.Library.Clients;
 using Neasden.Models;
-using Neasden.Repository.Integration.Tests;
+using Neasden.Repository.Integration.Tests.Read;
 using Neasden.Repository.Read;
 using Neasden.Repository.Write;
 using NSubstitute;
@@ -28,7 +27,7 @@ public class NotificationRetrieverTests
             .UseNpgsql($"Host=localhost;Port=5434;Database={_databaseName};Username=neasdenUser;Password=password12345")
             .Options;
 
-        var _contextFactory = new TestDbContextFactory(readOptions);
+        var _contextFactory = new TestReadDbContextFactory(readOptions);
 
         using (var context = _contextFactory.CreateDbContext())
         {
@@ -101,8 +100,7 @@ public class NotificationRetrieverTests
             DisruptionId = disruption.Id,
             DescriptionId = description.Id,
             SentTime = disruption.StartTime.AddMinutes(5),
-            SeverityId = severity.Id,
-            NotificationSentBy = NotificationSentBy.Push
+            SeverityId = severity.Id
         };
 
         await _writeContext.Disruptions.AddAsync(disruption);
@@ -193,8 +191,7 @@ public class NotificationRetrieverTests
             DisruptionId = disruption.Id,
             DescriptionId = description.Id,
             SentTime = disruption.StartTime.AddMinutes(5),
-            SeverityId = severity.Id,
-            NotificationSentBy = NotificationSentBy.Push
+            SeverityId = severity.Id
         };
 
         await _writeContext.Disruptions.AddAsync(disruption);
@@ -305,8 +302,7 @@ public class NotificationRetrieverTests
             DisruptionId = disruption.Id,
             DescriptionId = description.Id,
             SentTime = disruption.StartTime.AddMinutes(5),
-            SeverityId = severity.Id,
-            NotificationSentBy = NotificationSentBy.Push
+            SeverityId = severity.Id
         };
 
         await _writeContext.Disruptions.AddAsync(disruption);

@@ -3,8 +3,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Neasden.API.Client;
-using Neasden.API.Model;
+using Neasden.Library.Clients;
 using Neasden.Models;
 using Neasden.Repository.Write;
 using NSubstitute;
@@ -97,7 +96,6 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
             DescriptionId = description.Id,
             SentTime = disruption.StartTime.AddMinutes(5),
             SeverityId = severity.Id,
-            NotificationSentBy = NotificationSentBy.Push
         };
 
         await _writeContext.Disruptions.AddAsync(disruption);
@@ -184,7 +182,6 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
             DescriptionId = description.Id,
             SentTime = disruption.StartTime.AddMinutes(5),
             SeverityId = severity.Id,
-            NotificationSentBy = NotificationSentBy.Push
         };
 
         await _writeContext.Disruptions.AddAsync(disruption);
@@ -270,8 +267,7 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
             DisruptionId = disruption.Id,
             DescriptionId = description.Id,
             SentTime = disruption.StartTime.AddMinutes(5),
-            SeverityId = severity.Id,
-            NotificationSentBy = NotificationSentBy.Push
+            SeverityId = severity.Id
         };
 
         await _writeContext.Disruptions.AddAsync(disruption);

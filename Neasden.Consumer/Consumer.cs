@@ -1,8 +1,10 @@
 using Azure.Messaging.ServiceBus;
-using CSharpFunctionalExtensions;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using Neasden.Consumer.Repositories;
+using Neasden.Consumer.Dto;
+using Neasden.Models;
+using Neasden.Repository.Write;
+using System.Text.Json;
 
 namespace Neasden.Consumer;
 
@@ -17,17 +19,20 @@ public enum SaveType
 public class Consumer
 {
     private readonly ILogger<Consumer> _logger;
-    private readonly DisruptionConsumerRepo _disruptionRepo;
-    private readonly NotificationConsumerRepo _notificationRepo;
+    private readonly DisruptionNotifier _notifer;
+    private readonly WriteDisruptionRepository _writeDisruptionRepository;
 
     public Consumer(
         ILogger<Consumer> logger,
-        DisruptionConsumerRepo disruptionRepo,
-        NotificationConsumerRepo notificationRepo)
+        DisruptionNotifier notifer,
+        WriteDisruptionRepository writeDisruptionRepository)
     {
-        _logger = logger;
-        _disruptionRepo = disruptionRepo;
-        _notificationRepo = notificationRepo;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _notifer = notifer ?? throw new ArgumentNullException( nameof(notifer));
+
+        _writeDisruptionRepository = writeDisruptionRepository ?? 
+            throw new ArgumentNullException(nameof(writeDisruptionRepository));
+
     }
 
     [Function("DisruptionsConsumer")]
@@ -40,7 +45,26 @@ public class Consumer
         _logger.LogInformation("Message Body: {body}", message.Body);
         _logger.LogInformation("Message Content-Type: {contentType}", message.ContentType);
 
-        await _disruptionRepo.AddDisruptionAsync(message.Body);
+
+        try
+        {
+            var json = message.Body.ToArray();
+            var disruptionDto = JsonSerializer.Deserialize<DisruptionDto>(json);
+            var disruption = new Disruption()
+            {
+                Id = disruptionDto!.Id,
+                LineId = disruptionDto.Line.Id,
+                StartStationId = disruptionDto.StartStationId,
+                EndStationId = disruptionDto.EndStationId,
+                StartTime = disruptionDto.StartTime
+            };
+
+            await _writeDisruptionRepository.AddDisruptionAsync(disruption);
+            await _notifer.NotifyDisruptionAsync(disruptionDto!);
+        }
+        catch (Exception ex) {
+            _logger.LogError(ex, "Could not deserialize disruption.");
+        }
 
         await messageActions.CompleteMessageAsync(message);
     }
@@ -55,7 +79,15 @@ public class Consumer
         _logger.LogInformation("Message Body: {body}", message.Body);
         _logger.LogInformation("Message Content-Type: {contentType}", message.ContentType);
 
-        await _disruptionRepo.UpdateDisruptionSeverityAsync(message.Body);
+        try
+        {
+            var json = message.Body.ToArray();
+            var disruptionSeverity = JsonSerializer.Deserialize<DisruptionSeverity>(json);
+            await _writeDisruptionRepository.AddDisruptionSeverityAsync(disruptionSeverity!);
+        }
+        catch(Exception ex) {
+            _logger.LogError(ex, "Could not deserialize disruption severity.");
+        }
 
         await messageActions.CompleteMessageAsync(message);
     }
@@ -70,7 +102,16 @@ public class Consumer
         _logger.LogInformation("Message Body: {body}", message.Body);
         _logger.LogInformation("Message Content-Type: {contentType}", message.ContentType);
 
-        await _disruptionRepo.AddDisruptionEndTimeAsync(message.Body);
+        try
+        {
+            var json = message.Body.ToArray();
+            var disruptionEnd = JsonSerializer.Deserialize<DisruptionEnd>(json);
+            await _writeDisruptionRepository.AddDisruptionEndTimeAsync(disruptionEnd!);
+            await _notifer.NotifyDisruptionEndAsync(disruptionEnd!);
+        }
+        catch (Exception ex) {
+            _logger.LogError(ex, "Could not deserialize disruption end.");
+        }
 
         await messageActions.CompleteMessageAsync(message);
     }
@@ -85,22 +126,15 @@ public class Consumer
         _logger.LogInformation("Message Body: {body}", message.Body);
         _logger.LogInformation("Message Content-Type: {contentType}", message.ContentType);
 
-        await _disruptionRepo.AddDisruptionDescriptionAsync(message.Body);
-
-        await messageActions.CompleteMessageAsync(message);
-    }
-
-    [Function("NotificationConsumer")]
-    public async Task NotificationHandler(
-      [ServiceBusTrigger("%QueueNotifications%", Connection = "ServiceBusConnection")]
-      ServiceBusReceivedMessage message,
-      ServiceBusMessageActions messageActions)
-    {
-        _logger.LogInformation("Message ID: {id}", message.MessageId);
-        _logger.LogInformation("Message Body: {body}", message.Body);
-        _logger.LogInformation("Message Content-Type: {contentType}", message.ContentType);
-
-        await _notificationRepo.AddNotificationAsync(message.Body);
+        try
+        {
+            var json = message.Body.ToArray();
+            var disruptionDescription = JsonSerializer.Deserialize<DisruptionDescription>(json);
+            await _writeDisruptionRepository.AddDescriptionAsync(disruptionDescription!);
+        }
+        catch (Exception ex) {
+            _logger.LogError(ex, "Could not deserialize disruption end.");
+        }
 
         await messageActions.CompleteMessageAsync(message);
     }

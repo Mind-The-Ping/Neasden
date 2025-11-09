@@ -5,7 +5,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
-using Neasden.Repository.Database;
 using Neasden.Repository.Read;
 using System.Security.Claims;
 using System.Text;

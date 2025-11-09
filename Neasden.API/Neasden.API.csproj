@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Neasden.Library\Neasden.Library.csproj" />
     <ProjectReference Include="..\Neasden.Repository\Neasden.Repository.csproj" />
   </ItemGroup>
 
