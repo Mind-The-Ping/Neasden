@@ -115,4 +115,20 @@ public class UserNotifiedRepository : IUserNotifiedRepository
             await _database.KeyDeleteAsync(indexKey);
         }
     }
+
+    public async Task DeleteUsersAsync(Guid disruptionId, IEnumerable<User> users)
+    {
+        var batch = _database.CreateBatch();
+        var tasks = new List<Task>();
+
+        foreach (var user in users)
+        {
+            var key = $"notified:{disruptionId}:{user.Id}";
+            tasks.Add(batch.KeyDeleteAsync(key));
+            tasks.Add(batch.SetRemoveAsync($"notified_index:{disruptionId}", key));
+        }
+
+        batch.Execute();
+        await Task.WhenAll(tasks);
+    }
 }

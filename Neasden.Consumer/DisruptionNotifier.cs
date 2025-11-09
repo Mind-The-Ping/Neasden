@@ -43,7 +43,7 @@ public class DisruptionNotifier
 
     public async Task<Result> NotifyDisruptionAsync(DisruptionDto disruption)
     {
-        var notifiedUsers = await _userNotifiedRepository
+        var allNotifiedUsers = await _userNotifiedRepository
             .GetUsersByDisruptionIdAsync(disruption.Id);
 
         var localTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _londonTimeZone);
@@ -61,6 +61,19 @@ public class DisruptionNotifier
         }
 
         var affectedUserIds = affectedUsers.Value.Select(u => u.Id).ToHashSet();
+
+        var usersToRemove = allNotifiedUsers
+        .Where(u => !affectedUserIds.Contains(u.Id))
+        .ToList();
+
+        if (usersToRemove.Count > 0) {
+            await _userNotifiedRepository.DeleteUsersAsync(disruption.Id, usersToRemove);
+        }
+
+        var notifiedUsers = allNotifiedUsers
+        .Where(u => affectedUserIds.Contains(u.Id))
+        .ToList();
+
         notifiedUsers = [.. notifiedUsers.Where(u => affectedUserIds.Contains(u.Id))];
 
         var newUsers = affectedUsers.Value.ToList();
