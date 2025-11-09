@@ -60,6 +60,9 @@ public class DisruptionNotifier
             return Result.Failure($"Failed to get affected users : {affectedUsers.Error}");
         }
 
+        var affectedUserIds = affectedUsers.Value.Select(u => u.Id).ToHashSet();
+        notifiedUsers = [.. notifiedUsers.Where(u => affectedUserIds.Contains(u.Id))];
+
         var newUsers = affectedUsers.Value.ToList();
         var usersToNotify = new Dictionary<Guid, User>();
 
@@ -127,6 +130,7 @@ public class DisruptionNotifier
         }
 
         await _notificationPublisher.PublishAsync(notifications);
+        await _userNotifiedRepository.SaveUsersAsync(finalUsersToNotify);
 
         return errors.Count != 0
             ? Result.Failure(string.Join("; ", errors))
