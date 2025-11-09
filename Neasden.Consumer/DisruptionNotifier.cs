@@ -129,7 +129,7 @@ public class DisruptionNotifier
             return Result.Failure(string.Join("; ", errors));
         }
 
-        await _notificationPublisher.PublishAsync(notifications);
+        await _notificationPublisher.PublishAsync(finalUsersToNotify);
         await _userNotifiedRepository.SaveUsersAsync(finalUsersToNotify);
 
         return errors.Count != 0
@@ -168,6 +168,7 @@ public class DisruptionNotifier
                 AffectedStationIds = [.. user.AffectedStations.Select(x => x.Id)],
             };
 
+            user.NotificationId = notification.Id;
             notifications.Add(notification);
         }
 

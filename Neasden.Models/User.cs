@@ -13,7 +13,7 @@ public class User(
 {
     public Guid Id { get; init; } = id;
     public Guid DisruptionId { get; init; } = disruptionId;
-    public Guid? NotificationId { get; set; }
+    public Guid NotificationId { get; set; }
     public Line Line { get; init; } = line;
     public Station StartStation { get; init; } = startStation;
     public Station EndStation { get; init; } = endStation;

@@ -31,17 +31,17 @@ public class NotificationPublisher : INotificationPublisher
         _resolvedNotificationSender = CreateSender(options.ResolvedNotifications, "ServiceBus:Queues:ResolvedNotifications");
     }
 
-    public async Task PublishAsync(IEnumerable<Notification> notifications)
+    public async Task PublishAsync(IEnumerable<User> users)
     {
-        foreach (var notification in notifications)
+        foreach (var user in users)
         {
-            var message = BinaryData.FromObjectAsJson(notification);
+            var message = BinaryData.FromObjectAsJson(user);
 
             try {
                 await _notificationSender.SendMessageAsync(new ServiceBusMessage(message));
             }
             catch (Exception ex) {
-                _logger.LogError($"Could not send notification message {notification.Id}.", ex);
+                _logger.LogError($"Could not send notification message {user.Id}.", ex);
             }
         }
     }
