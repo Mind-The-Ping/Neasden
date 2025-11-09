@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using Neasden.Models;
 
 namespace Neasden.Repository.Write;
-public class WriteNotificationRepository
+public class WriteNotificationRepository : IWriteNotificationRepository
 {
     private readonly WriteDbContext _context;
     private readonly ILogger<WriteNotificationRepository> _logger;

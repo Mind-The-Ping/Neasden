@@ -1,7 +1,12 @@
-﻿using Neasden.Consumer.Clients.StratfordClient;
+﻿using CSharpFunctionalExtensions;
+using FluentAssertions;
+using Neasden.Consumer.Clients.StratfordClient;
+using Neasden.Consumer.Dto;
+using Neasden.Consumer.Models;
 using Neasden.Consumer.Repositories;
 using Neasden.Library.Clients;
 using Neasden.Models;
+using Neasden.Repository.Write;
 using NSubstitute;
 
 namespace Neasden.Consumer.Unit.Tests;
@@ -12,6 +17,8 @@ public class DisruptionNotifierTests
     private readonly IWaterlooClient _waterlooClient;
     private readonly IStratfordClient _stratfordClient;
     private readonly IUserNotifiedRepository _userNotifiedRepository;
+    private readonly IWriteNotificationRepository _writeNotificationRepository;
+    private readonly INotificationPublisher _notificationPublisher;
 
     private readonly Line _line;
     private readonly Station _startStation;
@@ -35,5 +42,354 @@ public class DisruptionNotifierTests
         _waterlooClient =  Substitute.For<IWaterlooClient>();
         _stratfordClient = Substitute.For<IStratfordClient>();
         _userNotifiedRepository =  Substitute.For<IUserNotifiedRepository>();
+        _writeNotificationRepository = Substitute.For<IWriteNotificationRepository>();
+        _notificationPublisher = Substitute.For<INotificationPublisher>();
+
+        _notifier = new DisruptionNotifier(
+            _waterlooClient,
+            _stratfordClient,
+            _userNotifiedRepository,
+            _writeNotificationRepository,
+            _notificationPublisher);
+    }
+
+    [Fact]
+    public async Task DisruptionNotifier_NotifyDisruptionAsync_New_Users_Disruption_Notifys_New_Users_Only()
+    {
+        _userNotifiedRepository.GetUsersByDisruptionIdAsync(Arg.Any<Guid>())
+          .Returns(Enumerable.Empty<User>());
+
+        _userNotifiedRepository.SaveUsersAsync(Arg.Any<IEnumerable<User>>())
+            .Returns(Result.Success());
+
+        _userNotifiedRepository.DeleteByDisruptionIdAsync(Arg.Any<Guid>())
+            .Returns(Task.CompletedTask);
+
+        var affectedUsers = new List<AffectedUser>
+        {
+            new(Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime),
+            new(Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime)
+        };
+
+        _waterlooClient.GetAffectedUsersAsync(
+            Arg.Any<Guid>(),
+            Arg.Any<Guid>(),
+            Arg.Any<Guid>(),
+            Arg.Any<Severity>(),
+            Arg.Any<TimeOnly>(),
+            Arg.Any<DayOfWeek>())
+            .Returns(Result.Success<IEnumerable<AffectedUser>>(affectedUsers));
+
+        var userDetails = new List<UserDetails>
+        {
+            new(affectedUsers.First().Id, "+447123456789", PhoneOS.Android),
+            new(affectedUsers.Last().Id, "+447234567890", PhoneOS.IOS)
+        };
+
+        _stratfordClient.GetUserDetailsAsync(Arg.Any<IEnumerable<Guid>>())
+            .Returns(Result.Success<IEnumerable<UserDetails>>(userDetails));
+
+        var disruption = new DisruptionDto(
+           Guid.NewGuid(),
+           _line,
+           _startStation.Id,
+           _endStation.Id,
+           Severity.Suspended,
+           Guid.NewGuid(),
+           Guid.NewGuid(),
+           DateTime.UtcNow);
+
+        _writeNotificationRepository.AddNotificationsAsync(Arg.Any<IEnumerable<Notification>>())
+            .Returns(Result.Success());
+
+        IEnumerable<Notification> capturedNotifications = null!;
+
+        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Notification>>(c => capturedNotifications = c))
+            .Returns(Task.CompletedTask);
+
+        await _notifier.NotifyDisruptionAsync(disruption);
+
+        capturedNotifications.Count().Should().Be(2);
+
+        capturedNotifications.First().UserId.Should().Be(affectedUsers.First().Id);
+        capturedNotifications.First().LineId.Should().Be(disruption.Line.Id);
+        capturedNotifications.First().DisruptionId.Should().Be(disruption.Id);
+        capturedNotifications.First().StartStationId.Should().Be(affectedUsers.First().StartStation.Id);
+        capturedNotifications.First().EndStationId.Should().Be(affectedUsers.First().EndStation.Id);
+        capturedNotifications.First().SeverityId.Should().Be(disruption.SeverityId);
+        capturedNotifications.First().DescriptionId.Should().Be(disruption.DescriptionId);
+        capturedNotifications.First().AffectedStationIds.Should()
+            .BeEquivalentTo(affectedUsers.First().AffectedStations.Select(x => x.Id).ToList());
+
+        capturedNotifications.Last().UserId.Should().Be(affectedUsers.Last().Id);
+        capturedNotifications.Last().LineId.Should().Be(disruption.Line.Id);
+        capturedNotifications.Last().DisruptionId.Should().Be(disruption.Id);
+        capturedNotifications.Last().StartStationId.Should().Be(affectedUsers.Last().StartStation.Id);
+        capturedNotifications.Last().EndStationId.Should().Be(affectedUsers.Last().EndStation.Id);
+        capturedNotifications.Last().SeverityId.Should().Be(disruption.SeverityId);
+        capturedNotifications.Last().DescriptionId.Should().Be(disruption.DescriptionId);
+        capturedNotifications.Last().AffectedStationIds.Should()
+            .BeEquivalentTo(affectedUsers.Last().AffectedStations.Select(x => x.Id).ToList());
+    }
+
+    [Fact]
+    public async Task DisruptionNotifier_NotifyDisruptionAsync_NewUsers_NotifiedUsers_SameSeverity_Disruption_Notifys_New_Users_Only()
+    {
+        var severity = Severity.Severe;
+
+        var disruption = new DisruptionDto(
+            Guid.NewGuid(),
+            _line,
+            _startStation.Id,
+            _endStation.Id,
+            severity,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            DateTime.UtcNow);
+
+        var users = new List<User>
+        {
+            new(
+                Guid.NewGuid(),
+                disruption.Id,
+                _line,
+                _startStation,
+                _endStation,
+                severity,
+                "+447123456789",
+                PhoneOS.Android,
+                _endTime,
+                _affectedStations),
+            new(
+                Guid.NewGuid(),
+                disruption.Id,
+                _line,
+                _startStation,
+                _endStation,
+                severity,
+                 "+447234567890",
+                 PhoneOS.Android,
+                _endTime,
+                _affectedStations),
+        };
+
+        _userNotifiedRepository.GetUsersByDisruptionIdAsync(Arg.Any<Guid>())
+            .Returns(users);
+
+        _userNotifiedRepository.SaveUsersAsync(Arg.Any<IEnumerable<User>>())
+           .Returns(Result.Success());
+
+        _userNotifiedRepository.DeleteByDisruptionIdAsync(Arg.Any<Guid>())
+           .Returns(Task.CompletedTask);
+
+        var affectedUsers = new List<AffectedUser>
+        {
+            new(Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime),
+            new(Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime)
+        };
+
+        _waterlooClient.GetAffectedUsersAsync(
+             Arg.Any<Guid>(),
+             Arg.Any<Guid>(),
+             Arg.Any<Guid>(),
+             Arg.Any<Severity>(),
+             Arg.Any<TimeOnly>(),
+             Arg.Any<DayOfWeek>())
+             .Returns(Result.Success<IEnumerable<AffectedUser>>(affectedUsers));
+
+        var userDetails = new List<UserDetails>
+        {
+            new(affectedUsers.First().Id, "+447345678901", PhoneOS.Android),
+            new(affectedUsers.Last().Id, "+447456789012", PhoneOS.IOS)
+        };
+
+        _stratfordClient.GetUserDetailsAsync(Arg.Any<IEnumerable<Guid>>())
+           .Returns(Result.Success<IEnumerable<UserDetails>>(userDetails));
+
+
+        _writeNotificationRepository.AddNotificationsAsync(Arg.Any<IEnumerable<Notification>>())
+           .Returns(Result.Success());
+
+        IEnumerable<Notification> capturedNotifications = null!;
+
+        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Notification>>(c => capturedNotifications = c))
+            .Returns(Task.CompletedTask);
+
+        await _notifier.NotifyDisruptionAsync(disruption);
+
+        capturedNotifications.Count().Should().Be(2);
+
+        capturedNotifications.First().UserId.Should().Be(affectedUsers.First().Id);
+        capturedNotifications.First().LineId.Should().Be(disruption.Line.Id);
+        capturedNotifications.First().DisruptionId.Should().Be(disruption.Id);
+        capturedNotifications.First().StartStationId.Should().Be(affectedUsers.First().StartStation.Id);
+        capturedNotifications.First().EndStationId.Should().Be(affectedUsers.First().EndStation.Id);
+        capturedNotifications.First().SeverityId.Should().Be(disruption.SeverityId);
+        capturedNotifications.First().DescriptionId.Should().Be(disruption.DescriptionId);
+        capturedNotifications.First().AffectedStationIds.Should()
+            .BeEquivalentTo(affectedUsers.First().AffectedStations.Select(x => x.Id).ToList());
+
+        capturedNotifications.Last().UserId.Should().Be(affectedUsers.Last().Id);
+        capturedNotifications.Last().LineId.Should().Be(disruption.Line.Id);
+        capturedNotifications.Last().DisruptionId.Should().Be(disruption.Id);
+        capturedNotifications.Last().StartStationId.Should().Be(affectedUsers.Last().StartStation.Id);
+        capturedNotifications.Last().EndStationId.Should().Be(affectedUsers.Last().EndStation.Id);
+        capturedNotifications.Last().SeverityId.Should().Be(disruption.SeverityId);
+        capturedNotifications.Last().DescriptionId.Should().Be(disruption.DescriptionId);
+        capturedNotifications.Last().AffectedStationIds.Should()
+            .BeEquivalentTo(affectedUsers.Last().AffectedStations.Select(x => x.Id).ToList());
+    }
+
+    [Fact]
+    public async Task DisruptionNotifier_NotifyDisruptionAsync_NewUsers_NotifiedUsers_DifferentSeverity_Disruption_Notifys_All()
+    {
+        var disruption = new DisruptionDto(
+           Guid.NewGuid(),
+           _line,
+           _startStation.Id,
+           _endStation.Id,
+           Severity.Minor,
+           Guid.NewGuid(),
+           Guid.NewGuid(),
+           DateTime.UtcNow);
+
+        var users = new List<User>
+        {
+            new(
+                Guid.NewGuid(),
+                disruption.Id,
+                _line,
+                _startStation,
+                _endStation,
+                 Severity.Severe,
+                "+447123456789",
+                PhoneOS.Android,
+                _endTime,
+                _affectedStations),
+            new(
+                Guid.NewGuid(),
+                disruption.Id,
+                _line,
+                _startStation,
+                _endStation,
+                 Severity.Severe,
+                 "+447234567890",
+                 PhoneOS.Android,
+                _endTime,
+                _affectedStations),
+        };
+
+        _userNotifiedRepository.GetUsersByDisruptionIdAsync(Arg.Any<Guid>())
+           .Returns(users);
+
+        _userNotifiedRepository.SaveUsersAsync(Arg.Any<IEnumerable<User>>())
+          .Returns(Result.Success());
+
+        _userNotifiedRepository.DeleteByDisruptionIdAsync(Arg.Any<Guid>())
+           .Returns(Task.CompletedTask);
+
+        var affectedUsers = new List<AffectedUser>
+        {
+            new(Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime),
+            new(Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime)
+        };
+
+        _waterlooClient.GetAffectedUsersAsync(
+           Arg.Any<Guid>(),
+           Arg.Any<Guid>(),
+           Arg.Any<Guid>(),
+           Arg.Any<Severity>(),
+           Arg.Any<TimeOnly>(),
+           Arg.Any<DayOfWeek>())
+           .Returns(Result.Success<IEnumerable<AffectedUser>>(affectedUsers));
+
+        var userDetails = new List<UserDetails>
+        {
+            new(affectedUsers.First().Id, "+447345678901", PhoneOS.Android),
+            new(affectedUsers.Last().Id, "+447456789012", PhoneOS.IOS)
+        };
+
+        _stratfordClient.GetUserDetailsAsync(Arg.Any<IEnumerable<Guid>>())
+          .Returns(Result.Success<IEnumerable<UserDetails>>(userDetails));
+
+        IEnumerable<Notification> capturedNotifications = null!;
+
+        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Notification>>(c => capturedNotifications = c))
+            .Returns(Task.CompletedTask);
+
+        await _notifier.NotifyDisruptionAsync(disruption);
+
+        capturedNotifications.Count().Should().Be(4);
+    }
+
+    [Fact]
+    public async Task DisruptionNotifier_NotifyDisruptionAsync_NewUser_NotifiedUser_Different_Severity_Disruption_Notify_Sends_New()
+    {
+        var severityId = Guid.NewGuid();
+        var disruption = new DisruptionDto(
+            Guid.NewGuid(),
+            _line,
+            _startStation.Id,
+            _endStation.Id,
+            Severity.Minor,
+            severityId,
+            Guid.NewGuid(),
+            DateTime.UtcNow);
+
+        var users = new List<User>
+        {
+            new(
+                Guid.NewGuid(),
+                disruption.Id,
+                _line,
+                _startStation,
+                _endStation,
+                Severity.Severe,
+                "+447123456789",
+                PhoneOS.Android,
+                _endTime,
+                _affectedStations)
+        };
+
+        _userNotifiedRepository.GetUsersByDisruptionIdAsync(Arg.Any<Guid>())
+          .Returns(users);
+
+        _userNotifiedRepository.SaveUsersAsync(Arg.Any<IEnumerable<User>>())
+         .Returns(Result.Success());
+
+        _userNotifiedRepository.DeleteByDisruptionIdAsync(Arg.Any<Guid>())
+           .Returns(Task.CompletedTask);
+
+        var affectedUsers = new List<AffectedUser>
+        {
+            new(users.First().Id, _startStation, _endStation, _affectedStations, _endTime),
+        };
+
+        _waterlooClient.GetAffectedUsersAsync(
+            Arg.Any<Guid>(),
+            Arg.Any<Guid>(),
+            Arg.Any<Guid>(),
+            Arg.Any<Severity>(),
+            Arg.Any<TimeOnly>(),
+            Arg.Any<DayOfWeek>())
+            .Returns(Result.Success<IEnumerable<AffectedUser>>(affectedUsers));
+
+        var userDetails = new List<UserDetails>
+        {
+            new(affectedUsers.First().Id, "+447345678901", PhoneOS.Android),
+        };
+
+        _stratfordClient.GetUserDetailsAsync(Arg.Any<IEnumerable<Guid>>())
+          .Returns(Result.Success<IEnumerable<UserDetails>>(userDetails));
+
+        IEnumerable<Notification> capturedNotifications = null!;
+
+        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Notification>>(c => capturedNotifications = c))
+            .Returns(Task.CompletedTask);
+
+        await _notifier.NotifyDisruptionAsync(disruption);
+
+        capturedNotifications.Count().Should().Be(1);
+        capturedNotifications.First().UserId.Should().Be(affectedUsers.First().Id);
     }
 }

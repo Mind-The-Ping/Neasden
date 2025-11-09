@@ -5,9 +5,10 @@ using Neasden.Library.Options;
 using Neasden.Models;
 
 namespace Neasden.Consumer;
-public class NotificationPublisher
+public class NotificationPublisher : INotificationPublisher
 {
-    private readonly ServiceBusSender _sender;
+    private readonly ServiceBusSender _notificationSender;
+    private readonly ServiceBusSender _resolvedNotificationSender;
     private readonly ILogger<NotificationPublisher> _logger;
 
     public NotificationPublisher(
@@ -26,7 +27,8 @@ public class NotificationPublisher
             return serviceBusClient.CreateSender(name);
         }
 
-        _sender = CreateSender(options.Notifications, "ServiceBus:Queues:Notifications");
+        _notificationSender = CreateSender(options.Notifications, "ServiceBus:Queues:Notifications");
+        _resolvedNotificationSender = CreateSender(options.ResolvedNotifications, "ServiceBus:Queues:ResolvedNotifications");
     }
 
     public async Task PublishAsync(IEnumerable<Notification> notifications)
@@ -36,10 +38,25 @@ public class NotificationPublisher
             var message = BinaryData.FromObjectAsJson(notification);
 
             try {
-                await _sender.SendMessageAsync(new ServiceBusMessage(message));
+                await _notificationSender.SendMessageAsync(new ServiceBusMessage(message));
             }
             catch (Exception ex) {
                 _logger.LogError($"Could not send notification message {notification.Id}.", ex);
+            }
+        }
+    }
+
+    public async Task PublishResolvedAsync(IEnumerable<User> notifiedUsers)
+    {
+        foreach (var user in notifiedUsers)
+        {
+            var message = BinaryData.FromObjectAsJson(user);
+
+            try {
+                await _resolvedNotificationSender.SendMessageAsync(new ServiceBusMessage(message));
+            }
+            catch (Exception ex) {
+                _logger.LogError($"Could not send resolved notification message for user {user.Id}.", ex);
             }
         }
     }

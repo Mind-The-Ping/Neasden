@@ -48,10 +48,10 @@ builder.Services.AddScoped<TokenProvider>();
 builder.Services.AddScoped<IWaterlooClient, WaterlooClient>();
 builder.Services.AddScoped<IStratfordClient, StratfordClient>();
 builder.Services.AddScoped<IUserNotifiedRepository, UserNotifiedRepository>();
-builder.Services.AddScoped<NotificationPublisher>();
+builder.Services.AddScoped<INotificationPublisher, NotificationPublisher>();
 builder.Services.AddScoped<DisruptionNotifier>();
 builder.Services.AddScoped<WriteDisruptionRepository>();
-builder.Services.AddScoped<WriteNotificationRepository>();
+builder.Services.AddScoped<IWriteNotificationRepository,  WriteNotificationRepository>();
 
 builder.Services
     .AddApplicationInsightsTelemetryWorkerService()

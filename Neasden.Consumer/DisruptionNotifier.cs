@@ -13,15 +13,15 @@ public class DisruptionNotifier
     private readonly IWaterlooClient _waterlooClient;
     private readonly IStratfordClient _stratfordClient;
     private readonly IUserNotifiedRepository _userNotifiedRepository;
-    private readonly WriteNotificationRepository _notificationRepository;
-    private readonly NotificationPublisher _notificationPublisher;
+    private readonly IWriteNotificationRepository _notificationRepository;
+    private readonly INotificationPublisher _notificationPublisher;
 
     public DisruptionNotifier(
         IWaterlooClient waterlooClient,
         IStratfordClient stratfordClient,
         IUserNotifiedRepository userNotifiedRepository,
-        WriteNotificationRepository notificationRepository,
-        NotificationPublisher notificationPublisher)
+        IWriteNotificationRepository notificationRepository,
+        INotificationPublisher notificationPublisher)
     {
         _waterlooClient = waterlooClient ?? 
             throw new ArgumentNullException(nameof(waterlooClient));
@@ -119,6 +119,7 @@ public class DisruptionNotifier
         var notifications = NotificationsCreate(disruption, finalUsersToNotify);
 
         var notificationAdd = await _notificationRepository.AddNotificationsAsync(notifications);
+
         if(notificationAdd.IsFailure) 
         {
             errors.Add($"Failed to add notifications, Error: {notificationAdd.Error}");
@@ -130,6 +131,15 @@ public class DisruptionNotifier
         return errors.Count != 0
             ? Result.Failure(string.Join("; ", errors))
             : Result.Success();
+    }
+
+    public async Task NotifyDisruptionEndAsync(DisruptionEnd disruptionEnd)
+    {
+        var notifiedUsers = await _userNotifiedRepository
+            .GetUsersByDisruptionIdAsync(disruptionEnd.Id);
+
+        await _notificationPublisher.PublishResolvedAsync(notifiedUsers);
+        await _userNotifiedRepository.DeleteByDisruptionIdAsync(disruptionEnd.Id);
     }
 
     private static List<Notification> NotificationsCreate(

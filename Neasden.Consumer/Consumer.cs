@@ -107,6 +107,7 @@ public class Consumer
             var json = message.Body.ToArray();
             var disruptionEnd = JsonSerializer.Deserialize<DisruptionEnd>(json);
             await _writeDisruptionRepository.AddDisruptionEndTimeAsync(disruptionEnd!);
+            await _notifer.NotifyDisruptionEndAsync(disruptionEnd!);
         }
         catch (Exception ex) {
             _logger.LogError(ex, "Could not deserialize disruption end.");
