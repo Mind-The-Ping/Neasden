@@ -176,7 +176,7 @@ public class UserNotifiedRepositoryTests : IAsyncLifetime
             Severity.Minor,
             "+441234567890",
             PhoneOS.Android,
-            new TimeOnly(5, 15),
+            TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(2)),
             affectedStations);
 
         var user2 = new User(
@@ -188,7 +188,7 @@ public class UserNotifiedRepositoryTests : IAsyncLifetime
             Severity.Severe,
             "+441244562891",
             PhoneOS.IOS,
-            new TimeOnly(5, 15),
+            TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(2)),
             affectedStations);
 
         var users = new List<User>
@@ -202,6 +202,78 @@ public class UserNotifiedRepositoryTests : IAsyncLifetime
 
         var result = await userNotifiedRepository.GetUsersByDisruptionIdAsync(disruptionId);
         result.Count().Should().Be(0);
+    }
+
+    [Fact]
+    public async Task UserNotifiedRepository_DeleteUsersAsync_Successfully()
+    {
+        var multiplexer = ConnectionMultiplexer.Connect(_redisContainer.GetConnectionString());
+        var userNotifiedRepository = new UserNotifiedRepository(multiplexer);
+
+        var disruptionId = Guid.NewGuid();
+
+        var line = new Line(Guid.Parse("c7f7c41a-03d2-4a79-9e8e-b55b1b5a056e"), "Central");
+        var startStation = new Station(Guid.Parse("44e87f5b-015d-42f8-a250-232e226de45b"), "Chancery Lane");
+        var endStation = new Station(Guid.Parse("73bce1de-143f-4903-928a-c34ceb3db42e"), "Mile End");
+        var affectedStations = new List<Station>()
+        {
+           new(Guid.Parse("44e87f5b-015d-42f8-a250-232e226de45b"), "Chancery Lane"),
+           new(Guid.Parse("299580df-c896-486f-898d-c51f4a0bd0d2"), "St. Pauls"),
+           new(Guid.Parse("aaedc653-e766-4d6b-87e2-4c87322971ef"), "Bank"),
+           new(Guid.Parse("db101bcd-350e-4485-b875-7ac2c8c1b6cc"), "Liverpool Street"),
+           new(Guid.Parse("b7a5ae67-882b-4509-8df9-4bae2ef1dd2a"), "Bethnal Green"),
+           new(Guid.Parse("73bce1de-143f-4903-928a-c34ceb3db42e"), "Mile End")
+        };
+
+        var user1 = new User(
+            Guid.NewGuid(),
+            disruptionId,
+            line,
+            startStation,
+            endStation,
+            Severity.Minor,
+            "+441234567890",
+            PhoneOS.Android,
+            TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(2)),
+            affectedStations);
+
+        var user2 = new User(
+            Guid.NewGuid(),
+            disruptionId,
+            line,
+            startStation,
+            endStation,
+            Severity.Severe,
+            "+441244562891",
+            PhoneOS.IOS,
+            TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(2)),
+            affectedStations);
+
+        var user3 = new User(
+            Guid.NewGuid(),
+            disruptionId,
+            line,
+            startStation,
+            endStation,
+            Severity.Severe,
+            "+441244562822",
+            PhoneOS.IOS,
+            TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(2)),
+            affectedStations);
+
+        var users = new List<User>
+        {
+            user1,
+            user2,
+            user3,
+        };
+
+        await userNotifiedRepository.SaveUsersAsync(users);
+        await userNotifiedRepository.DeleteUsersAsync(disruptionId, [user1, user2]);
+
+        var result = await userNotifiedRepository.GetUsersByDisruptionIdAsync(disruptionId);
+        result.Count().Should().Be(1);
+        result.First().Id.Should().Be(user3.Id);
     }
 
     [Fact]
