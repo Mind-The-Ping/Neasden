@@ -1,3 +1,4 @@
+using Azure.Messaging.ServiceBus;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -31,8 +32,20 @@ builder.Services.Configure<StratfordOptions>(
 builder.Services.Configure<ServiceBusOptions>(
     builder.Configuration.GetSection("ServiceBus"));
 
+builder.Services.AddOptions<RedisOptions>()
+    .Configure<IConfiguration>((settings, configuration) =>
+    {
+        configuration.GetSection("Redis").Bind(settings);
+    });
+
 builder.Services.AddDbContextFactory<WriteDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddSingleton(sp =>
+{
+    var options = sp.GetRequiredService<IOptions<ServiceBusOptions>>().Value;
+    return new ServiceBusClient(options.ConnectionString);
+});
 
 builder.Services.AddSingleton(sp =>
 {
