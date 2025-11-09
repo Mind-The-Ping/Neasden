@@ -102,34 +102,36 @@ public class DisruptionNotifierTests
         _writeNotificationRepository.AddNotificationsAsync(Arg.Any<IEnumerable<Notification>>())
             .Returns(Result.Success());
 
-        IEnumerable<Notification> capturedNotifications = null!;
+        IEnumerable<User> capturedUsers = null!;
 
-        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Notification>>(c => capturedNotifications = c))
+        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<User>>(c => capturedUsers = c))
             .Returns(Task.CompletedTask);
 
         await _notifier.NotifyDisruptionAsync(disruption);
 
-        capturedNotifications.Count().Should().Be(2);
+        capturedUsers.Count().Should().Be(2);
 
-        capturedNotifications.First().UserId.Should().Be(affectedUsers.First().Id);
-        capturedNotifications.First().LineId.Should().Be(disruption.Line.Id);
-        capturedNotifications.First().DisruptionId.Should().Be(disruption.Id);
-        capturedNotifications.First().StartStationId.Should().Be(affectedUsers.First().StartStation.Id);
-        capturedNotifications.First().EndStationId.Should().Be(affectedUsers.First().EndStation.Id);
-        capturedNotifications.First().SeverityId.Should().Be(disruption.SeverityId);
-        capturedNotifications.First().DescriptionId.Should().Be(disruption.DescriptionId);
-        capturedNotifications.First().AffectedStationIds.Should()
-            .BeEquivalentTo(affectedUsers.First().AffectedStations.Select(x => x.Id).ToList());
+        capturedUsers.First().Id.Should().Be(affectedUsers.First().Id);
+        capturedUsers.First().DisruptionId.Should().Be(disruption.Id);
+        capturedUsers.First().Line.Should().Be(disruption.Line);
+        capturedUsers.First().StartStation.Should().Be(affectedUsers.First().StartStation);
+        capturedUsers.First().EndStation.Should().Be(affectedUsers.First().EndStation);
+        capturedUsers.First().Severity.Should().Be(disruption.Severity);
+        capturedUsers.First().PhoneNumber.Should().Be(userDetails.First().PhoneNumber);
+        capturedUsers.First().PhoneOS.Should().Be(userDetails.First().PhoneOS);
+        capturedUsers.First().EndTime.Should().Be(affectedUsers.First().EndTime);
+        capturedUsers.First().AffectedStations.Should().BeEquivalentTo(affectedUsers.First().AffectedStations);
 
-        capturedNotifications.Last().UserId.Should().Be(affectedUsers.Last().Id);
-        capturedNotifications.Last().LineId.Should().Be(disruption.Line.Id);
-        capturedNotifications.Last().DisruptionId.Should().Be(disruption.Id);
-        capturedNotifications.Last().StartStationId.Should().Be(affectedUsers.Last().StartStation.Id);
-        capturedNotifications.Last().EndStationId.Should().Be(affectedUsers.Last().EndStation.Id);
-        capturedNotifications.Last().SeverityId.Should().Be(disruption.SeverityId);
-        capturedNotifications.Last().DescriptionId.Should().Be(disruption.DescriptionId);
-        capturedNotifications.Last().AffectedStationIds.Should()
-            .BeEquivalentTo(affectedUsers.Last().AffectedStations.Select(x => x.Id).ToList());
+        capturedUsers.Last().Id.Should().Be(affectedUsers.Last().Id);
+        capturedUsers.Last().DisruptionId.Should().Be(disruption.Id);
+        capturedUsers.Last().Line.Should().Be(disruption.Line);
+        capturedUsers.Last().StartStation.Should().Be(affectedUsers.Last().StartStation);
+        capturedUsers.Last().EndStation.Should().Be(affectedUsers.Last().EndStation);
+        capturedUsers.Last().Severity.Should().Be(disruption.Severity);
+        capturedUsers.Last().PhoneNumber.Should().Be(userDetails.Last().PhoneNumber);
+        capturedUsers.Last().PhoneOS.Should().Be(userDetails.Last().PhoneOS);
+        capturedUsers.Last().EndTime.Should().Be(affectedUsers.Last().EndTime);
+        capturedUsers.Last().AffectedStations.Should().BeEquivalentTo(affectedUsers.Last().AffectedStations);
     }
 
     [Fact]
@@ -210,34 +212,36 @@ public class DisruptionNotifierTests
         _writeNotificationRepository.AddNotificationsAsync(Arg.Any<IEnumerable<Notification>>())
            .Returns(Result.Success());
 
-        IEnumerable<Notification> capturedNotifications = null!;
+        IEnumerable<User> capturedUsers = null!;
 
-        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Notification>>(c => capturedNotifications = c))
+        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<User>>(c => capturedUsers = c))
             .Returns(Task.CompletedTask);
 
         await _notifier.NotifyDisruptionAsync(disruption);
 
-        capturedNotifications.Count().Should().Be(2);
+        capturedUsers.Count().Should().Be(2);
 
-        capturedNotifications.First().UserId.Should().Be(affectedUsers.First().Id);
-        capturedNotifications.First().LineId.Should().Be(disruption.Line.Id);
-        capturedNotifications.First().DisruptionId.Should().Be(disruption.Id);
-        capturedNotifications.First().StartStationId.Should().Be(affectedUsers.First().StartStation.Id);
-        capturedNotifications.First().EndStationId.Should().Be(affectedUsers.First().EndStation.Id);
-        capturedNotifications.First().SeverityId.Should().Be(disruption.SeverityId);
-        capturedNotifications.First().DescriptionId.Should().Be(disruption.DescriptionId);
-        capturedNotifications.First().AffectedStationIds.Should()
-            .BeEquivalentTo(affectedUsers.First().AffectedStations.Select(x => x.Id).ToList());
+        capturedUsers.First().Id.Should().Be(affectedUsers.First().Id);
+        capturedUsers.First().DisruptionId.Should().Be(disruption.Id);
+        capturedUsers.First().Line.Should().Be(disruption.Line);
+        capturedUsers.First().StartStation.Should().Be(affectedUsers.First().StartStation);
+        capturedUsers.First().EndStation.Should().Be(affectedUsers.First().EndStation);
+        capturedUsers.First().Severity.Should().Be(disruption.Severity);
+        capturedUsers.First().PhoneNumber.Should().Be(userDetails.First().PhoneNumber);
+        capturedUsers.First().PhoneOS.Should().Be(userDetails.First().PhoneOS);
+        capturedUsers.First().EndTime.Should().Be(affectedUsers.First().EndTime);
+        capturedUsers.First().AffectedStations.Should().BeEquivalentTo(affectedUsers.First().AffectedStations);
 
-        capturedNotifications.Last().UserId.Should().Be(affectedUsers.Last().Id);
-        capturedNotifications.Last().LineId.Should().Be(disruption.Line.Id);
-        capturedNotifications.Last().DisruptionId.Should().Be(disruption.Id);
-        capturedNotifications.Last().StartStationId.Should().Be(affectedUsers.Last().StartStation.Id);
-        capturedNotifications.Last().EndStationId.Should().Be(affectedUsers.Last().EndStation.Id);
-        capturedNotifications.Last().SeverityId.Should().Be(disruption.SeverityId);
-        capturedNotifications.Last().DescriptionId.Should().Be(disruption.DescriptionId);
-        capturedNotifications.Last().AffectedStationIds.Should()
-            .BeEquivalentTo(affectedUsers.Last().AffectedStations.Select(x => x.Id).ToList());
+        capturedUsers.Last().Id.Should().Be(affectedUsers.Last().Id);
+        capturedUsers.Last().DisruptionId.Should().Be(disruption.Id);
+        capturedUsers.Last().Line.Should().Be(disruption.Line);
+        capturedUsers.Last().StartStation.Should().Be(affectedUsers.Last().StartStation);
+        capturedUsers.Last().EndStation.Should().Be(affectedUsers.Last().EndStation);
+        capturedUsers.Last().Severity.Should().Be(disruption.Severity);
+        capturedUsers.Last().PhoneNumber.Should().Be(userDetails.Last().PhoneNumber);
+        capturedUsers.Last().PhoneOS.Should().Be(userDetails.Last().PhoneOS);
+        capturedUsers.Last().EndTime.Should().Be(affectedUsers.Last().EndTime);
+        capturedUsers.Last().AffectedStations.Should().BeEquivalentTo(affectedUsers.Last().AffectedStations);
     }
 
     [Fact]
@@ -312,14 +316,14 @@ public class DisruptionNotifierTests
         _stratfordClient.GetUserDetailsAsync(Arg.Any<IEnumerable<Guid>>())
           .Returns(Result.Success<IEnumerable<UserDetails>>(userDetails));
 
-        IEnumerable<Notification> capturedNotifications = null!;
+        IEnumerable<User> capturedUser = null!;
 
-        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Notification>>(c => capturedNotifications = c))
+        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<User>>(c => capturedUser = c))
             .Returns(Task.CompletedTask);
 
         await _notifier.NotifyDisruptionAsync(disruption);
 
-        capturedNotifications.Count().Should().Be(2);
+        capturedUser.Count().Should().Be(2);
     }
 
     [Fact]
@@ -381,15 +385,15 @@ public class DisruptionNotifierTests
         _stratfordClient.GetUserDetailsAsync(Arg.Any<IEnumerable<Guid>>())
           .Returns(Result.Success<IEnumerable<UserDetails>>(userDetails));
 
-        IEnumerable<Notification> capturedNotifications = null!;
+        IEnumerable<User> capturedUsers = null!;
 
-        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Notification>>(c => capturedNotifications = c))
+        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<User>>(c => capturedUsers = c))
             .Returns(Task.CompletedTask);
 
         await _notifier.NotifyDisruptionAsync(disruption);
 
-        capturedNotifications.Count().Should().Be(1);
-        capturedNotifications.First().UserId.Should().Be(affectedUsers.First().Id);
+        capturedUsers.Count().Should().Be(1);
+        capturedUsers.First().Id.Should().Be(affectedUsers.First().Id);
     }
 
     [Fact]
@@ -468,16 +472,16 @@ public class DisruptionNotifierTests
         _writeNotificationRepository.AddNotificationsAsync(Arg.Any<IEnumerable<Notification>>())
            .Returns(Result.Success());
 
-        IEnumerable<Notification> capturedNotifications = null!;
+        IEnumerable<User> capturedUsers = null!;
 
-        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Notification>>(c => capturedNotifications = c))
+        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<User>>(c => capturedUsers = c))
             .Returns(Task.CompletedTask);
 
         await _notifier.NotifyDisruptionAsync(disruption);
 
-        capturedNotifications.Count().Should().Be(2);
+        capturedUsers.Count().Should().Be(2);
 
-        capturedNotifications.ElementAt(0).UserId.Should().Be(users.First().Id);
-        capturedNotifications.ElementAt(1).UserId.Should().Be(affectedUsers.Last().Id);
+        capturedUsers.ElementAt(0).Id.Should().Be(users.First().Id);
+        capturedUsers.ElementAt(1).Id.Should().Be(affectedUsers.Last().Id);
     }
 }

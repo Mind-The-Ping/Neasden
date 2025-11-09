@@ -3,6 +3,6 @@
 namespace Neasden.Consumer;
 public interface INotificationPublisher
 {
-    Task PublishAsync(IEnumerable<Notification> notifications);
+    Task PublishAsync(IEnumerable<User> notifications);
     Task PublishResolvedAsync(IEnumerable<User> notifiedUsers);
 }
