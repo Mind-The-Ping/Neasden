@@ -32,6 +32,9 @@ builder.Services.Configure<StratfordOptions>(
 builder.Services.Configure<ServiceBusOptions>(
     builder.Configuration.GetSection("ServiceBus"));
 
+builder.Services.Configure<NotificationOptions>(
+    builder.Configuration.GetSection("Notifications"));
+
 builder.Services.AddOptions<RedisOptions>()
     .Configure<IConfiguration>((settings, configuration) =>
     {

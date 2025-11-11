@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Neasden.API;
 using Neasden.API.Options;
 using Neasden.Library.Clients;
+using Neasden.Library.Options;
 using Neasden.Repository.Read;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
