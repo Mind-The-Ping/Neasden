@@ -94,7 +94,7 @@ public class DisruptionNotifierTests
            _line,
            _startStation.Id,
            _endStation.Id,
-           Severity.Suspended,
+           Severity.Closed,
            Guid.NewGuid(),
            Guid.NewGuid(),
            DateTime.UtcNow);
