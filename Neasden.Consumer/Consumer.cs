@@ -120,7 +120,7 @@ public class Consumer
         await messageActions.CompleteMessageAsync(message);
     }
 
-    [Function("DisruptionsEndConsumer")]
+    [Function("DeletedUserConsumer")]
     public async Task DeletedUserHandler(
      [ServiceBusTrigger("%TopicDeletedUser%", "%TopicDeletedUserSubscription%", Connection = "ServiceBusConnection")]
       ServiceBusReceivedMessage message,
