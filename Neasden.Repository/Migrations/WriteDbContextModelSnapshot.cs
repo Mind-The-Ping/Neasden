@@ -93,6 +93,9 @@ namespace Neasden.Repository.Migrations
                         .IsRequired()
                         .HasColumnType("uuid[]");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("DescriptionId")
                         .HasColumnType("uuid");
 

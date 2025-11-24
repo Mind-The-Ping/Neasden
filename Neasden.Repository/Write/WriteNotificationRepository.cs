@@ -1,4 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Neasden.Models;
 
@@ -31,6 +32,29 @@ public class WriteNotificationRepository : IWriteNotificationRepository
         catch (Exception ex)
         {
             var message = "Could not save notifications to database.";
+
+            _logger.LogError(ex, message);
+            return Result.Failure(message);
+        }
+    }
+
+    public async Task<Result> RemoveNotificationsByUserIdAsync(Guid userId, DateTime deletedAt)
+    {
+        try
+        {
+            var affectedRows = await _context.Notifications
+              .Where(x => x.UserId == userId && x.DeletedAt == null)
+              .ExecuteUpdateAsync(setters => setters.SetProperty(n => n.DeletedAt, deletedAt));
+
+            if (affectedRows == 0) {
+                _logger.LogWarning("Could not find any notifications for user: {userId}", userId);
+            }
+
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            var message = $"Could not delete notifications for {userId} on database.";
 
             _logger.LogError(ex, message);
             return Result.Failure(message);

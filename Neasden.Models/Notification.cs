@@ -11,5 +11,6 @@ public class Notification
     public Guid SeverityId { get; set; }
     public Guid DescriptionId { get; set; }
     public DateTime SentTime { get; set; }
+    public DateTime? DeletedAt { get; set; }
     public required IList<Guid> AffectedStationIds { get; set; }
 }

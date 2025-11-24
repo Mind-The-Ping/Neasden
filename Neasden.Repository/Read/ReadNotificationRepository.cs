@@ -21,7 +21,7 @@ public class ReadNotificationRepository
     {
         await using var context = _contextFactory.CreateDbContext();
         var result = await context.Notifications
-            .SingleOrDefaultAsync(x => x.Id == id);
+            .SingleOrDefaultAsync(x => x.Id == id && x.DeletedAt == null);
 
         if (result == null)
         {
@@ -44,7 +44,7 @@ public class ReadNotificationRepository
 
         await using var context = _contextFactory.CreateDbContext();
         var query = context.Notifications
-           .Where(x => x.UserId == userId)
+           .Where(x => x.UserId == userId && x.DeletedAt == null)
            .OrderByDescending(x => x.SentTime);
 
         var totalCount = await query.CountAsync();
@@ -71,7 +71,7 @@ public class ReadNotificationRepository
     {
         await using var context = _contextFactory.CreateDbContext();
         var query = context.Notifications
-           .Where(x => x.UserId == userId);
+           .Where(x => x.UserId == userId && x.DeletedAt == null);
 
         var totalCount = await query.CountAsync();
 

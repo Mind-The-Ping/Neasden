@@ -254,7 +254,7 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
         var notification = new Notification()
         {
             Id = Guid.NewGuid(),
-            UserId = Guid.NewGuid(),
+            UserId = _id,
             LineId = Guid.Parse("2f0c75a5-8149-49b7-9cc6-32e4a5246d7f"),
             StartStationId = Guid.Parse("6252902f-7fd2-45a8-a6d5-1f377e88b9be"),
             EndStationId = Guid.Parse("6842d9a0-acc8-4843-a3d3-2e06d03fdcd1"),
@@ -300,7 +300,8 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
             .GetStationsById(Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(getStationResult1, getStationResult2, getStationResult3, getStationResult4, getStationResult5);
 
-        var response = await _client.GetAsync($"api/notification/getByUserIdLatest?lastChecked={DateTime.UtcNow.AddMinutes(-10)}");
+        var lastChecked = DateTime.UtcNow.AddMinutes(-10).ToString("yyyy-MM-ddTHH:mm:ssZ");
+        var response = await _client.GetAsync($"api/notification/getByUserIdLatest?lastChecked={lastChecked}");
         response.EnsureSuccessStatusCode();
     }
 

@@ -5,4 +5,6 @@ namespace Neasden.Repository.Write;
 public interface IWriteNotificationRepository
 {
     Task<Result> AddNotificationsAsync(IEnumerable<Notification> notifications);
+
+    Task<Result> RemoveNotificationsByUserIdAsync(Guid userId, DateTime deletedAt);
 }
