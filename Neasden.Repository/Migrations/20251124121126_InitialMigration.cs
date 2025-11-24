@@ -53,6 +53,7 @@ namespace Neasden.Repository.Migrations
                     SeverityId = table.Column<Guid>(type: "uuid", nullable: false),
                     DescriptionId = table.Column<Guid>(type: "uuid", nullable: false),
                     SentTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     AffectedStationIds = table.Column<Guid[]>(type: "uuid[]", nullable: false)
                 },
                 constraints: table =>

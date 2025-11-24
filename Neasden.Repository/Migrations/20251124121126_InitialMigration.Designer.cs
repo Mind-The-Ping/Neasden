@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Neasden.Repository.Migrations
 {
     [DbContext(typeof(WriteDbContext))]
-    [Migration("20251112153749_InitialMigration")]
+    [Migration("20251124121126_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
@@ -95,6 +95,9 @@ namespace Neasden.Repository.Migrations
                     b.PrimitiveCollection<Guid[]>("AffectedStationIds")
                         .IsRequired()
                         .HasColumnType("uuid[]");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("DescriptionId")
                         .HasColumnType("uuid");
