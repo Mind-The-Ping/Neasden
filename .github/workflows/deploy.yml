@@ -35,8 +35,8 @@ jobs:
           path: ./output/API
 
   build-and-deploy-consumer:
-    name: Build Consumer (Windows)
-    runs-on: windows-latest
+    name: Build Consumer
+    runs-on: ubuntu-latest
     permissions:
       id-token: write #This is required for requesting the JWT
       contents: read #This is required for actions/checkout
@@ -51,7 +51,7 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: 'Resolve Project Dependencies Using Dotnet'
-        shell: pwsh
+        shell: bash
         run: |
           pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
           dotnet build --configuration Release --output ./output
@@ -60,15 +60,15 @@ jobs:
       - name: Login to Azure for Neasden.Consumer
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_9528E2B23CA24F84B5B41D048863316E }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_CAC05A23993841408CAAC5F020781CA4 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_288C97172BAA4B94B244857C164347F9 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_4D5DBA83129B4BF59B31EE346BC37946 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A085BB59450C4CE5B8A4C218ABCD602C }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_6D01BCD898124A04862922F0207D53C5 }}
       
       - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1
         id: fa
         with:
-          app-name: 'neasden-consumer'
+          app-name: 'neasden-consumer-ping'
           slot-name: 'Production'
           package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
 
@@ -90,13 +90,13 @@ jobs:
       - name: Login to Azure for Neasden.API
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_92A358569B66448AB2AD150F5E466513 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_1B19828EB75B4E66ACEC09358CBCD81A }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C7B2C5C43CD74364B399F53962B303E9 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_98C263D238894A03975BBFBC7A89A758 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A4EA7EB8BF02451CAECFA3D2C2A538F0 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CFB2010E409D4BB9B2C1FACEEE5C4BF2 }}
 
       - name: Deploy Neasden.API
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'neasden'
+          app-name: 'neasden-ping'
           slot-name: 'Production'
           package: ./output/API
