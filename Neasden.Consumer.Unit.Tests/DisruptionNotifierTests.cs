@@ -67,8 +67,8 @@ public class DisruptionNotifierTests
 
         var affectedUsers = new List<AffectedUser>
         {
-            new(Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime),
-            new(Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime)
+            new(Guid.NewGuid(), Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime),
+            new(Guid.NewGuid(), Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime)
         };
 
         _waterlooClient.GetAffectedUsersAsync(
@@ -82,8 +82,8 @@ public class DisruptionNotifierTests
 
         var userDetails = new List<UserDetails>
         {
-            new(affectedUsers.First().Id, "+447123456789", PhoneOS.Android),
-            new(affectedUsers.Last().Id, "+447234567890", PhoneOS.IOS)
+            new(affectedUsers.First().UserId, "+447123456789", PhoneOS.Android),
+            new(affectedUsers.Last().UserId, "+447234567890", PhoneOS.IOS)
         };
 
         _stratfordClient.GetUserDetailsAsync(Arg.Any<IEnumerable<Guid>>())
@@ -111,7 +111,7 @@ public class DisruptionNotifierTests
 
         capturedUsers.Count().Should().Be(2);
 
-        capturedUsers.First().Id.Should().Be(affectedUsers.First().Id);
+        capturedUsers.First().Id.Should().Be(affectedUsers.First().UserId);
         capturedUsers.First().DisruptionId.Should().Be(disruption.Id);
         capturedUsers.First().Line.Should().Be(disruption.Line);
         capturedUsers.First().StartStation.Should().Be(affectedUsers.First().StartStation);
@@ -122,7 +122,7 @@ public class DisruptionNotifierTests
         capturedUsers.First().EndTime.Should().Be(affectedUsers.First().EndTime);
         capturedUsers.First().AffectedStations.Should().BeEquivalentTo(affectedUsers.First().AffectedStations);
 
-        capturedUsers.Last().Id.Should().Be(affectedUsers.Last().Id);
+        capturedUsers.Last().Id.Should().Be(affectedUsers.Last().UserId);
         capturedUsers.Last().DisruptionId.Should().Be(disruption.Id);
         capturedUsers.Last().Line.Should().Be(disruption.Line);
         capturedUsers.Last().StartStation.Should().Be(affectedUsers.Last().StartStation);
@@ -186,8 +186,8 @@ public class DisruptionNotifierTests
 
         var affectedUsers = new List<AffectedUser>
         {
-            new(Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime),
-            new(Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime)
+            new(Guid.NewGuid(), Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime),
+            new(Guid.NewGuid(), Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime)
         };
 
         _waterlooClient.GetAffectedUsersAsync(
@@ -201,8 +201,8 @@ public class DisruptionNotifierTests
 
         var userDetails = new List<UserDetails>
         {
-            new(affectedUsers.First().Id, "+447345678901", PhoneOS.Android),
-            new(affectedUsers.Last().Id, "+447456789012", PhoneOS.IOS)
+            new(affectedUsers.First().UserId, "+447345678901", PhoneOS.Android),
+            new(affectedUsers.Last().UserId, "+447456789012", PhoneOS.IOS)
         };
 
         _stratfordClient.GetUserDetailsAsync(Arg.Any<IEnumerable<Guid>>())
@@ -221,7 +221,7 @@ public class DisruptionNotifierTests
 
         capturedUsers.Count().Should().Be(2);
 
-        capturedUsers.First().Id.Should().Be(affectedUsers.First().Id);
+        capturedUsers.First().Id.Should().Be(affectedUsers.First().UserId);
         capturedUsers.First().DisruptionId.Should().Be(disruption.Id);
         capturedUsers.First().Line.Should().Be(disruption.Line);
         capturedUsers.First().StartStation.Should().Be(affectedUsers.First().StartStation);
@@ -232,7 +232,7 @@ public class DisruptionNotifierTests
         capturedUsers.First().EndTime.Should().Be(affectedUsers.First().EndTime);
         capturedUsers.First().AffectedStations.Should().BeEquivalentTo(affectedUsers.First().AffectedStations);
 
-        capturedUsers.Last().Id.Should().Be(affectedUsers.Last().Id);
+        capturedUsers.Last().Id.Should().Be(affectedUsers.Last().UserId);
         capturedUsers.Last().DisruptionId.Should().Be(disruption.Id);
         capturedUsers.Last().Line.Should().Be(disruption.Line);
         capturedUsers.Last().StartStation.Should().Be(affectedUsers.Last().StartStation);
@@ -294,8 +294,8 @@ public class DisruptionNotifierTests
 
         var affectedUsers = new List<AffectedUser>
         {
-            new(Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime),
-            new(Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime)
+            new(Guid.NewGuid(), Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime),
+            new(Guid.NewGuid(), Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime)
         };
 
         _waterlooClient.GetAffectedUsersAsync(
@@ -309,8 +309,8 @@ public class DisruptionNotifierTests
 
         var userDetails = new List<UserDetails>
         {
-            new(affectedUsers.First().Id, "+447345678901", PhoneOS.Android),
-            new(affectedUsers.Last().Id, "+447456789012", PhoneOS.IOS)
+            new(affectedUsers.First().UserId, "+447345678901", PhoneOS.Android),
+            new(affectedUsers.Last().UserId, "+447456789012", PhoneOS.IOS)
         };
 
         _stratfordClient.GetUserDetailsAsync(Arg.Any<IEnumerable<Guid>>())
@@ -365,7 +365,7 @@ public class DisruptionNotifierTests
 
         var affectedUsers = new List<AffectedUser>
         {
-            new(users.First().Id, _startStation, _endStation, _affectedStations, _endTime),
+            new(Guid.NewGuid(), users.First().Id, _startStation, _endStation, _affectedStations, _endTime),
         };
 
         _waterlooClient.GetAffectedUsersAsync(
@@ -393,7 +393,7 @@ public class DisruptionNotifierTests
         await _notifier.NotifyDisruptionAsync(disruption);
 
         capturedUsers.Count().Should().Be(1);
-        capturedUsers.First().Id.Should().Be(affectedUsers.First().Id);
+        capturedUsers.First().Id.Should().Be(affectedUsers.First().UserId);
     }
 
     [Fact]
@@ -446,8 +446,8 @@ public class DisruptionNotifierTests
 
         var affectedUsers = new List<AffectedUser>
         {
-            new(users.First().Id, _startStation, _endStation, _affectedStations, _endTime),
-            new(Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime)
+            new(Guid.NewGuid(), users.First().Id, _startStation, _endStation, _affectedStations, _endTime),
+            new(Guid.NewGuid(), Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime)
         };
 
         _waterlooClient.GetAffectedUsersAsync(
@@ -461,8 +461,8 @@ public class DisruptionNotifierTests
 
         var userDetails = new List<UserDetails>
         {
-            new(affectedUsers.First().Id, "+447345678901", PhoneOS.Android),
-            new(affectedUsers.Last().Id, "+447456789012", PhoneOS.IOS)
+            new(affectedUsers.First().UserId, "+447345678901", PhoneOS.Android),
+            new(affectedUsers.Last().UserId, "+447456789012", PhoneOS.IOS)
         };
 
         _stratfordClient.GetUserDetailsAsync(Arg.Any<IEnumerable<Guid>>())
@@ -482,6 +482,6 @@ public class DisruptionNotifierTests
         capturedUsers.Count().Should().Be(2);
 
         capturedUsers.ElementAt(0).Id.Should().Be(users.First().Id);
-        capturedUsers.ElementAt(1).Id.Should().Be(affectedUsers.Last().Id);
+        capturedUsers.ElementAt(1).Id.Should().Be(affectedUsers.Last().UserId);
     }
 }

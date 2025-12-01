@@ -60,7 +60,7 @@ public class DisruptionNotifier
             return Result.Failure($"Failed to get affected users : {affectedUsers.Error}");
         }
 
-        var affectedUserIds = affectedUsers.Value.Select(u => u.Id).ToHashSet();
+        var affectedUserIds = affectedUsers.Value.Select(u => u.UserId).ToHashSet();
 
         var usersToRemove = allNotifiedUsers
         .Where(u => !affectedUserIds.Contains(u.Id))
@@ -83,7 +83,7 @@ public class DisruptionNotifier
         {
             if (notifiedUser.Severity == disruption.Severity)
             {
-                var newUser = newUsers.SingleOrDefault(x => x.Id == notifiedUser.Id);
+                var newUser = newUsers.SingleOrDefault(x => x.UserId == notifiedUser.Id);
                 if (newUser is not null) {
                     newUsers.Remove(newUser);
                 }
@@ -94,7 +94,7 @@ public class DisruptionNotifier
         }
 
         var userDetails = await _stratfordClient.GetUserDetailsAsync(
-            [.. newUsers.Select(x => x.Id)]);
+            [.. newUsers.Select(x => x.UserId)]);
 
         if (userDetails.IsFailure) {
             return Result.Failure($"Failed to get users details : {userDetails.Error}");
@@ -110,14 +110,14 @@ public class DisruptionNotifier
 
         foreach (var newUser in newUsers)
         {
-            if (!phoneLookup.TryGetValue(newUser.Id, out var phoneDetails))
+            if (!phoneLookup.TryGetValue(newUser.UserId, out var phoneDetails))
             {
                 errors.Add($"Failed to find phone number for {newUser.Id}");
                 continue;
             }
 
             var user = new User(
-               newUser.Id,
+               newUser.UserId,
                disruption.Id,
                disruption.Line,
                newUser.StartStation,
