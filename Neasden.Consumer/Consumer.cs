@@ -98,7 +98,7 @@ public class Consumer
 
     [Function("DisruptionsEndConsumer")]
     public async Task DisruptionEndsHandler(
-      [ServiceBusTrigger("%TopicsDisruptionEndsName%", "%TopicsDisruptionEndsSubscription%", Connection = "ServiceBusConnection")]
+      [ServiceBusTrigger("%QueueDisruptionEnds%", Connection = "ServiceBusConnection")]
       ServiceBusReceivedMessage message,
       ServiceBusMessageActions messageActions)
     {
