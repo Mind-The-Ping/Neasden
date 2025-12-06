@@ -58,8 +58,8 @@ public class Consumer
             {
                 Id = disruptionDto!.Id,
                 LineId = disruptionDto.Line.Id,
-                StartStationId = disruptionDto.StartStationId,
-                EndStationId = disruptionDto.EndStationId,
+                StartStationId = disruptionDto.OriginalStartStationId,
+                EndStationId = disruptionDto.OriginalEndStationId,
                 StartTime = disruptionDto.StartTime
             };
 
