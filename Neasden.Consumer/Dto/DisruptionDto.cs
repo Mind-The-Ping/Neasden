@@ -7,8 +7,6 @@ public record DisruptionDto(
     Line Line,
     Guid StartStationId,
     Guid EndStationId,
-    Guid OriginalStartStationId,
-    Guid OriginalEndStationId,
     Severity Severity,
     Guid SeverityId,
     Guid DescriptionId,
