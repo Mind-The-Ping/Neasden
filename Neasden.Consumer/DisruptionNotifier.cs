@@ -41,42 +41,76 @@ public class DisruptionNotifier
         _londonTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/London");
     }
 
-    public async Task<Result> NotifyDisruptionAsync(DisruptionDto disruption)
+    public async Task<Result> NotifyDisruptionAsync(LineDisruptionsDto lineDisruptions)
     {
-        var allNotifiedUsers = await _userNotifiedRepository
-            .GetUsersByDisruptionIdAsync(disruption.Id);
-
         var localTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _londonTimeZone);
 
-        var affectedUsers = await _waterlooClient.GetAffectedUsersAsync(
-           disruption.Line.Id,
-           disruption.StartStationId,
-           disruption.EndStationId,
-           disruption.Severity,
-           TimeOnly.FromDateTime(DateTime.UtcNow),
-           localTime.DayOfWeek);
+        var affectedUsers = await _waterlooClient.GetAffectedUsersAsync(new AffectedJourney(
+            lineDisruptions.Line.Id,
+            TimeOnly.FromDateTime(DateTime.UtcNow),
+            localTime.DayOfWeek,
+            lineDisruptions.DisruptionDtos.Select(x =>
+            new AffectedDisruption(
+                x.Id,
+                x.StartStationId,
+                x.EndStationId,
+                x.Severity
+            ))));
 
         if (affectedUsers.IsFailure) {
             return Result.Failure($"Failed to get affected users : {affectedUsers.Error}");
         }
 
-        var affectedUserIds = affectedUsers.Value.Select(u => u.UserId).ToHashSet();
+        var groups = affectedUsers.Value.GroupBy(x => x.DisruptionId);
+        foreach (var group in groups)
+        {
+            var disruption = lineDisruptions.DisruptionDtos
+                .Single(d => d.Id == group.Key);
+
+            var result = await NotifySingularDisruptionAsync(disruption, group.ToList());
+
+            if (result.IsFailure) {
+                return result;
+            }
+        }
+
+        return Result.Success();
+    }
+
+
+    public async Task NotifyDisruptionEndAsync(DisruptionEnd disruptionEnd)
+    {
+        var notifiedUsers = await _userNotifiedRepository
+            .GetUsersByDisruptionIdAsync(disruptionEnd.Id);
+
+        await _notificationPublisher.PublishResolvedAsync(notifiedUsers);
+        await _userNotifiedRepository.DeleteByDisruptionIdAsync(disruptionEnd.Id);
+    }
+
+    private async Task<Result> NotifySingularDisruptionAsync(
+        DisruptionDto disruption,
+        List<AffectedUser> affectedUsers)
+    {
+        var allNotifiedUsers = await _userNotifiedRepository
+           .GetUsersByDisruptionIdAsync(disruption.Id);
+
+        var affectedUserIds = affectedUsers.Select(u => u.UserId).ToHashSet();
 
         var usersToRemove = allNotifiedUsers
-        .Where(u => !affectedUserIds.Contains(u.Id))
-        .ToList();
+            .Where(u => !affectedUserIds.Contains(u.Id))
+            .ToList();
 
         if (usersToRemove.Count > 0) {
             await _userNotifiedRepository.DeleteUsersAsync(disruption.Id, usersToRemove);
         }
 
         var notifiedUsers = allNotifiedUsers
-        .Where(u => affectedUserIds.Contains(u.Id))
-        .ToList();
+            .Where(u => affectedUserIds.Contains(u.Id))
+            .ToList();
 
         notifiedUsers = [.. notifiedUsers.Where(u => affectedUserIds.Contains(u.Id))];
 
-        var newUsers = affectedUsers.Value.ToList();
+        var newUsers = affectedUsers.ToList();
         var usersToNotify = new Dictionary<Guid, User>();
 
         foreach (var notifiedUser in notifiedUsers)
@@ -136,7 +170,7 @@ public class DisruptionNotifier
 
         var notificationAdd = await _notificationRepository.AddNotificationsAsync(notifications);
 
-        if(notificationAdd.IsFailure) 
+        if (notificationAdd.IsFailure)
         {
             errors.Add($"Failed to add notifications, Error: {notificationAdd.Error}");
             return Result.Failure(string.Join("; ", errors));
@@ -148,15 +182,6 @@ public class DisruptionNotifier
         return errors.Count != 0
             ? Result.Failure(string.Join("; ", errors))
             : Result.Success();
-    }
-
-    public async Task NotifyDisruptionEndAsync(DisruptionEnd disruptionEnd)
-    {
-        var notifiedUsers = await _userNotifiedRepository
-            .GetUsersByDisruptionIdAsync(disruptionEnd.Id);
-
-        await _notificationPublisher.PublishResolvedAsync(notifiedUsers);
-        await _userNotifiedRepository.DeleteByDisruptionIdAsync(disruptionEnd.Id);
     }
 
     private static List<Notification> NotificationsCreate(

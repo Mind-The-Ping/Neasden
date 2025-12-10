@@ -53,18 +53,23 @@ public class Consumer
         try
         {
             var json = message.Body.ToArray();
-            var disruptionDto = JsonSerializer.Deserialize<DisruptionDto>(json);
-            var disruption = new Disruption()
-            {
-                Id = disruptionDto!.Id,
-                LineId = disruptionDto.Line.Id,
-                StartStationId = disruptionDto.StartStationId,
-                EndStationId = disruptionDto.EndStationId,
-                StartTime = disruptionDto.StartTime
-            };
+            var lineDisruptionsDto = JsonSerializer.Deserialize<LineDisruptionsDto>(json);
 
-            await _writeDisruptionRepository.AddDisruptionAsync(disruption);
-            await _notifer.NotifyDisruptionAsync(disruptionDto!);
+            foreach (var lineDisruption in lineDisruptionsDto!.DisruptionDtos)
+            {
+                var disruption = new Disruption()
+                {
+                    Id = lineDisruption!.Id,
+                    LineId = lineDisruption.Line.Id,
+                    StartStationId = lineDisruption.StartStationId,
+                    EndStationId = lineDisruption.EndStationId,
+                    StartTime = lineDisruption.StartTime
+                };
+                await _writeDisruptionRepository.AddDisruptionAsync(disruption);
+            }
+
+
+            await _notifer.NotifyDisruptionAsync(lineDisruptionsDto!);
         }
         catch (Exception ex) {
             _logger.LogError(ex, "Could not deserialize disruption.");

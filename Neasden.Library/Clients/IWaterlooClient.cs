@@ -14,11 +14,6 @@ public interface IWaterlooClient
         CancellationToken cancellationToken = default);
 
     public Task<Result<IEnumerable<AffectedUser>>> GetAffectedUsersAsync(
-       Guid line,
-       Guid startStation,
-       Guid endStation,
-       Severity severity,
-       TimeOnly time,
-       DayOfWeek queryDay,
+       AffectedJourney affectedJourney,
        CancellationToken cancellationToken = default);
 }

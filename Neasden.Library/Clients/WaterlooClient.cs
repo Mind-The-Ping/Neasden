@@ -100,38 +100,20 @@ public class WaterlooClient : IWaterlooClient
     }
 
     public async Task<Result<IEnumerable<AffectedUser>>> GetAffectedUsersAsync(
-        Guid line,
-        Guid startStation,
-        Guid endStation,
-        Severity severity,
-        TimeOnly time,
-        DayOfWeek queryDay,
+        AffectedJourney affectedJourney,
         CancellationToken cancellationToken = default)
     {
         _httpClient.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", _tokenProvider.CreateToken());
-
-        var url = QueryHelpers.AddQueryString(
-             $"{_waterlooOptions.BaseUrl}/{_waterlooOptions.AffectedUsers}",
-             new Dictionary<string, string?>
-             {
-                 ["LineId"] = line.ToString(),
-                 ["StartStationId"] = startStation.ToString(),
-                 ["EndStationId"] = endStation.ToString(),
-                 ["QueryTime"] = time.ToString("HH:mm"),
-                 ["QueryDay"] = queryDay.ToString(),
-                 ["Serverity"] = severity.ToString()
-             });
-
         try
         {
-            var response = await _httpClient.GetAsync(url, cancellationToken);
+            var response = await _httpClient.PostAsJsonAsync($"{_waterlooOptions.BaseUrl}/{_waterlooOptions.AffectedUsers}", affectedJourney);
             if (response.IsSuccessStatusCode)
             {
-                var affectedUsers = await response.Content.ReadFromJsonAsync<IEnumerable<AffectedUser>>();
+                var affectedUsers = await response.Content.ReadFromJsonAsync<IEnumerable<AffectedUser>>(cancellationToken: cancellationToken);
                 return affectedUsers is null
                      ? Result.Failure<IEnumerable<AffectedUser>>(
-                         $"Null response from {startStation} to {endStation}")
+                         $"Null response from {affectedJourney.LineId}")
                      : Result.Success(affectedUsers);
             }
 
@@ -142,7 +124,7 @@ public class WaterlooClient : IWaterlooClient
         catch (Exception ex)
         {
             return Result
-                .Failure<IEnumerable<AffectedUser>>($"Exception getting affected users from: {startStation} to {endStation} " +
+                .Failure<IEnumerable<AffectedUser>>($"Exception getting affected users from: {affectedJourney.LineId}" +
                 $": {ex.Message}");
         }
     }
