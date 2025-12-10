@@ -20,6 +20,7 @@ public class DisruptionNotifierTests
     private readonly IWriteNotificationRepository _writeNotificationRepository;
     private readonly INotificationPublisher _notificationPublisher;
 
+    private readonly Guid _disruptionId;
     private readonly Line _line;
     private readonly Station _startStation;
     private readonly Station _endStation;
@@ -51,6 +52,8 @@ public class DisruptionNotifierTests
             _userNotifiedRepository,
             _writeNotificationRepository,
             _notificationPublisher);
+
+        _disruptionId = Guid.NewGuid();
     }
 
     [Fact]
@@ -67,17 +70,12 @@ public class DisruptionNotifierTests
 
         var affectedUsers = new List<AffectedUser>
         {
-            new(Guid.NewGuid(), Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime),
-            new(Guid.NewGuid(), Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime)
+            new(Guid.NewGuid(), Guid.NewGuid(), _disruptionId, _startStation, _endStation, _affectedStations, _endTime),
+            new(Guid.NewGuid(), Guid.NewGuid(), _disruptionId, _startStation, _endStation, _affectedStations, _endTime)
         };
 
         _waterlooClient.GetAffectedUsersAsync(
-            Arg.Any<Guid>(),
-            Arg.Any<Guid>(),
-            Arg.Any<Guid>(),
-            Arg.Any<Severity>(),
-            Arg.Any<TimeOnly>(),
-            Arg.Any<DayOfWeek>())
+            Arg.Any<AffectedJourney>())
             .Returns(Result.Success<IEnumerable<AffectedUser>>(affectedUsers));
 
         var userDetails = new List<UserDetails>
@@ -90,7 +88,7 @@ public class DisruptionNotifierTests
             .Returns(Result.Success<IEnumerable<UserDetails>>(userDetails));
 
         var disruption = new DisruptionDto(
-           Guid.NewGuid(),
+           _disruptionId,
            _line,
            _startStation.Id,
            _endStation.Id,
@@ -107,7 +105,7 @@ public class DisruptionNotifierTests
         _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<User>>(c => capturedUsers = c))
             .Returns(Task.CompletedTask);
 
-        await _notifier.NotifyDisruptionAsync(disruption);
+        await _notifier.NotifyDisruptionAsync(new LineDisruptionsDto(_line, [disruption]));
 
         capturedUsers.Count().Should().Be(2);
 
@@ -186,17 +184,12 @@ public class DisruptionNotifierTests
 
         var affectedUsers = new List<AffectedUser>
         {
-            new(Guid.NewGuid(), Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime),
-            new(Guid.NewGuid(), Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime)
+            new(Guid.NewGuid(), Guid.NewGuid(), disruption.Id, _startStation, _endStation, _affectedStations, _endTime),
+            new(Guid.NewGuid(), Guid.NewGuid(), disruption.Id, _startStation, _endStation, _affectedStations, _endTime)
         };
 
         _waterlooClient.GetAffectedUsersAsync(
-             Arg.Any<Guid>(),
-             Arg.Any<Guid>(),
-             Arg.Any<Guid>(),
-             Arg.Any<Severity>(),
-             Arg.Any<TimeOnly>(),
-             Arg.Any<DayOfWeek>())
+             Arg.Any<AffectedJourney>())
              .Returns(Result.Success<IEnumerable<AffectedUser>>(affectedUsers));
 
         var userDetails = new List<UserDetails>
@@ -217,7 +210,7 @@ public class DisruptionNotifierTests
         _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<User>>(c => capturedUsers = c))
             .Returns(Task.CompletedTask);
 
-        await _notifier.NotifyDisruptionAsync(disruption);
+        await _notifier.NotifyDisruptionAsync(new LineDisruptionsDto(_line, [disruption]));
 
         capturedUsers.Count().Should().Be(2);
 
@@ -294,18 +287,13 @@ public class DisruptionNotifierTests
 
         var affectedUsers = new List<AffectedUser>
         {
-            new(Guid.NewGuid(), Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime),
-            new(Guid.NewGuid(), Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime)
+            new(Guid.NewGuid(), Guid.NewGuid(), disruption.Id, _startStation, _endStation, _affectedStations, _endTime),
+            new(Guid.NewGuid(), Guid.NewGuid(), disruption.Id, _startStation, _endStation, _affectedStations, _endTime)
         };
 
         _waterlooClient.GetAffectedUsersAsync(
-           Arg.Any<Guid>(),
-           Arg.Any<Guid>(),
-           Arg.Any<Guid>(),
-           Arg.Any<Severity>(),
-           Arg.Any<TimeOnly>(),
-           Arg.Any<DayOfWeek>())
-           .Returns(Result.Success<IEnumerable<AffectedUser>>(affectedUsers));
+             Arg.Any<AffectedJourney>())
+             .Returns(Result.Success<IEnumerable<AffectedUser>>(affectedUsers));
 
         var userDetails = new List<UserDetails>
         {
@@ -321,7 +309,7 @@ public class DisruptionNotifierTests
         _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<User>>(c => capturedUser = c))
             .Returns(Task.CompletedTask);
 
-        await _notifier.NotifyDisruptionAsync(disruption);
+        await _notifier.NotifyDisruptionAsync(new LineDisruptionsDto(_line, [disruption]));
 
         capturedUser.Count().Should().Be(2);
     }
@@ -365,17 +353,12 @@ public class DisruptionNotifierTests
 
         var affectedUsers = new List<AffectedUser>
         {
-            new(Guid.NewGuid(), users.First().Id, _startStation, _endStation, _affectedStations, _endTime),
+            new(Guid.NewGuid(), users.First().Id, disruption.Id, _startStation, _endStation, _affectedStations, _endTime),
         };
 
         _waterlooClient.GetAffectedUsersAsync(
-            Arg.Any<Guid>(),
-            Arg.Any<Guid>(),
-            Arg.Any<Guid>(),
-            Arg.Any<Severity>(),
-            Arg.Any<TimeOnly>(),
-            Arg.Any<DayOfWeek>())
-            .Returns(Result.Success<IEnumerable<AffectedUser>>(affectedUsers));
+             Arg.Any<AffectedJourney>())
+             .Returns(Result.Success<IEnumerable<AffectedUser>>(affectedUsers));
 
         var userDetails = new List<UserDetails>
         {
@@ -390,7 +373,7 @@ public class DisruptionNotifierTests
         _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<User>>(c => capturedUsers = c))
             .Returns(Task.CompletedTask);
 
-        await _notifier.NotifyDisruptionAsync(disruption);
+        await _notifier.NotifyDisruptionAsync(new LineDisruptionsDto(_line, [disruption]));
 
         capturedUsers.Count().Should().Be(1);
         capturedUsers.First().Id.Should().Be(affectedUsers.First().UserId);
@@ -446,17 +429,12 @@ public class DisruptionNotifierTests
 
         var affectedUsers = new List<AffectedUser>
         {
-            new(Guid.NewGuid(), users.First().Id, _startStation, _endStation, _affectedStations, _endTime),
-            new(Guid.NewGuid(), Guid.NewGuid(), _startStation, _endStation, _affectedStations, _endTime)
+            new(Guid.NewGuid(), users.First().Id, disruption.Id, _startStation, _endStation, _affectedStations, _endTime),
+            new(Guid.NewGuid(), Guid.NewGuid(), disruption.Id, _startStation, _endStation, _affectedStations, _endTime)
         };
 
         _waterlooClient.GetAffectedUsersAsync(
-             Arg.Any<Guid>(),
-             Arg.Any<Guid>(),
-             Arg.Any<Guid>(),
-             Arg.Any<Severity>(),
-             Arg.Any<TimeOnly>(),
-             Arg.Any<DayOfWeek>())
+             Arg.Any<AffectedJourney>())
              .Returns(Result.Success<IEnumerable<AffectedUser>>(affectedUsers));
 
         var userDetails = new List<UserDetails>
@@ -477,7 +455,7 @@ public class DisruptionNotifierTests
         _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<User>>(c => capturedUsers = c))
             .Returns(Task.CompletedTask);
 
-        await _notifier.NotifyDisruptionAsync(disruption);
+        await _notifier.NotifyDisruptionAsync(new LineDisruptionsDto(_line, [disruption]));
 
         capturedUsers.Count().Should().Be(2);
 
