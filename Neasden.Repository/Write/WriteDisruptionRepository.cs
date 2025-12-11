@@ -101,21 +101,25 @@ public class WriteDisruptionRepository
     public async Task<Result> AddDescriptionAsync(DisruptionDescription description)
     {
         await using var context = _contextFactory.CreateDbContext();
-        if (context.Descriptions.Contains(description)) {
+
+        var exising = await context.Descriptions
+            .FirstOrDefaultAsync(x => x.Id == description.Id);
+
+        if (exising != null) {
             return Result.Success();
         }
+
+        description.CreatedAt = DateTime.UtcNow;
 
         try
         {
             await context.Descriptions.AddAsync(description);
             await context.SaveChangesAsync();
-
             return Result.Success();
         }
         catch (Exception ex)
         {
             var message = $"Could not save disruption description {description.Id}. error: {ex.Message}";
-
             _logger.LogError(message);
             return Result.Failure(message);
         }
