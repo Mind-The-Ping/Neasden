@@ -83,6 +83,29 @@ namespace Neasden.Repository.Migrations
                     b.ToTable("Severities");
                 });
 
+            modelBuilder.Entity("Neasden.Models.DisruptionSeverityHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CurrentSeverity")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("DisruptionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("PreviousSeverity")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SeverityHistories");
+                });
+
             modelBuilder.Entity("Neasden.Models.Notification", b =>
                 {
                     b.Property<Guid>("Id")

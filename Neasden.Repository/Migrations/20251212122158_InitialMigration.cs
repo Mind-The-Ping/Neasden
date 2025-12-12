@@ -73,6 +73,21 @@ namespace Neasden.Repository.Migrations
                 {
                     table.PrimaryKey("PK_Severities", x => x.Id);
                 });
+
+            migrationBuilder.CreateTable(
+                name: "SeverityHistories",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    DisruptionId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CurrentSeverity = table.Column<int>(type: "integer", nullable: false),
+                    PreviousSeverity = table.Column<int>(type: "integer", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SeverityHistories", x => x.Id);
+                });
         }
 
         /// <inheritdoc />
@@ -89,6 +104,9 @@ namespace Neasden.Repository.Migrations
 
             migrationBuilder.DropTable(
                 name: "Severities");
+
+            migrationBuilder.DropTable(
+                name: "SeverityHistories");
         }
     }
 }
