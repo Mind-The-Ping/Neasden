@@ -8,6 +8,7 @@ public class WriteDbContext : DbContext
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<DisruptionSeverity> Severities { get; set; }
     public DbSet<DisruptionDescription> Descriptions { get; set; }
+    public DbSet<DisruptionSeverityHistory> SeverityHistories { get; set; }
     public WriteDbContext(DbContextOptions<WriteDbContext> options)
         : base(options) { }
 }

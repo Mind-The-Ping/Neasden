@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Neasden.Repository.Migrations
 {
     [DbContext(typeof(WriteDbContext))]
-    [Migration("20251124121126_InitialMigration")]
+    [Migration("20251212122158_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
@@ -84,6 +84,29 @@ namespace Neasden.Repository.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Severities");
+                });
+
+            modelBuilder.Entity("Neasden.Models.DisruptionSeverityHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CurrentSeverity")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("DisruptionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("PreviousSeverity")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SeverityHistories");
                 });
 
             modelBuilder.Entity("Neasden.Models.Notification", b =>

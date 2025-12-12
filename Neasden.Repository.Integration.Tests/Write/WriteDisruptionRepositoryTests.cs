@@ -22,7 +22,6 @@ public class WriteDisruptionRepositoryTests
 
         _contextFactory = new TestWriteDbContextFactory(options);
 
-
         using (var context = _contextFactory.CreateDbContext())
         {
             context.Database.EnsureDeleted();

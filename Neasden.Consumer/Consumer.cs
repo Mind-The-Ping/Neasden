@@ -21,13 +21,15 @@ public class Consumer
     private readonly ILogger<Consumer> _logger;
     private readonly DisruptionNotifier _notifer;
     private readonly WriteDisruptionRepository _writeDisruptionRepository;
+    private readonly WriteDisruptionSeverityHistory _writeDisruptionSeverityHistory;
     private readonly IWriteNotificationRepository _writeNotificationRepository;
 
     public Consumer(
         ILogger<Consumer> logger,
         DisruptionNotifier notifer,
         WriteDisruptionRepository writeDisruptionRepository,
-        IWriteNotificationRepository writeNotificationRepository)
+        IWriteNotificationRepository writeNotificationRepository,
+        WriteDisruptionSeverityHistory writeDisruptionSeverityHistory)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _notifer = notifer ?? throw new ArgumentNullException( nameof(notifer));
@@ -37,6 +39,9 @@ public class Consumer
 
         _writeNotificationRepository = writeNotificationRepository ?? 
             throw new ArgumentNullException(nameof(writeNotificationRepository));
+
+        _writeDisruptionSeverityHistory = writeDisruptionSeverityHistory ??
+            throw new ArgumentNullException(nameof(writeDisruptionSeverityHistory));
     }
 
     [Function("DisruptionsConsumer")]
@@ -96,6 +101,30 @@ public class Consumer
         }
         catch(Exception ex) {
             _logger.LogError(ex, "Could not deserialize disruption severity.");
+        }
+
+        await messageActions.CompleteMessageAsync(message);
+    }
+
+
+    [Function("QueueDisruptionSeverityHistoryConsumer")]
+    public async Task QueueDisruptionSeverityHistoryHandler(
+        [ServiceBusTrigger("%QueueDisruptionSeverityHistory%", Connection = "ServiceBusConnection")]
+        ServiceBusReceivedMessage message,
+        ServiceBusMessageActions messageActions)
+    {
+        _logger.LogInformation("Message ID: {id}", message.MessageId);
+        _logger.LogInformation("Message Body: {body}", message.Body);
+        _logger.LogInformation("Message Content-Type: {contentType}", message.ContentType);
+
+        try
+        {
+            var json = message.Body.ToArray();
+            var disruptionSeverityHistory = JsonSerializer.Deserialize<DisruptionSeverityHistory>(json);
+            await _writeDisruptionSeverityHistory.AddDisruptionSeverityHistoryAsync(disruptionSeverityHistory!);
+        }
+        catch (Exception ex) {
+            _logger.LogError(ex, "Could not deserialize disruption severity history.");
         }
 
         await messageActions.CompleteMessageAsync(message);

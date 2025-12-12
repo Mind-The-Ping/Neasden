@@ -68,6 +68,7 @@ builder.Services.AddScoped<INotificationPublisher, NotificationPublisher>();
 builder.Services.AddScoped<DisruptionNotifier>();
 builder.Services.AddScoped<WriteDisruptionRepository>();
 builder.Services.AddScoped<IWriteNotificationRepository,  WriteNotificationRepository>();
+builder.Services.AddScoped<WriteDisruptionSeverityHistory>();
 
 builder.Services
     .AddApplicationInsightsTelemetryWorkerService()
