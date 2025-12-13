@@ -53,10 +53,15 @@ builder.Services.AddSingleton(sp =>
 builder.Services.AddSingleton(sp =>
 {
     var options = sp.GetRequiredService<IOptions<RedisOptions>>().Value;
-    var configOptions = ConfigurationOptions.Parse(options.Connection);
-    configOptions.AbortOnConnectFail = false;
+    var muxer = ConnectionMultiplexer.Connect(
+        new ConfigurationOptions
+        {
+            EndPoints = { { options.Connection, options.Port } },
+            User = options.UserName,
+            Password = options.Password
+        });
 
-    return ConnectionMultiplexer.Connect(configOptions);
+    return muxer;
 });
 
 builder.Services.AddHttpClient();
