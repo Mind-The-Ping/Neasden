@@ -64,23 +64,29 @@ public class UserNotifiedRepository : IUserNotifiedRepository
 
     public async Task<IEnumerable<User>> GetUsersByDisruptionIdAsync(Guid disruptionId)
     {
+        var indexKey = (RedisKey)$"notified_index:{disruptionId}";
         var results = new List<User>();
 
-        var indexKey = $"notified_index:{disruptionId}";
-        var keys = (await _database.SetMembersAsync(indexKey))
-           .Select(x => (RedisKey)x.ToString())
-           .ToArray();
+        RedisValue[] members = await _database.SetMembersAsync(indexKey);
 
-        foreach (var key in keys)
+        foreach (var member in members)
         {
-            var data = await _database.StringGetAsync(key);
-            if (!data.IsNullOrEmpty)
+            if (member.IsNullOrEmpty) {
+                continue;
+            }
+
+            RedisKey userKey = member.ToString();
+            var data = await _database.StringGetAsync(userKey);
+
+            if (data.IsNullOrEmpty)
             {
-                var user = JsonSerializer.Deserialize<User>(data!);
-                if (user is not null)
-                {
-                    results.Add(user);
-                }
+                await _database.SetRemoveAsync(indexKey, member);
+                continue;
+            }
+
+            var user = JsonSerializer.Deserialize<User>(data!);
+            if (user != null) {
+                results.Add(user);
             }
         }
 

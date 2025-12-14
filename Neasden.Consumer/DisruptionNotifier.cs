@@ -108,8 +108,6 @@ public class DisruptionNotifier
             .Where(u => affectedUserIds.Contains(u.Id))
             .ToList();
 
-        notifiedUsers = [.. notifiedUsers.Where(u => affectedUserIds.Contains(u.Id))];
-
         var newUsers = affectedUsers.ToList();
         var usersToNotify = new Dictionary<Guid, User>();
 
