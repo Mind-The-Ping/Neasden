@@ -58,7 +58,8 @@ builder.Services.AddSingleton(sp =>
         {
             EndPoints = { { options.Connection, options.Port } },
             User = options.UserName,
-            Password = options.Password
+            Password = options.Password,
+            AbortOnConnectFail = false
         });
 
     return muxer;
