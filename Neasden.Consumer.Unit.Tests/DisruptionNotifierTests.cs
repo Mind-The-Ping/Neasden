@@ -473,4 +473,65 @@ public class DisruptionNotifierTests
         capturedJourneys.ElementAt(0).JourneyId.Should().Be(journeys.First().JourneyId);
         capturedJourneys.ElementAt(1).JourneyId.Should().Be(affectedUsers.Last().JourneyId);
     }
+
+    [Fact]
+    public async Task DisruptionNotifier_NotifyDisruptionAsync_No_AffectedUsers_Disruption_Deleted()
+    {
+        var disruption = new DisruptionDto(
+            Guid.NewGuid(),
+            _line,
+            _startStation.Id,
+            _endStation.Id,
+            Severity.Severe,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            DateTime.UtcNow);
+
+        var journeys = new List<Journey>
+        {
+            new(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                disruption.Id,
+                _line,
+                _startStation,
+                _endStation,
+                Severity.Minor,
+                "+447123456789",
+                PhoneOS.Android,
+                _endTime,
+                _affectedStations),
+            new(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                disruption.Id,
+                _line,
+                _startStation,
+                _endStation,
+                 Severity.Minor,
+                 "+447234567890",
+                 PhoneOS.Android,
+                _endTime,
+                _affectedStations),
+        };
+
+        _userNotifiedRepository.GetJourneysByDisruptionIdAsync(Arg.Any<Guid>())
+                .Returns(journeys);
+
+        _waterlooClient.GetAffectedUsersAsync(
+            Arg.Any<AffectedJourney>())
+            .Returns(Result.Success<IEnumerable<AffectedUser>>([]));
+
+        _writeNotificationRepository.AddNotificationsAsync(Arg.Any<IEnumerable<Notification>>())
+           .Returns(Result.Success());
+
+        IEnumerable<Journey> capturedJourneys = null!;
+
+        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Journey>>(c => capturedJourneys = c))
+            .Returns(Task.CompletedTask);
+
+        await _notifier.NotifyDisruptionAsync(new LineDisruptionsDto(_line, [disruption]));
+
+        capturedJourneys.Count().Should().Be(0);
+    }
 }
