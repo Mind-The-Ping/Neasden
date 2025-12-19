@@ -1,7 +1,7 @@
 ﻿namespace Neasden.Models;
 
 public record AffectedUser(
-    Guid Id,
+    Guid JourneyId,
     Guid UserId,
     Guid DisruptionId,
     Station StartStation,

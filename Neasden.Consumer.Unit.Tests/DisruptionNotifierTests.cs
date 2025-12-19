@@ -59,10 +59,10 @@ public class DisruptionNotifierTests
     [Fact]
     public async Task DisruptionNotifier_NotifyDisruptionAsync_New_Users_Disruption_Notifys_New_Users_Only()
     {
-        _userNotifiedRepository.GetUsersByDisruptionIdAsync(Arg.Any<Guid>())
-          .Returns(Enumerable.Empty<User>());
+        _userNotifiedRepository.GetJourneysByDisruptionIdAsync(Arg.Any<Guid>())
+          .Returns([]);
 
-        _userNotifiedRepository.SaveUsersAsync(Arg.Any<IEnumerable<User>>())
+        _userNotifiedRepository.SaveJourneysAsync(Arg.Any<IEnumerable<Journey>>())
             .Returns(Result.Success());
 
         _userNotifiedRepository.DeleteByDisruptionIdAsync(Arg.Any<Guid>())
@@ -100,36 +100,38 @@ public class DisruptionNotifierTests
         _writeNotificationRepository.AddNotificationsAsync(Arg.Any<IEnumerable<Notification>>())
             .Returns(Result.Success());
 
-        IEnumerable<User> capturedUsers = null!;
+        IEnumerable<Journey> capturedJourneys = null!;
 
-        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<User>>(c => capturedUsers = c))
+        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Journey>>(c => capturedJourneys = c))
             .Returns(Task.CompletedTask);
 
         await _notifier.NotifyDisruptionAsync(new LineDisruptionsDto(_line, [disruption]));
 
-        capturedUsers.Count().Should().Be(2);
+        capturedJourneys.Count().Should().Be(2);
 
-        capturedUsers.First().Id.Should().Be(affectedUsers.First().UserId);
-        capturedUsers.First().DisruptionId.Should().Be(disruption.Id);
-        capturedUsers.First().Line.Should().Be(disruption.Line);
-        capturedUsers.First().StartStation.Should().Be(affectedUsers.First().StartStation);
-        capturedUsers.First().EndStation.Should().Be(affectedUsers.First().EndStation);
-        capturedUsers.First().Severity.Should().Be(disruption.Severity);
-        capturedUsers.First().PhoneNumber.Should().Be(userDetails.First().PhoneNumber);
-        capturedUsers.First().PhoneOS.Should().Be(userDetails.First().PhoneOS);
-        capturedUsers.First().EndTime.Should().Be(affectedUsers.First().EndTime);
-        capturedUsers.First().AffectedStations.Should().BeEquivalentTo(affectedUsers.First().AffectedStations);
+        capturedJourneys.First().JourneyId.Should().Be(affectedUsers.First().JourneyId);
+        capturedJourneys.First().UserId.Should().Be(affectedUsers.First().UserId);
+        capturedJourneys.First().DisruptionId.Should().Be(disruption.Id);
+        capturedJourneys.First().Line.Should().Be(disruption.Line);
+        capturedJourneys.First().StartStation.Should().Be(affectedUsers.First().StartStation);
+        capturedJourneys.First().EndStation.Should().Be(affectedUsers.First().EndStation);
+        capturedJourneys.First().Severity.Should().Be(disruption.Severity);
+        capturedJourneys.First().PhoneNumber.Should().Be(userDetails.First().PhoneNumber);
+        capturedJourneys.First().PhoneOS.Should().Be(userDetails.First().PhoneOS);
+        capturedJourneys.First().EndTime.Should().Be(affectedUsers.First().EndTime);
+        capturedJourneys.First().AffectedStations.Should().BeEquivalentTo(affectedUsers.First().AffectedStations);
 
-        capturedUsers.Last().Id.Should().Be(affectedUsers.Last().UserId);
-        capturedUsers.Last().DisruptionId.Should().Be(disruption.Id);
-        capturedUsers.Last().Line.Should().Be(disruption.Line);
-        capturedUsers.Last().StartStation.Should().Be(affectedUsers.Last().StartStation);
-        capturedUsers.Last().EndStation.Should().Be(affectedUsers.Last().EndStation);
-        capturedUsers.Last().Severity.Should().Be(disruption.Severity);
-        capturedUsers.Last().PhoneNumber.Should().Be(userDetails.Last().PhoneNumber);
-        capturedUsers.Last().PhoneOS.Should().Be(userDetails.Last().PhoneOS);
-        capturedUsers.Last().EndTime.Should().Be(affectedUsers.Last().EndTime);
-        capturedUsers.Last().AffectedStations.Should().BeEquivalentTo(affectedUsers.Last().AffectedStations);
+        capturedJourneys.Last().JourneyId.Should().Be(affectedUsers.Last().JourneyId);
+        capturedJourneys.Last().UserId.Should().Be(affectedUsers.Last().UserId);
+        capturedJourneys.Last().DisruptionId.Should().Be(disruption.Id);
+        capturedJourneys.Last().Line.Should().Be(disruption.Line);
+        capturedJourneys.Last().StartStation.Should().Be(affectedUsers.Last().StartStation);
+        capturedJourneys.Last().EndStation.Should().Be(affectedUsers.Last().EndStation);
+        capturedJourneys.Last().Severity.Should().Be(disruption.Severity);
+        capturedJourneys.Last().PhoneNumber.Should().Be(userDetails.Last().PhoneNumber);
+        capturedJourneys.Last().PhoneOS.Should().Be(userDetails.Last().PhoneOS);
+        capturedJourneys.Last().EndTime.Should().Be(affectedUsers.Last().EndTime);
+        capturedJourneys.Last().AffectedStations.Should().BeEquivalentTo(affectedUsers.Last().AffectedStations);
     }
 
     [Fact]
@@ -147,9 +149,10 @@ public class DisruptionNotifierTests
             Guid.NewGuid(),
             DateTime.UtcNow);
 
-        var users = new List<User>
+        var users = new List<Journey>
         {
             new(
+                Guid.NewGuid(),
                 Guid.NewGuid(),
                 disruption.Id,
                 _line,
@@ -162,6 +165,7 @@ public class DisruptionNotifierTests
                 _affectedStations),
             new(
                 Guid.NewGuid(),
+                Guid.NewGuid(),
                 disruption.Id,
                 _line,
                 _startStation,
@@ -173,10 +177,10 @@ public class DisruptionNotifierTests
                 _affectedStations),
         };
 
-        _userNotifiedRepository.GetUsersByDisruptionIdAsync(Arg.Any<Guid>())
+        _userNotifiedRepository.GetJourneysByDisruptionIdAsync(Arg.Any<Guid>())
             .Returns(users);
 
-        _userNotifiedRepository.SaveUsersAsync(Arg.Any<IEnumerable<User>>())
+        _userNotifiedRepository.SaveJourneysAsync(Arg.Any<IEnumerable<Journey>>())
            .Returns(Result.Success());
 
         _userNotifiedRepository.DeleteByDisruptionIdAsync(Arg.Any<Guid>())
@@ -205,36 +209,38 @@ public class DisruptionNotifierTests
         _writeNotificationRepository.AddNotificationsAsync(Arg.Any<IEnumerable<Notification>>())
            .Returns(Result.Success());
 
-        IEnumerable<User> capturedUsers = null!;
+        IEnumerable<Journey> capturedJourneys = null!;
 
-        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<User>>(c => capturedUsers = c))
+        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Journey>>(c => capturedJourneys = c))
             .Returns(Task.CompletedTask);
 
         await _notifier.NotifyDisruptionAsync(new LineDisruptionsDto(_line, [disruption]));
 
-        capturedUsers.Count().Should().Be(2);
+        capturedJourneys.Count().Should().Be(2);
 
-        capturedUsers.First().Id.Should().Be(affectedUsers.First().UserId);
-        capturedUsers.First().DisruptionId.Should().Be(disruption.Id);
-        capturedUsers.First().Line.Should().Be(disruption.Line);
-        capturedUsers.First().StartStation.Should().Be(affectedUsers.First().StartStation);
-        capturedUsers.First().EndStation.Should().Be(affectedUsers.First().EndStation);
-        capturedUsers.First().Severity.Should().Be(disruption.Severity);
-        capturedUsers.First().PhoneNumber.Should().Be(userDetails.First().PhoneNumber);
-        capturedUsers.First().PhoneOS.Should().Be(userDetails.First().PhoneOS);
-        capturedUsers.First().EndTime.Should().Be(affectedUsers.First().EndTime);
-        capturedUsers.First().AffectedStations.Should().BeEquivalentTo(affectedUsers.First().AffectedStations);
+        capturedJourneys.First().JourneyId.Should().Be(affectedUsers.First().JourneyId);
+        capturedJourneys.First().UserId.Should().Be(affectedUsers.First().UserId);
+        capturedJourneys.First().DisruptionId.Should().Be(disruption.Id);
+        capturedJourneys.First().Line.Should().Be(disruption.Line);
+        capturedJourneys.First().StartStation.Should().Be(affectedUsers.First().StartStation);
+        capturedJourneys.First().EndStation.Should().Be(affectedUsers.First().EndStation);
+        capturedJourneys.First().Severity.Should().Be(disruption.Severity);
+        capturedJourneys.First().PhoneNumber.Should().Be(userDetails.First().PhoneNumber);
+        capturedJourneys.First().PhoneOS.Should().Be(userDetails.First().PhoneOS);
+        capturedJourneys.First().EndTime.Should().Be(affectedUsers.First().EndTime);
+        capturedJourneys.First().AffectedStations.Should().BeEquivalentTo(affectedUsers.First().AffectedStations);
 
-        capturedUsers.Last().Id.Should().Be(affectedUsers.Last().UserId);
-        capturedUsers.Last().DisruptionId.Should().Be(disruption.Id);
-        capturedUsers.Last().Line.Should().Be(disruption.Line);
-        capturedUsers.Last().StartStation.Should().Be(affectedUsers.Last().StartStation);
-        capturedUsers.Last().EndStation.Should().Be(affectedUsers.Last().EndStation);
-        capturedUsers.Last().Severity.Should().Be(disruption.Severity);
-        capturedUsers.Last().PhoneNumber.Should().Be(userDetails.Last().PhoneNumber);
-        capturedUsers.Last().PhoneOS.Should().Be(userDetails.Last().PhoneOS);
-        capturedUsers.Last().EndTime.Should().Be(affectedUsers.Last().EndTime);
-        capturedUsers.Last().AffectedStations.Should().BeEquivalentTo(affectedUsers.Last().AffectedStations);
+        capturedJourneys.First().JourneyId.Should().Be(affectedUsers.First().JourneyId);
+        capturedJourneys.First().UserId.Should().Be(affectedUsers.First().UserId);
+        capturedJourneys.Last().DisruptionId.Should().Be(disruption.Id);
+        capturedJourneys.Last().Line.Should().Be(disruption.Line);
+        capturedJourneys.Last().StartStation.Should().Be(affectedUsers.Last().StartStation);
+        capturedJourneys.Last().EndStation.Should().Be(affectedUsers.Last().EndStation);
+        capturedJourneys.Last().Severity.Should().Be(disruption.Severity);
+        capturedJourneys.Last().PhoneNumber.Should().Be(userDetails.Last().PhoneNumber);
+        capturedJourneys.Last().PhoneOS.Should().Be(userDetails.Last().PhoneOS);
+        capturedJourneys.Last().EndTime.Should().Be(affectedUsers.Last().EndTime);
+        capturedJourneys.Last().AffectedStations.Should().BeEquivalentTo(affectedUsers.Last().AffectedStations);
     }
 
     [Fact]
@@ -250,9 +256,10 @@ public class DisruptionNotifierTests
            Guid.NewGuid(),
            DateTime.UtcNow);
 
-        var users = new List<User>
+        var users = new List<Journey>
         {
             new(
+                Guid.NewGuid(),
                 Guid.NewGuid(),
                 disruption.Id,
                 _line,
@@ -265,6 +272,7 @@ public class DisruptionNotifierTests
                 _affectedStations),
             new(
                 Guid.NewGuid(),
+                Guid.NewGuid(),
                 disruption.Id,
                 _line,
                 _startStation,
@@ -276,10 +284,10 @@ public class DisruptionNotifierTests
                 _affectedStations),
         };
 
-        _userNotifiedRepository.GetUsersByDisruptionIdAsync(Arg.Any<Guid>())
+        _userNotifiedRepository.GetJourneysByDisruptionIdAsync(Arg.Any<Guid>())
            .Returns(users);
 
-        _userNotifiedRepository.SaveUsersAsync(Arg.Any<IEnumerable<User>>())
+        _userNotifiedRepository.SaveJourneysAsync(Arg.Any<IEnumerable<Journey>>())
           .Returns(Result.Success());
 
         _userNotifiedRepository.DeleteByDisruptionIdAsync(Arg.Any<Guid>())
@@ -304,14 +312,14 @@ public class DisruptionNotifierTests
         _stratfordClient.GetUserDetailsAsync(Arg.Any<IEnumerable<Guid>>())
           .Returns(Result.Success<IEnumerable<UserDetails>>(userDetails));
 
-        IEnumerable<User> capturedUser = null!;
+        IEnumerable<Journey> capturedJourney = null!;
 
-        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<User>>(c => capturedUser = c))
+        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Journey>>(c => capturedJourney = c))
             .Returns(Task.CompletedTask);
 
         await _notifier.NotifyDisruptionAsync(new LineDisruptionsDto(_line, [disruption]));
 
-        capturedUser.Count().Should().Be(2);
+        capturedJourney.Count().Should().Be(2);
     }
 
     [Fact]
@@ -327,9 +335,10 @@ public class DisruptionNotifierTests
             Guid.NewGuid(),
             DateTime.UtcNow);
 
-        var users = new List<User>
+        var journeys = new List<Journey>
         {
             new(
+                Guid.NewGuid(),
                 Guid.NewGuid(),
                 disruption.Id,
                 _line,
@@ -342,10 +351,10 @@ public class DisruptionNotifierTests
                 _affectedStations)
         };
 
-        _userNotifiedRepository.GetUsersByDisruptionIdAsync(Arg.Any<Guid>())
-          .Returns(users);
+        _userNotifiedRepository.GetJourneysByDisruptionIdAsync(Arg.Any<Guid>())
+          .Returns(journeys);
 
-        _userNotifiedRepository.SaveUsersAsync(Arg.Any<IEnumerable<User>>())
+        _userNotifiedRepository.SaveJourneysAsync(Arg.Any<IEnumerable<Journey>>())
          .Returns(Result.Success());
 
         _userNotifiedRepository.DeleteByDisruptionIdAsync(Arg.Any<Guid>())
@@ -353,7 +362,7 @@ public class DisruptionNotifierTests
 
         var affectedUsers = new List<AffectedUser>
         {
-            new(Guid.NewGuid(), users.First().Id, disruption.Id, _startStation, _endStation, _affectedStations, _endTime),
+            new(journeys.First().JourneyId, journeys.First().UserId, disruption.Id, _startStation, _endStation, _affectedStations, _endTime),
         };
 
         _waterlooClient.GetAffectedUsersAsync(
@@ -362,21 +371,21 @@ public class DisruptionNotifierTests
 
         var userDetails = new List<UserDetails>
         {
-            new(affectedUsers.First().Id, "+447345678901", PhoneOS.Android),
+            new(affectedUsers.First().UserId, "+447345678901", PhoneOS.Android),
         };
 
         _stratfordClient.GetUserDetailsAsync(Arg.Any<IEnumerable<Guid>>())
           .Returns(Result.Success<IEnumerable<UserDetails>>(userDetails));
 
-        IEnumerable<User> capturedUsers = null!;
+        IEnumerable<Journey> capturedJourneys = null!;
 
-        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<User>>(c => capturedUsers = c))
+        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Journey>>(c => capturedJourneys = c))
             .Returns(Task.CompletedTask);
 
         await _notifier.NotifyDisruptionAsync(new LineDisruptionsDto(_line, [disruption]));
 
-        capturedUsers.Count().Should().Be(1);
-        capturedUsers.First().Id.Should().Be(affectedUsers.First().UserId);
+        capturedJourneys.Count().Should().Be(1);
+        capturedJourneys.First().JourneyId.Should().Be(affectedUsers.First().JourneyId);
     }
 
     [Fact]
@@ -392,9 +401,10 @@ public class DisruptionNotifierTests
             Guid.NewGuid(),
             DateTime.UtcNow);
 
-        var users = new List<User>
+        var journeys = new List<Journey>
         {
             new(
+                Guid.NewGuid(),
                 Guid.NewGuid(),
                 disruption.Id,
                 _line,
@@ -407,6 +417,7 @@ public class DisruptionNotifierTests
                 _affectedStations),
             new(
                 Guid.NewGuid(),
+                Guid.NewGuid(),
                 disruption.Id,
                 _line,
                 _startStation,
@@ -418,10 +429,10 @@ public class DisruptionNotifierTests
                 _affectedStations),
         };
 
-        _userNotifiedRepository.GetUsersByDisruptionIdAsync(Arg.Any<Guid>())
-            .Returns(users);
+        _userNotifiedRepository.GetJourneysByDisruptionIdAsync(Arg.Any<Guid>())
+            .Returns(journeys);
 
-        _userNotifiedRepository.SaveUsersAsync(Arg.Any<IEnumerable<User>>())
+        _userNotifiedRepository.SaveJourneysAsync(Arg.Any<IEnumerable<Journey>>())
            .Returns(Result.Success());
 
         _userNotifiedRepository.DeleteByDisruptionIdAsync(Arg.Any<Guid>())
@@ -429,7 +440,7 @@ public class DisruptionNotifierTests
 
         var affectedUsers = new List<AffectedUser>
         {
-            new(Guid.NewGuid(), users.First().Id, disruption.Id, _startStation, _endStation, _affectedStations, _endTime),
+            new(journeys.First().JourneyId, journeys.First().UserId, disruption.Id, _startStation, _endStation, _affectedStations, _endTime),
             new(Guid.NewGuid(), Guid.NewGuid(), disruption.Id, _startStation, _endStation, _affectedStations, _endTime)
         };
 
@@ -450,16 +461,77 @@ public class DisruptionNotifierTests
         _writeNotificationRepository.AddNotificationsAsync(Arg.Any<IEnumerable<Notification>>())
            .Returns(Result.Success());
 
-        IEnumerable<User> capturedUsers = null!;
+        IEnumerable<Journey> capturedJourneys = null!;
 
-        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<User>>(c => capturedUsers = c))
+        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Journey>>(c => capturedJourneys = c))
             .Returns(Task.CompletedTask);
 
         await _notifier.NotifyDisruptionAsync(new LineDisruptionsDto(_line, [disruption]));
 
-        capturedUsers.Count().Should().Be(2);
+        capturedJourneys.Count().Should().Be(2);
 
-        capturedUsers.ElementAt(0).Id.Should().Be(users.First().Id);
-        capturedUsers.ElementAt(1).Id.Should().Be(affectedUsers.Last().UserId);
+        capturedJourneys.ElementAt(0).JourneyId.Should().Be(journeys.First().JourneyId);
+        capturedJourneys.ElementAt(1).JourneyId.Should().Be(affectedUsers.Last().JourneyId);
+    }
+
+    [Fact]
+    public async Task DisruptionNotifier_NotifyDisruptionAsync_No_AffectedUsers_Disruption_Deleted()
+    {
+        var disruption = new DisruptionDto(
+            Guid.NewGuid(),
+            _line,
+            _startStation.Id,
+            _endStation.Id,
+            Severity.Severe,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            DateTime.UtcNow);
+
+        var journeys = new List<Journey>
+        {
+            new(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                disruption.Id,
+                _line,
+                _startStation,
+                _endStation,
+                Severity.Minor,
+                "+447123456789",
+                PhoneOS.Android,
+                _endTime,
+                _affectedStations),
+            new(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                disruption.Id,
+                _line,
+                _startStation,
+                _endStation,
+                 Severity.Minor,
+                 "+447234567890",
+                 PhoneOS.Android,
+                _endTime,
+                _affectedStations),
+        };
+
+        _userNotifiedRepository.GetJourneysByDisruptionIdAsync(Arg.Any<Guid>())
+                .Returns(journeys);
+
+        _waterlooClient.GetAffectedUsersAsync(
+            Arg.Any<AffectedJourney>())
+            .Returns(Result.Success<IEnumerable<AffectedUser>>([]));
+
+        _writeNotificationRepository.AddNotificationsAsync(Arg.Any<IEnumerable<Notification>>())
+           .Returns(Result.Success());
+
+        IEnumerable<Journey> capturedJourneys = null!;
+
+        _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Journey>>(c => capturedJourneys = c))
+            .Returns(Task.CompletedTask);
+
+        await _notifier.NotifyDisruptionAsync(new LineDisruptionsDto(_line, [disruption]));
+
+        capturedJourneys.Count().Should().Be(0);
     }
 }

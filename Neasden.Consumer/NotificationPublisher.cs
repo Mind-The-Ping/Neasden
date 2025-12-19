@@ -36,11 +36,11 @@ public class NotificationPublisher : INotificationPublisher
         _messageDelay = TimeSpan.FromSeconds(notifyOptions.DelayTime);
     }
 
-    public async Task PublishAsync(IEnumerable<User> users)
+    public async Task PublishAsync(IEnumerable<Journey> journeys)
     {
-        foreach (var user in users)
+        foreach (var journey in journeys)
         {
-            var message = new ServiceBusMessage(BinaryData.FromObjectAsJson(user))
+            var message = new ServiceBusMessage(BinaryData.FromObjectAsJson(journey))
             {
                 ScheduledEnqueueTime = DateTimeOffset.UtcNow.Add(_messageDelay)
             };
@@ -49,16 +49,16 @@ public class NotificationPublisher : INotificationPublisher
                 await _notificationSender.SendMessageAsync(message);
             }
             catch (Exception ex) {
-                _logger.LogError($"Could not send notification message {user.Id}.", ex);
+                _logger.LogError($"Could not send notification message {journey.JourneyId}.", ex);
             }
         }
     }
 
-    public async Task PublishResolvedAsync(IEnumerable<User> notifiedUsers)
+    public async Task PublishResolvedAsync(IEnumerable<Journey> notifiedUserJourneys)
     {
-        foreach (var user in notifiedUsers)
+        foreach (var journey in notifiedUserJourneys)
         {
-            var message = new ServiceBusMessage(BinaryData.FromObjectAsJson(user))
+            var message = new ServiceBusMessage(BinaryData.FromObjectAsJson(journey))
             {
                 ScheduledEnqueueTime = DateTimeOffset.UtcNow.Add(_messageDelay)
             };
@@ -67,7 +67,7 @@ public class NotificationPublisher : INotificationPublisher
                 await _resolvedNotificationSender.SendMessageAsync(message);
             }
             catch (Exception ex) {
-                _logger.LogError($"Could not send resolved notification message for user {user.Id}.", ex);
+                _logger.LogError($"Could not send resolved notification message for user {journey.JourneyId}.", ex);
             }
         }
     }
