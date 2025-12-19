@@ -269,7 +269,7 @@ public class UserNotifiedRepositoryTests : IAsyncLifetime
         };
 
         await userNotifiedRepository.SaveUsersAsync(users);
-        await userNotifiedRepository.DeleteUsersAsync(disruptionId, [user1, user2]);
+        await userNotifiedRepository.DeleteUsersAsync([user1, user2]);
 
         var result = await userNotifiedRepository.GetUsersByDisruptionIdAsync(disruptionId);
         result.Count().Should().Be(1);

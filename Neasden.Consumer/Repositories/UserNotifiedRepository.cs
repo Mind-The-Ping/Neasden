@@ -106,8 +106,7 @@ public class UserNotifiedRepository : IUserNotifiedRepository
             var batch = _database.CreateBatch();
             var deleteTasks = new List<Task>();
 
-            foreach (var key in keys)
-            {
+            foreach (var key in keys) {
                 deleteTasks.Add(batch.KeyDeleteAsync(key));
             }
 
@@ -122,16 +121,16 @@ public class UserNotifiedRepository : IUserNotifiedRepository
         }
     }
 
-    public async Task DeleteUsersAsync(Guid disruptionId, IEnumerable<User> users)
+    public async Task DeleteUsersAsync(IEnumerable<User> users)
     {
         var batch = _database.CreateBatch();
         var tasks = new List<Task>();
 
         foreach (var user in users)
         {
-            var key = $"notified:{disruptionId}:{user.Id}";
+            var key = $"notified:{user.DisruptionId}:{user.Id}";
             tasks.Add(batch.KeyDeleteAsync(key));
-            tasks.Add(batch.SetRemoveAsync($"notified_index:{disruptionId}", key));
+            tasks.Add(batch.SetRemoveAsync($"notified_index:{user.DisruptionId}", key));
         }
 
         batch.Execute();

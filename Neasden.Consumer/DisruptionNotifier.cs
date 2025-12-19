@@ -94,14 +94,16 @@ public class DisruptionNotifier
         var allNotifiedUsers = await _userNotifiedRepository
            .GetUsersByDisruptionIdAsync(disruption.Id);
 
-        var affectedUserIds = affectedUsers.Select(u => u.UserId).ToHashSet();
+        var affectedUserIds = affectedUsers
+            .Select(u => u.UserId)
+            .ToHashSet();
 
         var usersToRemove = allNotifiedUsers
             .Where(u => !affectedUserIds.Contains(u.Id))
             .ToList();
 
         if (usersToRemove.Count > 0) {
-            await _userNotifiedRepository.DeleteUsersAsync(disruption.Id, usersToRemove);
+            await _userNotifiedRepository.DeleteUsersAsync(usersToRemove);
         }
 
         var notifiedUsers = allNotifiedUsers
