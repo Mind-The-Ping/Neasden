@@ -8,49 +8,49 @@ public class UserNotifiedRepository : IUserNotifiedRepository
 {
     private readonly IDatabase _database;
 
-    private static string GetKey(User user) =>
-      $"notified:{user.DisruptionId}:{user.Id}";
+    private static string GetKey(Journey journey) =>
+      $"notified:{journey.DisruptionId}:{journey.JourneyId}";
 
     public UserNotifiedRepository(ConnectionMultiplexer redis)
     {
         _database = redis.GetDatabase();
     }
 
-    public async Task<Result> SaveUsersAsync(IEnumerable<User> users)
+    public async Task<Result> SaveJourneysAsync(IEnumerable<Journey> journeys)
     {
         var errors = new List<string>();
         var batch = _database.CreateBatch();
 
         var tasks = new List<Task>();
 
-        foreach (var user in users)
+        foreach (var journey in journeys)
         {
-            var key = GetKey(user);
-            var value = JsonSerializer.Serialize(user);
+            var key = GetKey(journey);
+            var value = JsonSerializer.Serialize(journey);
 
             var now = DateTime.UtcNow;
-            var todayEndTime = now.Date.Add(user.EndTime.ToTimeSpan());
+            var todayEndTime = now.Date.Add(journey.EndTime.ToTimeSpan());
             var ttl = todayEndTime - now;
 
             if (ttl <= TimeSpan.Zero)
             {
-                errors.Add($"TTL already expired for user {user.Id}.");
+                errors.Add($"TTL already expired for user {journey.JourneyId}.");
                 continue;
             }
 
             var stringSetTask = batch.StringSetAsync(key, value, ttl + TimeSpan.FromMinutes(1));
-            var setAddTask = batch.SetAddAsync($"notified_index:{user.DisruptionId}", key);
+            var setAddTask = batch.SetAddAsync($"notified_index:{journey.DisruptionId}", key);
 
             tasks.Add(stringSetTask.ContinueWith(t =>
             {
                 if (!t.Result)
-                    errors.Add($"Failed to save user {user.Id} to database.");
+                    errors.Add($"Failed to save user {journey.JourneyId} to database.");
             }));
 
             tasks.Add(setAddTask.ContinueWith(t =>
             {
                 if (!t.Result)
-                    errors.Add($"Failed to index user {user.Id} for disruption {user.DisruptionId}.");
+                    errors.Add($"Failed to index user {journey.JourneyId} for disruption {journey.DisruptionId}.");
             }));
         }
 
@@ -62,10 +62,10 @@ public class UserNotifiedRepository : IUserNotifiedRepository
             : Result.Success();
     }
 
-    public async Task<IEnumerable<User>> GetUsersByDisruptionIdAsync(Guid disruptionId)
+    public async Task<IEnumerable<Journey>> GetJourneysByDisruptionIdAsync(Guid disruptionId)
     {
         var indexKey = (RedisKey)$"notified_index:{disruptionId}";
-        var results = new List<User>();
+        var results = new List<Journey>();
 
         RedisValue[] members = await _database.SetMembersAsync(indexKey);
 
@@ -84,9 +84,9 @@ public class UserNotifiedRepository : IUserNotifiedRepository
                 continue;
             }
 
-            var user = JsonSerializer.Deserialize<User>(data!);
-            if (user != null) {
-                results.Add(user);
+            var journey = JsonSerializer.Deserialize<Journey>(data!);
+            if (journey != null) {
+                results.Add(journey);
             }
         }
 
@@ -121,16 +121,16 @@ public class UserNotifiedRepository : IUserNotifiedRepository
         }
     }
 
-    public async Task DeleteUsersAsync(IEnumerable<User> users)
+    public async Task DeleteJourneysAsync(IEnumerable<Journey> journeys)
     {
         var batch = _database.CreateBatch();
         var tasks = new List<Task>();
 
-        foreach (var user in users)
+        foreach (var journey in journeys)
         {
-            var key = $"notified:{user.DisruptionId}:{user.Id}";
+            var key = $"notified:{journey.DisruptionId}:{journey.JourneyId}";
             tasks.Add(batch.KeyDeleteAsync(key));
-            tasks.Add(batch.SetRemoveAsync($"notified_index:{user.DisruptionId}", key));
+            tasks.Add(batch.SetRemoveAsync($"notified_index:{journey.DisruptionId}", key));
         }
 
         batch.Execute();

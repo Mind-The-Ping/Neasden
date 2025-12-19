@@ -7,6 +7,7 @@ using Neasden.Models;
 using Neasden.Repository.Write;
 
 namespace Neasden.Consumer;
+
 public class DisruptionNotifier
 {
     private readonly TimeZoneInfo _londonTimeZone;
@@ -23,10 +24,10 @@ public class DisruptionNotifier
         IWriteNotificationRepository notificationRepository,
         INotificationPublisher notificationPublisher)
     {
-        _waterlooClient = waterlooClient ?? 
+        _waterlooClient = waterlooClient ??
             throw new ArgumentNullException(nameof(waterlooClient));
 
-        _stratfordClient = stratfordClient ?? 
+        _stratfordClient = stratfordClient ??
             throw new ArgumentNullException(nameof(stratfordClient));
 
         _userNotifiedRepository = userNotifiedRepository ??
@@ -45,29 +46,33 @@ public class DisruptionNotifier
     {
         var localTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _londonTimeZone);
 
-        var affectedUsers = await _waterlooClient.GetAffectedUsersAsync(new AffectedJourney(
+        var affectedJourneysResult = await _waterlooClient.GetAffectedUsersAsync(new AffectedJourney(
             lineDisruptions.Line.Id,
             TimeOnly.FromDateTime(DateTime.UtcNow),
             localTime.DayOfWeek,
             lineDisruptions.DisruptionDtos.Select(x =>
-            new AffectedDisruption(
-                x.Id,
-                x.StartStationId,
-                x.EndStationId,
-                x.Severity
-            ))));
+                new AffectedDisruption(
+                    x.Id,
+                    x.StartStationId,
+                    x.EndStationId,
+                    x.Severity
+                ))));
 
-        if (affectedUsers.IsFailure) {
-            return Result.Failure($"Failed to get affected users : {affectedUsers.Error}");
+        if (affectedJourneysResult.IsFailure) {
+            return Result.Failure($"Failed to get affected users : {affectedJourneysResult.Error}");
         }
 
-        var groups = affectedUsers.Value.GroupBy(x => x.DisruptionId);
-        foreach (var group in groups)
-        {
-            var disruption = lineDisruptions.DisruptionDtos
-                .Single(d => d.Id == group.Key);
+        var affectedJourneysByDisruption =
+         affectedJourneysResult.Value
+             .GroupBy(x => x.DisruptionId)
+             .ToDictionary(g => g.Key, g => g.ToList());
 
-            var result = await NotifySingularDisruptionAsync(disruption, group.ToList());
+        foreach (var disruption in lineDisruptions.DisruptionDtos)
+        {
+            affectedJourneysByDisruption
+                .TryGetValue(disruption.Id,out var affectedJourneysForDisruption);
+
+            var result = await NotifySingularDisruptionAsync(disruption, affectedJourneysForDisruption ?? []);
 
             if (result.IsFailure) {
                 return result;
@@ -77,96 +82,99 @@ public class DisruptionNotifier
         return Result.Success();
     }
 
-
     public async Task NotifyDisruptionEndAsync(DisruptionEnd disruptionEnd)
     {
-        var notifiedUsers = await _userNotifiedRepository
-            .GetUsersByDisruptionIdAsync(disruptionEnd.Id);
+        var notifiedEntries = await _userNotifiedRepository
+            .GetJourneysByDisruptionIdAsync(disruptionEnd.Id);
 
-        await _notificationPublisher.PublishResolvedAsync(notifiedUsers);
+        await _notificationPublisher.PublishResolvedAsync(notifiedEntries);
         await _userNotifiedRepository.DeleteByDisruptionIdAsync(disruptionEnd.Id);
     }
 
     private async Task<Result> NotifySingularDisruptionAsync(
         DisruptionDto disruption,
-        List<AffectedUser> affectedUsers)
+        List<AffectedUser> affectedJourneys)
     {
-        var allNotifiedUsers = await _userNotifiedRepository
-           .GetUsersByDisruptionIdAsync(disruption.Id);
+        var allNotifiedEntries = await _userNotifiedRepository
+            .GetJourneysByDisruptionIdAsync(disruption.Id);
 
-        var affectedUserIds = affectedUsers
-            .Select(u => u.UserId)
+        var affectedJourneyIds = affectedJourneys
+            .Select(x => x.JourneyId)
             .ToHashSet();
 
-        var usersToRemove = allNotifiedUsers
-            .Where(u => !affectedUserIds.Contains(u.Id))
+        var notifiedEntriesToRemove = allNotifiedEntries
+            .Where(x => !affectedJourneyIds.Contains(x.JourneyId))
             .ToList();
 
-        if (usersToRemove.Count > 0) {
-            await _userNotifiedRepository.DeleteUsersAsync(usersToRemove);
+        if (notifiedEntriesToRemove.Count > 0) {
+            await _userNotifiedRepository.DeleteJourneysAsync(notifiedEntriesToRemove);
         }
 
-        var notifiedUsers = allNotifiedUsers
-            .Where(u => affectedUserIds.Contains(u.Id))
+        var existingNotifiedEntriesStillAffected = allNotifiedEntries
+            .Where(x => affectedJourneyIds.Contains(x.JourneyId))
             .ToList();
 
-        var newUsers = affectedUsers.ToList();
-        var usersToNotify = new Dictionary<Guid, User>();
+        var newlyAffectedJourneys = affectedJourneys.ToList();
+        var entriesToNotifyByJourneyId = new Dictionary<Guid, Journey>();
 
-        foreach (var notifiedUser in notifiedUsers)
+        foreach (var existingNotifiedEntry in existingNotifiedEntriesStillAffected)
         {
-            if (notifiedUser.Severity == disruption.Severity)
+            if (existingNotifiedEntry.Severity == disruption.Severity)
             {
-                var newUser = newUsers.SingleOrDefault(x => x.UserId == notifiedUser.Id);
-                if (newUser is not null) {
-                    newUsers.Remove(newUser);
+                var matchingAffectedJourney = newlyAffectedJourneys
+                    .SingleOrDefault(x => x.JourneyId == existingNotifiedEntry.JourneyId);
+
+                if (matchingAffectedJourney is not null) {
+                    newlyAffectedJourneys.Remove(matchingAffectedJourney);
                 }
+
                 continue;
             }
 
-            usersToNotify[notifiedUser.Id] = notifiedUser;
+            entriesToNotifyByJourneyId[existingNotifiedEntry.JourneyId] = existingNotifiedEntry;
         }
 
-        var userDetails = await _stratfordClient.GetUserDetailsAsync(
-            [.. newUsers.Select(x => x.UserId)]);
+        var userDetailsResult = await _stratfordClient.GetUserDetailsAsync(
+            [.. newlyAffectedJourneys.Select(x => x.UserId)]);
 
-        if (userDetails.IsFailure) {
-            return Result.Failure($"Failed to get users details : {userDetails.Error}");
+        if (userDetailsResult.IsFailure) {
+            return Result.Failure($"Failed to get users details : {userDetailsResult.Error}");
         }
 
-        var phoneLookup = userDetails.Value?
-         .ToDictionary(
-             u => u.Id,
-             u => new { u.PhoneNumber, u.PhoneOS })
-         ?? [];
+        var phoneLookup = userDetailsResult.Value?
+            .ToDictionary(
+                u => u.Id,
+                u => new { u.PhoneNumber, u.PhoneOS })
+            ?? [];
 
         var errors = new List<string>();
 
-        foreach (var newUser in newUsers)
+        foreach (var newlyAffectedJourney in newlyAffectedJourneys)
         {
-            if (!phoneLookup.TryGetValue(newUser.UserId, out var phoneDetails))
+            if (!phoneLookup.TryGetValue(newlyAffectedJourney.UserId, out var phoneDetails))
             {
-                errors.Add($"Failed to find phone number for {newUser.Id}");
+                errors.Add($"Failed to find phone number for {newlyAffectedJourney.JourneyId}");
                 continue;
             }
 
-            var user = new User(
-               newUser.UserId,
-               disruption.Id,
-               disruption.Line,
-               newUser.StartStation,
-               newUser.EndStation,
-               disruption.Severity,
-               phoneDetails.PhoneNumber,
-               phoneDetails.PhoneOS,
-               newUser.EndTime,
-               newUser.AffectedStations);
+            var notifiedEntry = new Journey(
+                newlyAffectedJourney.JourneyId,
+                newlyAffectedJourney.UserId,
+                disruption.Id,
+                disruption.Line,
+                newlyAffectedJourney.StartStation,
+                newlyAffectedJourney.EndStation,
+                disruption.Severity,
+                phoneDetails.PhoneNumber,
+                phoneDetails.PhoneOS,
+                newlyAffectedJourney.EndTime,
+                newlyAffectedJourney.AffectedStations);
 
-            usersToNotify[user.Id] = user;
+            entriesToNotifyByJourneyId[notifiedEntry.JourneyId] = notifiedEntry;
         }
 
-        var finalUsersToNotify = usersToNotify.Values.ToList();
-        var notifications = NotificationsCreate(disruption, finalUsersToNotify);
+        var finalEntriesToNotify = entriesToNotifyByJourneyId.Values.ToList();
+        var notifications = NotificationsCreate(disruption, finalEntriesToNotify);
 
         var notificationAdd = await _notificationRepository.AddNotificationsAsync(notifications);
 
@@ -176,8 +184,8 @@ public class DisruptionNotifier
             return Result.Failure(string.Join("; ", errors));
         }
 
-        await _notificationPublisher.PublishAsync(finalUsersToNotify);
-        await _userNotifiedRepository.SaveUsersAsync(finalUsersToNotify);
+        await _notificationPublisher.PublishAsync(finalEntriesToNotify);
+        await _userNotifiedRepository.SaveJourneysAsync(finalEntriesToNotify);
 
         return errors.Count != 0
             ? Result.Failure(string.Join("; ", errors))
@@ -186,27 +194,27 @@ public class DisruptionNotifier
 
     private static List<Notification> NotificationsCreate(
         DisruptionDto disruptionDto,
-        IEnumerable<User> users)
+        IEnumerable<Journey> notifiedEntries)
     {
         var notifications = new List<Notification>();
 
-        foreach (var user in users)
+        foreach (var notifiedEntry in notifiedEntries)
         {
             var notification = new Notification()
             {
                 Id = Guid.NewGuid(),
-                UserId = user.Id,
+                UserId = notifiedEntry.UserId,
                 LineId = disruptionDto.Line.Id,
                 DisruptionId = disruptionDto.Id,
-                StartStationId = user.StartStation.Id,
-                EndStationId = user.EndStation.Id,
+                StartStationId = notifiedEntry.StartStation.Id,
+                EndStationId = notifiedEntry.EndStation.Id,
                 SeverityId = disruptionDto.SeverityId,
                 DescriptionId = disruptionDto.DescriptionId,
                 SentTime = DateTime.UtcNow,
-                AffectedStationIds = [.. user.AffectedStations.Select(x => x.Id)],
+                AffectedStationIds = [.. notifiedEntry.AffectedStations.Select(x => x.Id)],
             };
 
-            user.NotificationId = notification.Id;
+            notifiedEntry.NotificationId = notification.Id;
             notifications.Add(notification);
         }
 

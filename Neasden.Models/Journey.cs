@@ -1,6 +1,7 @@
 ﻿namespace Neasden.Models;
-public class User(
-    Guid id,
+public class Journey(
+    Guid journeyId,
+    Guid userId,
     Guid disruptionId,
     Line line,
     Station startStation,
@@ -11,7 +12,8 @@ public class User(
     TimeOnly endTime,
     IEnumerable<Station> affectedStations)
 {
-    public Guid Id { get; init; } = id;
+    public Guid JourneyId { get; init; } = journeyId;
+    public Guid UserId { get; init; } = userId;
     public Guid DisruptionId { get; init; } = disruptionId;
     public Guid NotificationId { get; set; }
     public Line Line { get; init; } = line;

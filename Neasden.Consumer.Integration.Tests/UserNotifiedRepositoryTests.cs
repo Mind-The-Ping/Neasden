@@ -28,7 +28,7 @@ public class UserNotifiedRepositoryTests : IAsyncLifetime
         await _redisContainer.DisposeAsync();
 
     [Fact]
-    public async Task UserNotifiedRepository_SaveUsersAsync_Successfully()
+    public async Task UserNotifiedRepository_SaveJourneysAsync_Successfully()
     {
         var redis = ConnectionMultiplexer.Connect(_redisContainer.GetConnectionString());
         var database = redis.GetDatabase();
@@ -48,7 +48,8 @@ public class UserNotifiedRepositoryTests : IAsyncLifetime
            new(Guid.Parse("73bce1de-143f-4903-928a-c34ceb3db42e"), "Mile End")
         };
 
-        var user = new User(
+        var journey = new Journey(
+            Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
             line,
@@ -60,35 +61,36 @@ public class UserNotifiedRepositoryTests : IAsyncLifetime
             TimeOnly.FromDateTime(DateTime.UtcNow.AddMinutes(30)),
             affectedStations);
 
-        var users = new List<User>
+        var journeys = new List<Journey>
         {
-            user
+            journey
         };
 
-        var result = await userNotifiedRepository.SaveUsersAsync(users);
+        var result = await userNotifiedRepository.SaveJourneysAsync(journeys);
         result.IsSuccess.Should().BeTrue();
 
-        var values = await database.SetMembersAsync($"notified_index:{user.DisruptionId}");
+        var values = await database.SetMembersAsync($"notified_index:{journey.DisruptionId}");
         values.Count().Should().Be(1);
 
         var recordResult = await database.StringGetAsync((RedisKey)values.First().ToString());
-        var userRecord = JsonSerializer.Deserialize<User>(recordResult!);
+        var journeyRecord = JsonSerializer.Deserialize<Journey>(recordResult!);
 
-        userRecord.Id.Should().Be(user.Id);
-        userRecord.DisruptionId.Should().Be(user.DisruptionId);
-        userRecord.Line.Should().Be(user.Line);
-        userRecord.StartStation.Should().Be(user.StartStation);
-        userRecord.EndStation.Should().Be(user.EndStation);
-        userRecord.Severity.Should().Be(user.Severity);
-        userRecord.PhoneNumber.Should().Be(user.PhoneNumber);
-        userRecord.PhoneOS.Should().Be(user.PhoneOS);
-        userRecord.EndTime.Should().Be(user.EndTime);
-        userRecord.AffectedStations.Should().BeEquivalentTo(user.AffectedStations);
+        journeyRecord.JourneyId.Should().Be(journey.JourneyId);
+        journeyRecord.UserId.Should().Be(journey.UserId);
+        journeyRecord.DisruptionId.Should().Be(journey.DisruptionId);
+        journeyRecord.Line.Should().Be(journey.Line);
+        journeyRecord.StartStation.Should().Be(journey.StartStation);
+        journeyRecord.EndStation.Should().Be(journey.EndStation);
+        journeyRecord.Severity.Should().Be(journey.Severity);
+        journeyRecord.PhoneNumber.Should().Be(journey.PhoneNumber);
+        journeyRecord.PhoneOS.Should().Be(journey.PhoneOS);
+        journeyRecord.EndTime.Should().Be(journey.EndTime);
+        journeyRecord.AffectedStations.Should().BeEquivalentTo(journey.AffectedStations);
     }
 
 
     [Fact]
-    public async Task UserNotifiedRepository_GetUsersByDisruptionIdAsync_Successfully()
+    public async Task UserNotifiedRepository_GetJourneysByDisruptionIdAsync_Successfully()
     {
         var multiplexer = ConnectionMultiplexer.Connect(_redisContainer.GetConnectionString());
         var userNotifiedRepository = new UserNotifiedRepository(multiplexer);
@@ -108,7 +110,8 @@ public class UserNotifiedRepositoryTests : IAsyncLifetime
 
         var disruptionId = Guid.NewGuid();
 
-        var user1 = new User(
+        var journey1 = new Journey(
+            Guid.NewGuid(),
             Guid.NewGuid(),
             disruptionId,
             line,
@@ -121,7 +124,8 @@ public class UserNotifiedRepositoryTests : IAsyncLifetime
             affectedStations);
 
 
-        var user2 = new User(
+        var journey2 = new Journey(
+            Guid.NewGuid(),
             Guid.NewGuid(),
             disruptionId,
             line,
@@ -133,17 +137,17 @@ public class UserNotifiedRepositoryTests : IAsyncLifetime
             TimeOnly.FromDateTime(DateTime.UtcNow.AddMinutes(45)),
             affectedStations);
 
-        var users = new List<User>
+        var journeys = new List<Journey>
         {
-            user1, user2
+            journey1, journey2
         };
 
-        await userNotifiedRepository.SaveUsersAsync(users);
+        await userNotifiedRepository.SaveJourneysAsync(journeys);
 
-        var result = await userNotifiedRepository.GetUsersByDisruptionIdAsync(disruptionId);
+        var result = await userNotifiedRepository.GetJourneysByDisruptionIdAsync(disruptionId);
 
         result.Count().Should().Be(2);
-        result.Should().BeEquivalentTo([user1, user2]);
+        result.Should().BeEquivalentTo([journey1, journey2]);
     }
 
     [Fact]
@@ -167,7 +171,8 @@ public class UserNotifiedRepositoryTests : IAsyncLifetime
            new(Guid.Parse("73bce1de-143f-4903-928a-c34ceb3db42e"), "Mile End")
         };
 
-        var user1 = new User(
+        var journey1 = new Journey(
+            Guid.NewGuid(),
             Guid.NewGuid(),
             disruptionId,
             line,
@@ -179,7 +184,8 @@ public class UserNotifiedRepositoryTests : IAsyncLifetime
             TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(2)),
             affectedStations);
 
-        var user2 = new User(
+        var journey2 = new Journey(
+            Guid.NewGuid(),
             Guid.NewGuid(),
             disruptionId,
             line,
@@ -191,21 +197,21 @@ public class UserNotifiedRepositoryTests : IAsyncLifetime
             TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(2)),
             affectedStations);
 
-        var users = new List<User>
+        var journeys = new List<Journey>
         {
-            user1,
-            user2
+            journey1,
+            journey2
         };
 
-        await userNotifiedRepository.SaveUsersAsync(users);
+        await userNotifiedRepository.SaveJourneysAsync(journeys);
         await userNotifiedRepository.DeleteByDisruptionIdAsync(disruptionId);
 
-        var result = await userNotifiedRepository.GetUsersByDisruptionIdAsync(disruptionId);
+        var result = await userNotifiedRepository.GetJourneysByDisruptionIdAsync(disruptionId);
         result.Count().Should().Be(0);
     }
 
     [Fact]
-    public async Task UserNotifiedRepository_DeleteUsersAsync_Successfully()
+    public async Task UserNotifiedRepository_DeleteJourneysAsync_Successfully()
     {
         var multiplexer = ConnectionMultiplexer.Connect(_redisContainer.GetConnectionString());
         var userNotifiedRepository = new UserNotifiedRepository(multiplexer);
@@ -225,7 +231,8 @@ public class UserNotifiedRepositoryTests : IAsyncLifetime
            new(Guid.Parse("73bce1de-143f-4903-928a-c34ceb3db42e"), "Mile End")
         };
 
-        var user1 = new User(
+        var journey1 = new Journey(
+            Guid.NewGuid(),
             Guid.NewGuid(),
             disruptionId,
             line,
@@ -237,7 +244,8 @@ public class UserNotifiedRepositoryTests : IAsyncLifetime
             TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(2)),
             affectedStations);
 
-        var user2 = new User(
+        var journey2 = new Journey(
+            Guid.NewGuid(),
             Guid.NewGuid(),
             disruptionId,
             line,
@@ -249,7 +257,8 @@ public class UserNotifiedRepositoryTests : IAsyncLifetime
             TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(2)),
             affectedStations);
 
-        var user3 = new User(
+        var journey3 = new Journey(
+            Guid.NewGuid(),
             Guid.NewGuid(),
             disruptionId,
             line,
@@ -261,19 +270,19 @@ public class UserNotifiedRepositoryTests : IAsyncLifetime
             TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(2)),
             affectedStations);
 
-        var users = new List<User>
+        var users = new List<Journey>
         {
-            user1,
-            user2,
-            user3,
+            journey1,
+            journey2,
+            journey3,
         };
 
-        await userNotifiedRepository.SaveUsersAsync(users);
-        await userNotifiedRepository.DeleteUsersAsync([user1, user2]);
+        await userNotifiedRepository.SaveJourneysAsync(users);
+        await userNotifiedRepository.DeleteJourneysAsync([journey1, journey2]);
 
-        var result = await userNotifiedRepository.GetUsersByDisruptionIdAsync(disruptionId);
+        var result = await userNotifiedRepository.GetJourneysByDisruptionIdAsync(disruptionId);
         result.Count().Should().Be(1);
-        result.First().Id.Should().Be(user3.Id);
+        result.First().JourneyId.Should().Be(journey3.JourneyId);
     }
 
     [Fact]
@@ -297,7 +306,8 @@ public class UserNotifiedRepositoryTests : IAsyncLifetime
            new(Guid.Parse("73bce1de-143f-4903-928a-c34ceb3db42e"), "Mile End")
         };
 
-        var user = new User(
+        var journey = new Journey(
+            Guid.NewGuid(),
             Guid.NewGuid(),
             disruptionId,
             line,
@@ -309,15 +319,15 @@ public class UserNotifiedRepositoryTests : IAsyncLifetime
             TimeOnly.FromDateTime(DateTime.UtcNow.AddSeconds(1)),
             affectedStations);
 
-        var users = new List<User>
+        var journeys = new List<Journey>
         {
-            user
+            journey
         };
 
-        await repo.SaveUsersAsync(users);
+        await repo.SaveJourneysAsync(journeys);
         await Task.Delay(70000);
 
-        var result = await repo.GetUsersByDisruptionIdAsync(disruptionId);
+        var result = await repo.GetJourneysByDisruptionIdAsync(disruptionId);
 
         result.Should().BeEmpty();
     }
@@ -332,73 +342,8 @@ public class UserNotifiedRepositoryTests : IAsyncLifetime
 
         await repo.DeleteByDisruptionIdAsync(disruptionId);
 
-        var result = await repo.GetUsersByDisruptionIdAsync(disruptionId);
+        var result = await repo.GetJourneysByDisruptionIdAsync(disruptionId);
 
         result.Should().BeEmpty();
-    }
-
-    [Fact]
-    public async Task UserNotifiedRepository_SaveUsersAsync_ShouldOverwrite_OnDuplicate()
-    {
-        var multiplexer = ConnectionMultiplexer.Connect(_redisContainer.GetConnectionString());
-        var repo = new UserNotifiedRepository(multiplexer);
-
-        var disruptionId = Guid.NewGuid();
-
-        var line = new Line(Guid.Parse("c7f7c41a-03d2-4a79-9e8e-b55b1b5a056e"), "Central");
-        var startStation = new Station(Guid.Parse("44e87f5b-015d-42f8-a250-232e226de45b"), "Chancery Lane");
-        var endStation = new Station(Guid.Parse("73bce1de-143f-4903-928a-c34ceb3db42e"), "Mile End");
-        var affectedStations = new List<Station>()
-        {
-           new(Guid.Parse("44e87f5b-015d-42f8-a250-232e226de45b"), "Chancery Lane"),
-           new(Guid.Parse("299580df-c896-486f-898d-c51f4a0bd0d2"), "St. Pauls"),
-           new(Guid.Parse("aaedc653-e766-4d6b-87e2-4c87322971ef"), "Bank"),
-           new(Guid.Parse("db101bcd-350e-4485-b875-7ac2c8c1b6cc"), "Liverpool Street"),
-           new(Guid.Parse("b7a5ae67-882b-4509-8df9-4bae2ef1dd2a"), "Bethnal Green"),
-           new(Guid.Parse("73bce1de-143f-4903-928a-c34ceb3db42e"), "Mile End")
-        };
-
-        var user = new User(
-            Guid.NewGuid(),
-            disruptionId,
-            line,
-            startStation,
-            endStation,
-            Severity.Minor,
-            "+441234567890",
-            PhoneOS.Android,
-            TimeOnly.FromDateTime(DateTime.UtcNow.AddMinutes(10)),
-            affectedStations);
-
-        var users1 = new List<User>
-        {
-            user
-        };
-        await repo.SaveUsersAsync(users1);
-
-
-        var updatedUser = new User(
-            user.Id,
-            disruptionId,
-            line,
-            startStation,
-            endStation,
-            Severity.Severe,
-            "+441234567890",
-            PhoneOS.Android,
-            TimeOnly.FromDateTime(DateTime.UtcNow.AddMinutes(10)),
-            affectedStations);
-
-
-        var users2 = new List<User>
-        {
-            updatedUser
-        };
-        await repo.SaveUsersAsync(users2);
-
-        var result = await repo.GetUsersByDisruptionIdAsync(disruptionId);
-
-        result.Should().ContainSingle()
-            .Which.Should().BeEquivalentTo(updatedUser);
     }
 }

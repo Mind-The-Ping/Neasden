@@ -4,8 +4,8 @@ using Neasden.Models;
 namespace Neasden.Consumer.Repositories;
 public interface IUserNotifiedRepository
 {
-    Task<Result> SaveUsersAsync(IEnumerable<User> users);
-    Task<IEnumerable<User>> GetUsersByDisruptionIdAsync(Guid disruptionId);
+    Task<Result> SaveJourneysAsync(IEnumerable<Journey> journeys);
+    Task<IEnumerable<Journey>> GetJourneysByDisruptionIdAsync(Guid disruptionId);
     Task DeleteByDisruptionIdAsync(Guid disruptionId);
-    Task DeleteUsersAsync(IEnumerable<User> users);
+    Task DeleteJourneysAsync(IEnumerable<Journey> journeys);
 }
