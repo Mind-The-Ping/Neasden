@@ -1,10 +1,12 @@
 using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver;
 using Neasden.API;
 using Neasden.API.Options;
 using Neasden.Library.Clients;
-using Neasden.Library.Options;
+using Neasden.Repository.NotificationCount;
 using Neasden.Repository.Read;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -66,10 +68,12 @@ builder.Services.Configure<JwtOptions>(
 builder.Services.Configure<WaterlooOptions>(
     builder.Configuration.GetSection("Waterloo"));
 
+builder.Services.Configure<DatabaseOptions>(
+   builder.Configuration.GetSection("Database"));
+
 builder.Services.AddDbContextFactory<ReadDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add services to the container.
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
     {
@@ -86,9 +90,20 @@ builder.Services.AddAuthentication("Bearer")
         };
     });
 
+builder.Services.AddSingleton(sp =>
+{
+    var options = sp.GetRequiredService<IOptions<DatabaseOptions>>().Value;
+
+    var client = new MongoClient(options.ConnectionString);
+    var database = client.GetDatabase(options.Name);
+
+    return database;
+});
+
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<TokenProvider>();
 builder.Services.AddScoped<IWaterlooClient, WaterlooClient>();
+builder.Services.AddScoped<INotificationCountRepository, NotificationCountRepository>();
 builder.Services.AddScoped<ReadDisruptionRepository>();
 builder.Services.AddScoped<ReadNotificationRepository>();
 builder.Services.AddScoped<NotificationRetriever>();

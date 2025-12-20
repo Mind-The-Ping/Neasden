@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using MongoDB.Driver;
 using Neasden.API;
 using Neasden.API.Options;
 using Neasden.Consumer;
@@ -13,6 +14,7 @@ using Neasden.Consumer.Clients.StratfordClient;
 using Neasden.Consumer.Repositories;
 using Neasden.Library.Clients;
 using Neasden.Library.Options;
+using Neasden.Repository.NotificationCount;
 using Neasden.Repository.Write;
 using StackExchange.Redis;
 
@@ -34,6 +36,9 @@ builder.Services.Configure<ServiceBusOptions>(
 
 builder.Services.Configure<NotificationOptions>(
     builder.Configuration.GetSection("Notifications"));
+
+builder.Services.Configure<DatabaseOptions>(
+   builder.Configuration.GetSection("Database"));
 
 builder.Services.AddOptions<RedisOptions>()
     .Configure<IConfiguration>((settings, configuration) =>
@@ -65,12 +70,23 @@ builder.Services.AddSingleton(sp =>
     return muxer;
 });
 
+builder.Services.AddSingleton(sp =>
+{
+    var options = sp.GetRequiredService<IOptions<DatabaseOptions>>().Value;
+
+    var client = new MongoClient(options.ConnectionString);
+    var database = client.GetDatabase(options.Name);
+
+    return database;
+});
+
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<TokenProvider>();
 builder.Services.AddScoped<IWaterlooClient, WaterlooClient>();
 builder.Services.AddScoped<IStratfordClient, StratfordClient>();
 builder.Services.AddScoped<IUserNotifiedRepository, UserNotifiedRepository>();
 builder.Services.AddScoped<INotificationPublisher, NotificationPublisher>();
+builder.Services.AddScoped<INotificationCountRepository, NotificationCountRepository>();
 builder.Services.AddScoped<DisruptionNotifier>();
 builder.Services.AddScoped<WriteDisruptionRepository>();
 builder.Services.AddScoped<IWriteNotificationRepository,  WriteNotificationRepository>();
