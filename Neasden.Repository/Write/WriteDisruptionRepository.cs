@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Neasden.Models;
+using Npgsql;
 
 namespace Neasden.Repository.Write;
 public class WriteDisruptionRepository
@@ -102,19 +103,19 @@ public class WriteDisruptionRepository
     {
         await using var context = _contextFactory.CreateDbContext();
 
-        var exising = await context.Descriptions
-            .FirstOrDefaultAsync(x => x.Id == description.Id);
-
-        if (exising != null) {
-            return Result.Success();
-        }
-
         description.CreatedAt = DateTime.UtcNow;
 
         try
         {
-            await context.Descriptions.AddAsync(description);
+            context.Descriptions.Add(description);
             await context.SaveChangesAsync();
+
+            return Result.Success();
+        }
+        catch (DbUpdateException ex)
+        when (ex.InnerException is PostgresException pg &&
+              pg.SqlState == PostgresErrorCodes.UniqueViolation)
+        {
             return Result.Success();
         }
         catch (Exception ex)
