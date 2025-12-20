@@ -18,11 +18,16 @@ public class NotificationCountRepository : INotificationCountRepository
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
+        ArgumentNullException.ThrowIfNull(databaseOptions);
+
         var options = databaseOptions.Value ??
             throw new ArgumentNullException(nameof(databaseOptions));
 
-        _unReadNotificationsCollection = 
-            mongoDatabase.GetCollection<UnReadNotification>(options.Collection);
+        var database = mongoDatabase ??
+          throw new ArgumentNullException(nameof(mongoDatabase));
+
+        _unReadNotificationsCollection =
+            database.GetCollection<UnReadNotification>(options.Collection);
     }
 
     public async Task<Result> AddToCountAsync(UnReadNotification unReadNotification)
@@ -41,7 +46,7 @@ public class NotificationCountRepository : INotificationCountRepository
         }
     }
 
-    public async Task<int> GetUserCountAsync(Guid userId) =>
+    public async Task<int> GetUserNotificationCountAsync(Guid userId) =>
          (int) await _unReadNotificationsCollection
         .CountDocumentsAsync(n => n.UserId == userId);
    
