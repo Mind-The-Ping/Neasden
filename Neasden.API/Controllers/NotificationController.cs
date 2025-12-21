@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Neasden.API.Dto;
 using Neasden.Repository.NotificationCount;
 using System.Security.Claims;
 
@@ -43,19 +44,27 @@ public class NotificationController : ControllerBase
             return BadRequest(notification.Error);
         }
 
-        var deleteNotificationCount = await _notificationCountRepository
-            .RemoveFromCountAsync(id);
+        return Ok(notification.Value);
+    }
 
-        if(deleteNotificationCount.IsFailure)
+    [Authorize]
+    [HttpPost("notificiationRead")]
+    public async Task<IActionResult> ReadNotification([FromBody] NotificationReadDto notificationReadDto)
+    {
+        var deleteNotificationCount = await _notificationCountRepository
+            .RemoveFromCountAsync(notificationReadDto.Id);
+
+        if (deleteNotificationCount.IsFailure)
         {
-            _logger.LogError("Failed to delete notification count {NotificationId}: {Error}",
-                id, deleteNotificationCount.Error);
+            _logger.LogError("Failed to mark notification as read {NotificationId}: {Error}",
+                notificationReadDto.Id, deleteNotificationCount.Error);
 
             return BadRequest(deleteNotificationCount.Error);
         }
 
-        return Ok(notification.Value);
+        return Ok();
     }
+
 
     [Authorize]
     [HttpGet("getByUserId")]
@@ -101,7 +110,9 @@ public class NotificationController : ControllerBase
             return BadRequest("You need to login to access this endpoint.");
         }
 
-        return Ok(await _notificationCountRepository.GetUserNotificationCountAsync(userId));
+        var count = await _notificationCountRepository.GetUserNotificationCountAsync(userId);
+
+        return Ok(count);
     }
 
     [Authorize]

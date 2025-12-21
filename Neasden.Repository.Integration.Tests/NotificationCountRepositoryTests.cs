@@ -24,7 +24,7 @@ public class NotificationCountRepositoryTests
 
         var databaseOptions = new DatabaseOptions()
         {
-            Name = "Waterloo",
+            Name = "Neasden",
             Collection = "UnReadNotifications",
             ConnectionString = "mongodb://localhost:27017"
         };
