@@ -136,6 +136,7 @@ public class NotificationRetrieverTests
         var result = await _notificationRetriever.GetNotificiationAsnyc(notification.Id);
 
         result.IsSuccess.Should().BeTrue();
+        result.Value.Id.Should().Be(notification.Id);
         result.Value.Line.Should().Be(line);
         result.Value.JourneyStartStation.Should().Be(getStationResult1.First());
         result.Value.JourneyEndStation.Should().Be(getStationResult2.First());
@@ -233,6 +234,7 @@ public class NotificationRetrieverTests
         result.Value.HasNextPage.Should().BeFalse();
         result.Value.HasPreviousPage.Should().BeFalse();
         result.Value.TotalCount.Should().Be(1);
+        result.Value.Items.First().Id.Should().Be(notification.Id);
         result.Value.Items.First().Line.Should().Be(line);
         result.Value.Items.First().JourneyStartStation.Should().Be(getStationResult1.First());
         result.Value.Items.First().JourneyEndStation.Should().Be(getStationResult2.First());
@@ -341,6 +343,7 @@ public class NotificationRetrieverTests
         result.Value.Page.Should().Be(1);
         result.Value.PageSize.Should().Be(1);
         result.Value.TotalCount.Should().Be(1);
+        result.Value.Items.First().Id.Should().Be(notification.Id);
         result.Value.Items.First().Line.Should().Be(line);
         result.Value.Items.First().JourneyStartStation.Should().Be(getStationResult1.First());
         result.Value.Items.First().JourneyEndStation.Should().Be(getStationResult2.First());

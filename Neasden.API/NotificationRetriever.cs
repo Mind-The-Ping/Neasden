@@ -222,6 +222,7 @@ public class NotificationRetriever
             var disruption = disruptionTask.Result.Value;
 
             var notificationReturn = new NotificationReturn(
+               notification.Id,
                line,
                journeyStartStation,
                journeyEndStation,

@@ -3,6 +3,7 @@
 namespace Neasden.API.Dto;
 
 public record NotificationReturn(
+    Guid Id,
     Line Line, 
     Station JourneyStartStation,
     Station JourneyEndStation,
