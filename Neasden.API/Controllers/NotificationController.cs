@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Neasden.API.Dto;
+using Neasden.Repository.NotificationCount;
 using System.Security.Claims;
 
 namespace Neasden.API.Controllers;
@@ -9,16 +11,21 @@ public class NotificationController : ControllerBase
 {
     private readonly ILogger<NotificationController> _logger;
     private readonly NotificationRetriever _notificationRetriever;
+    private readonly INotificationCountRepository _notificationCountRepository;
 
     public NotificationController(
         ILogger<NotificationController> logger,
-        NotificationRetriever notificationRetriever)
+        NotificationRetriever notificationRetriever,
+        INotificationCountRepository notificationCountRepository)
     {
         _logger = logger ?? 
             throw new ArgumentNullException(nameof(logger));
 
         _notificationRetriever = notificationRetriever ?? 
             throw new ArgumentNullException(nameof(notificationRetriever));
+
+        _notificationCountRepository = notificationCountRepository ??
+            throw new ArgumentNullException(nameof(notificationCountRepository));
     }
 
     [Authorize]
@@ -39,6 +46,25 @@ public class NotificationController : ControllerBase
 
         return Ok(notification.Value);
     }
+
+    [Authorize]
+    [HttpPost("notificiationRead")]
+    public async Task<IActionResult> ReadNotification([FromBody] NotificationReadDto notificationReadDto)
+    {
+        var deleteNotificationCount = await _notificationCountRepository
+            .RemoveFromCountAsync(notificationReadDto.Id);
+
+        if (deleteNotificationCount.IsFailure)
+        {
+            _logger.LogError("Failed to mark notification as read {NotificationId}: {Error}",
+                notificationReadDto.Id, deleteNotificationCount.Error);
+
+            return BadRequest(deleteNotificationCount.Error);
+        }
+
+        return Ok();
+    }
+
 
     [Authorize]
     [HttpGet("getByUserId")]
@@ -70,6 +96,23 @@ public class NotificationController : ControllerBase
         }
 
         return Ok(notifications.Value);
+    }
+
+    [Authorize]
+    [HttpGet("notificationCount")]
+    public async Task<IActionResult> GetNotificationCount()
+    {
+        var subValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!Guid.TryParse(subValue, out var userId))
+        {
+            _logger.LogError("{subValue} could not be parsed.", subValue);
+            return BadRequest("You need to login to access this endpoint.");
+        }
+
+        var count = await _notificationCountRepository.GetUserNotificationCountAsync(userId);
+
+        return Ok(count);
     }
 
     [Authorize]

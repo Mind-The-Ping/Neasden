@@ -3,12 +3,16 @@ using FluentAssertions;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Driver;
+using Neasden.API.Dto;
 using Neasden.Library.Clients;
 using Neasden.Models;
+using Neasden.Repository.NotificationCount;
 using Neasden.Repository.Write;
 using NSubstitute;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 
 namespace Neasden.API.Integration.Tests;
 
@@ -19,6 +23,7 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
     private readonly HttpClient _unauthorizedClient;
     private readonly WriteDbContext _writeContext;
     private readonly IWaterlooClient _waterlooClient;
+    private readonly IMongoCollection<UnReadNotification> _notificationCollection;
 
     public NotificationControllerTests(CustomWebApplicationFactory factory)
     {
@@ -51,6 +56,19 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
             .Options;
 
         _writeContext = new WriteDbContext(options);
+
+        var databaseOptions = new DatabaseOptions()
+        {
+            Name = "Neasden",
+            Collection = "UnReadNotifications",
+            ConnectionString = "mongodb://localhost:27017"
+        };
+
+        var client = new MongoClient("mongodb://localhost:27017");
+        var mongoDatabase = client.GetDatabase(databaseOptions.Name);
+
+        _notificationCollection = mongoDatabase
+           .GetCollection<UnReadNotification>(databaseOptions.Collection);
     }
 
     [Fact]
@@ -309,6 +327,53 @@ public class NotificationControllerTests : IClassFixture<CustomWebApplicationFac
     public async Task NotificationController_GetNotificationsByUserIdLatest_Unauthorized_User_Successful()
     {
         var response = await _unauthorizedClient.GetAsync($"api/notification/getByUserIdLatest?lastChecked={DateTime.UtcNow.AddMinutes(-10)}");
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task NotificationController_GetNotificationCount_Successful()
+    {
+        var unReadNotification = new UnReadNotification(
+            _id, Guid.NewGuid(), DateTime.UtcNow);
+
+        await _notificationCollection.InsertOneAsync(unReadNotification);
+
+        var response = await _client.GetAsync($"api/notification/notificationCount");
+        response.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task NotificationController_GetNotificationCount_Unauthorized_User_Fail()
+    {
+        var response = await _unauthorizedClient.GetAsync($"api/notification/notificationCount");
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task NotificationController_NotificationRead_Successful()
+    {
+        var unReadNotification = new UnReadNotification(
+            _id, Guid.NewGuid(), DateTime.UtcNow);
+
+        await _notificationCollection.InsertOneAsync(unReadNotification);
+
+        var response = await _client.PostAsJsonAsync($"api/notification/notificiationRead", 
+            new NotificationReadDto(unReadNotification.NotificationId));
+
+        response.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task NotificationController_NotificationRead_Unauthorized_User_Fail()
+    {
+        var unReadNotification = new UnReadNotification(
+            _id, Guid.NewGuid(), DateTime.UtcNow);
+
+        await _notificationCollection.InsertOneAsync(unReadNotification);
+
+        var response = await _unauthorizedClient.PostAsJsonAsync($"api/notification/notificiationRead",
+            new NotificationReadDto(unReadNotification.NotificationId));
+
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 

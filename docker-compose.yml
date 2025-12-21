@@ -1,4 +1,13 @@
 services:
+  mongodb:
+      image: mongo:6.0
+      container_name: test-mongodb
+      ports:
+        - "27017:27017"
+      environment:
+        MONGO_INITDB_DATABASE: testdb
+      networks:
+        - test-network
   db:
     image: postgres:16
     container_name: neasden-db
@@ -59,3 +68,4 @@ networks:
     driver: bridge
   sb-emulator:
     driver: bridge
+  test-network:

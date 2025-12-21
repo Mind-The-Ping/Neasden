@@ -6,6 +6,7 @@ using Neasden.Consumer.Models;
 using Neasden.Consumer.Repositories;
 using Neasden.Library.Clients;
 using Neasden.Models;
+using Neasden.Repository.NotificationCount;
 using Neasden.Repository.Write;
 using NSubstitute;
 
@@ -19,6 +20,7 @@ public class DisruptionNotifierTests
     private readonly IUserNotifiedRepository _userNotifiedRepository;
     private readonly IWriteNotificationRepository _writeNotificationRepository;
     private readonly INotificationPublisher _notificationPublisher;
+    private readonly INotificationCountRepository _notificationCountRepository;
 
     private readonly Guid _disruptionId;
     private readonly Line _line;
@@ -45,13 +47,16 @@ public class DisruptionNotifierTests
         _userNotifiedRepository =  Substitute.For<IUserNotifiedRepository>();
         _writeNotificationRepository = Substitute.For<IWriteNotificationRepository>();
         _notificationPublisher = Substitute.For<INotificationPublisher>();
+        _notificationCountRepository = Substitute.For<INotificationCountRepository>();
+
 
         _notifier = new DisruptionNotifier(
             _waterlooClient,
             _stratfordClient,
             _userNotifiedRepository,
             _writeNotificationRepository,
-            _notificationPublisher);
+            _notificationPublisher,
+            _notificationCountRepository);
 
         _disruptionId = Guid.NewGuid();
     }
@@ -104,6 +109,9 @@ public class DisruptionNotifierTests
 
         _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Journey>>(c => capturedJourneys = c))
             .Returns(Task.CompletedTask);
+
+        _notificationCountRepository.AddToCountAsync(Arg.Any<UnReadNotification>())
+            .Returns(Result.Success());
 
         await _notifier.NotifyDisruptionAsync(new LineDisruptionsDto(_line, [disruption]));
 
@@ -214,6 +222,10 @@ public class DisruptionNotifierTests
         _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Journey>>(c => capturedJourneys = c))
             .Returns(Task.CompletedTask);
 
+
+        _notificationCountRepository.AddToCountAsync(Arg.Any<UnReadNotification>())
+           .Returns(Result.Success());
+
         await _notifier.NotifyDisruptionAsync(new LineDisruptionsDto(_line, [disruption]));
 
         capturedJourneys.Count().Should().Be(2);
@@ -317,6 +329,9 @@ public class DisruptionNotifierTests
         _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Journey>>(c => capturedJourney = c))
             .Returns(Task.CompletedTask);
 
+        _notificationCountRepository.AddToCountAsync(Arg.Any<UnReadNotification>())
+           .Returns(Result.Success());
+
         await _notifier.NotifyDisruptionAsync(new LineDisruptionsDto(_line, [disruption]));
 
         capturedJourney.Count().Should().Be(2);
@@ -381,6 +396,9 @@ public class DisruptionNotifierTests
 
         _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Journey>>(c => capturedJourneys = c))
             .Returns(Task.CompletedTask);
+
+        _notificationCountRepository.AddToCountAsync(Arg.Any<UnReadNotification>())
+           .Returns(Result.Success());
 
         await _notifier.NotifyDisruptionAsync(new LineDisruptionsDto(_line, [disruption]));
 
@@ -466,6 +484,9 @@ public class DisruptionNotifierTests
         _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Journey>>(c => capturedJourneys = c))
             .Returns(Task.CompletedTask);
 
+        _notificationCountRepository.AddToCountAsync(Arg.Any<UnReadNotification>())
+           .Returns(Result.Success());
+
         await _notifier.NotifyDisruptionAsync(new LineDisruptionsDto(_line, [disruption]));
 
         capturedJourneys.Count().Should().Be(2);
@@ -529,6 +550,9 @@ public class DisruptionNotifierTests
 
         _notificationPublisher.PublishAsync(Arg.Do<IEnumerable<Journey>>(c => capturedJourneys = c))
             .Returns(Task.CompletedTask);
+
+        _notificationCountRepository.AddToCountAsync(Arg.Any<UnReadNotification>())
+           .Returns(Result.Success());
 
         await _notifier.NotifyDisruptionAsync(new LineDisruptionsDto(_line, [disruption]));
 

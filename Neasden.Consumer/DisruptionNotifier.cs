@@ -4,6 +4,7 @@ using Neasden.Consumer.Dto;
 using Neasden.Consumer.Repositories;
 using Neasden.Library.Clients;
 using Neasden.Models;
+using Neasden.Repository.NotificationCount;
 using Neasden.Repository.Write;
 
 namespace Neasden.Consumer;
@@ -16,13 +17,15 @@ public class DisruptionNotifier
     private readonly IUserNotifiedRepository _userNotifiedRepository;
     private readonly IWriteNotificationRepository _notificationRepository;
     private readonly INotificationPublisher _notificationPublisher;
+    private readonly INotificationCountRepository _notificationCountRepository;
 
     public DisruptionNotifier(
         IWaterlooClient waterlooClient,
         IStratfordClient stratfordClient,
         IUserNotifiedRepository userNotifiedRepository,
         IWriteNotificationRepository notificationRepository,
-        INotificationPublisher notificationPublisher)
+        INotificationPublisher notificationPublisher,
+        INotificationCountRepository notificationCountRepository)
     {
         _waterlooClient = waterlooClient ??
             throw new ArgumentNullException(nameof(waterlooClient));
@@ -38,6 +41,9 @@ public class DisruptionNotifier
 
         _notificationPublisher = notificationPublisher ??
             throw new ArgumentNullException(nameof(notificationPublisher));
+
+        _notificationCountRepository = notificationCountRepository ??
+             throw new ArgumentNullException(nameof(notificationCountRepository));
 
         _londonTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/London");
     }
@@ -174,7 +180,7 @@ public class DisruptionNotifier
         }
 
         var finalEntriesToNotify = entriesToNotifyByJourneyId.Values.ToList();
-        var notifications = NotificationsCreate(disruption, finalEntriesToNotify);
+        var notifications = await NotificationsCreate(disruption, finalEntriesToNotify);
 
         var notificationAdd = await _notificationRepository.AddNotificationsAsync(notifications);
 
@@ -192,7 +198,7 @@ public class DisruptionNotifier
             : Result.Success();
     }
 
-    private static List<Notification> NotificationsCreate(
+    private async Task<List<Notification>> NotificationsCreate(
         DisruptionDto disruptionDto,
         IEnumerable<Journey> notifiedEntries)
     {
@@ -216,6 +222,12 @@ public class DisruptionNotifier
 
             notifiedEntry.NotificationId = notification.Id;
             notifications.Add(notification);
+
+            _ = await _notificationCountRepository.AddToCountAsync(
+                new UnReadNotification(
+                    notifiedEntry.UserId,
+                    notifiedEntry.NotificationId,
+                    DateTime.UtcNow));
         }
 
         return notifications;
