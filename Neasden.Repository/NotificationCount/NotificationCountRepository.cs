@@ -37,7 +37,12 @@ public class NotificationCountRepository : INotificationCountRepository
             await _unReadNotificationsCollection.InsertOneAsync(unReadNotification);
             return Result.Success();
         }
-        catch(Exception ex)
+        catch (MongoWriteException ex)
+        when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
+        {
+            return Result.Success();
+        }
+        catch (Exception ex)
         {
             var message = $"Could not save unread notification : {unReadNotification.NotificationId}.";
 
