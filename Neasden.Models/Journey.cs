@@ -24,4 +24,5 @@ public class Journey(
     public PhoneOS PhoneOS { get; init; } = phoneOS;
     public TimeOnly EndTime { get; init; } = endTime;
     public IEnumerable<Station> AffectedStations { get; init; } = affectedStations;
+    public int UnReadMessageCount { get; set; }
 }

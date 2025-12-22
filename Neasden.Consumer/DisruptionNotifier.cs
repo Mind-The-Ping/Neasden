@@ -190,8 +190,8 @@ public class DisruptionNotifier
             return Result.Failure(string.Join("; ", errors));
         }
 
-        await _notificationPublisher.PublishAsync(finalEntriesToNotify);
         await _userNotifiedRepository.SaveJourneysAsync(finalEntriesToNotify);
+        await _notificationPublisher.PublishAsync(finalEntriesToNotify);
 
         return errors.Count != 0
             ? Result.Failure(string.Join("; ", errors))
@@ -228,6 +228,9 @@ public class DisruptionNotifier
                     notifiedEntry.UserId,
                     notifiedEntry.NotificationId,
                     DateTime.UtcNow));
+
+            notifiedEntry.UnReadMessageCount = await _notificationCountRepository
+                .GetUserNotificationCountAsync(notifiedEntry.UserId);
         }
 
         return notifications;
