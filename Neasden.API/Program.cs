@@ -117,7 +117,8 @@ var app = builder.Build();
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
-app.Run();
+
+app.MapGet("/", () => Results.Ok("Service alive"));
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Run($"http://0.0.0.0:{port}");
