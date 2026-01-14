@@ -40,10 +40,7 @@ public class NotificationPublisher : INotificationPublisher
     {
         foreach (var journey in journeys)
         {
-            var message = new ServiceBusMessage(BinaryData.FromObjectAsJson(journey))
-            {
-                ScheduledEnqueueTime = DateTimeOffset.UtcNow.Add(_messageDelay)
-            };
+            var message = new ServiceBusMessage(BinaryData.FromObjectAsJson(journey));
 
             try {
                 await _notificationSender.SendMessageAsync(message);
@@ -58,10 +55,7 @@ public class NotificationPublisher : INotificationPublisher
     {
         foreach (var journey in notifiedUserJourneys)
         {
-            var message = new ServiceBusMessage(BinaryData.FromObjectAsJson(journey))
-            {
-                ScheduledEnqueueTime = DateTimeOffset.UtcNow.Add(_messageDelay)
-            };
+            var message = new ServiceBusMessage(BinaryData.FromObjectAsJson(journey));
 
             try {
                 await _resolvedNotificationSender.SendMessageAsync(message);
