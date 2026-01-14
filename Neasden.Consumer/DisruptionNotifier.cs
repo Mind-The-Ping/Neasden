@@ -190,6 +190,7 @@ public class DisruptionNotifier
             return Result.Failure(string.Join("; ", errors));
         }
 
+        await Task.Delay(5000);
         await _userNotifiedRepository.SaveJourneysAsync(finalEntriesToNotify);
         await _notificationPublisher.PublishAsync(finalEntriesToNotify);
 

@@ -73,8 +73,8 @@ public class Consumer
                 await _writeDisruptionRepository.AddDisruptionAsync(disruption);
             }
 
-
             await _notifer.NotifyDisruptionAsync(lineDisruptionsDto!);
+            
         }
         catch (Exception ex) {
             _logger.LogError(ex, "Could not deserialize disruption.");
