@@ -24,7 +24,8 @@ public class WriteDisruptionRepository
     {
         await using var context = _contextFactory.CreateDbContext();
 
-        if (context.Disruptions.Contains(disruption)) {
+     
+        if (await context.Disruptions.AnyAsync(x => x.Id == disruption.Id)) {
             return Result.Success();
         }
 
@@ -32,15 +33,13 @@ public class WriteDisruptionRepository
         {
             await context.Disruptions.AddAsync(disruption);
             await context.SaveChangesAsync();
-
             return Result.Success();
         }
-        catch (Exception ex) 
-        {
-            var message = $"Could not save disruption {disruption.Id}. error: {ex.Message}";
-
-            _logger.LogError(message);
-            return Result.Failure(message);
+        catch (Exception ex) when (IsUniqueViolation(ex)) {
+            return Result.Success();
+        }
+        catch (Exception ex) {
+            return LogAndReturnFailure(ex, $"disruption {disruption.Id}");
         }
     }
 
@@ -54,7 +53,6 @@ public class WriteDisruptionRepository
         if (disruption == null)
         {
             var message = $"Disruption {disruptionEnd.Id} does not exist on the database to save end.";
-
             _logger.LogError(message);
             return Result.Failure(message);
         }
@@ -63,15 +61,10 @@ public class WriteDisruptionRepository
         {
             disruption.EndTime = disruptionEnd.EndTime;
             await context.SaveChangesAsync();
-
             return Result.Success();
         }
-        catch (Exception ex)
-        {
-            var message = $"Could not save disruption end time for {disruption.Id}. error: {ex.Message}";
-
-            _logger.LogError(message);
-            return Result.Failure(message);
+        catch (Exception ex) {
+            return LogAndReturnFailure(ex, $"disruption end time for {disruption.Id}");
         }
     }
 
@@ -79,7 +72,7 @@ public class WriteDisruptionRepository
     {
         await using var context = _contextFactory.CreateDbContext();
 
-        if (context.Severities.Contains(disruptionSeverity)) {
+        if (await context.Severities.AnyAsync(x => x.Id == disruptionSeverity.Id)) {
             return Result.Success();
         }
 
@@ -87,15 +80,13 @@ public class WriteDisruptionRepository
         {
             await context.Severities.AddAsync(disruptionSeverity);
             await context.SaveChangesAsync();
-
             return Result.Success();
         }
-        catch (Exception ex)
-        {
-            var message = $"Could not save disruption severity {disruptionSeverity.Id}. error: {ex.Message}";
-
-            _logger.LogError(message);
-            return Result.Failure(message);
+        catch (Exception ex) when (IsUniqueViolation(ex)) {
+            return Result.Success();
+        }
+        catch (Exception ex) {
+            return LogAndReturnFailure(ex, $"disruption severity {disruptionSeverity.Id}");
         }
     }
 
@@ -103,26 +94,37 @@ public class WriteDisruptionRepository
     {
         await using var context = _contextFactory.CreateDbContext();
 
+        if (await context.Descriptions.AnyAsync(x => x.Id == description.Id)) {
+            return Result.Success();
+        }
+
         description.CreatedAt = DateTime.UtcNow;
 
         try
         {
             context.Descriptions.Add(description);
             await context.SaveChangesAsync();
+            return Result.Success();
+        }
+        catch (DbUpdateException ex) when (IsUniqueViolation(ex)) {
+            return Result.Success();
+        }
+        catch (Exception ex) {
+            return LogAndReturnFailure(ex, $"disruption description {description.Id}");
+        }
+    }
 
-            return Result.Success();
-        }
-        catch (DbUpdateException ex)
-        when (ex.InnerException is PostgresException pg &&
-              pg.SqlState == PostgresErrorCodes.UniqueViolation)
-        {
-            return Result.Success();
-        }
-        catch (Exception ex)
-        {
-            var message = $"Could not save disruption description {description.Id}. error: {ex.Message}";
-            _logger.LogError(message);
-            return Result.Failure(message);
-        }
+    private static bool IsUniqueViolation(Exception ex)
+    {
+        return ex is DbUpdateException dbEx &&
+               dbEx.InnerException is PostgresException pg &&
+               pg.SqlState == PostgresErrorCodes.UniqueViolation;
+    }
+
+    private Result LogAndReturnFailure(Exception ex, string entityInfo)
+    {
+        var message = $"Could not save {entityInfo}. error: {ex.Message}";
+        _logger.LogError(ex, message);
+        return Result.Failure(message);
     }
 }
