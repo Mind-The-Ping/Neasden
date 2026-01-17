@@ -146,4 +146,30 @@ public class NotificationCountRepositoryTests
         var result = await _notificationCountRepository.GetUserNotificationCountAsync(notification.UserId);
         result.Should().Be(1);
     }
+
+    [Fact]
+    public async Task NotificationCountRepository_NotificationReadAsync_There_True()
+    {
+        var notification = new UnReadNotification(
+          Guid.NewGuid(),
+          Guid.NewGuid(),
+          DateTime.UtcNow);
+
+        var insertResult = await _notificationCountRepository.AddToCountAsync(notification);
+        insertResult.IsSuccess.Should().BeTrue();
+
+        var result = await _notificationCountRepository
+            .NotificationReadAsync(notification.NotificationId);
+
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task NotificationCountRepository_NotificationReadAsync_Not_There_False()
+    {
+        var result = await _notificationCountRepository
+            .NotificationReadAsync(Guid.NewGuid());
+
+        result.Should().BeTrue();
+    }
 }

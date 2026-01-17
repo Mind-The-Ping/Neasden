@@ -54,8 +54,7 @@ public class NotificationCountRepository : INotificationCountRepository
     public async Task<int> GetUserNotificationCountAsync(Guid userId) =>
          (int) await _unReadNotificationsCollection
         .CountDocumentsAsync(n => n.UserId == userId);
-   
-       
+
 
     public async Task<Result> RemoveFromCountAsync(Guid notificationId)
     {
@@ -72,5 +71,14 @@ public class NotificationCountRepository : INotificationCountRepository
             _logger.LogError(ex, message);
             return Result.Failure(message);
         }
+    }
+
+    public async Task<bool> NotificationReadAsync(Guid id)
+    {
+        bool isUnread = await _unReadNotificationsCollection
+         .Find(x => x.NotificationId == id)
+         .AnyAsync();
+
+        return !isUnread;
     }
 }
