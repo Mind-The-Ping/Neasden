@@ -75,8 +75,10 @@ public class NotificationCountRepository : INotificationCountRepository
 
     public async Task<bool> NotificationReadAsync(Guid id)
     {
-        return await _unReadNotificationsCollection
+        bool isUnread = await _unReadNotificationsCollection
          .Find(x => x.NotificationId == id)
          .AnyAsync();
+
+        return !isUnread;
     }
 }

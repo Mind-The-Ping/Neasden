@@ -161,7 +161,7 @@ public class NotificationCountRepositoryTests
         var result = await _notificationCountRepository
             .NotificationReadAsync(notification.NotificationId);
 
-        result.Should().BeTrue();
+        result.Should().BeFalse();
     }
 
     [Fact]
@@ -170,6 +170,6 @@ public class NotificationCountRepositoryTests
         var result = await _notificationCountRepository
             .NotificationReadAsync(Guid.NewGuid());
 
-        result.Should().BeFalse();
+        result.Should().BeTrue();
     }
 }
