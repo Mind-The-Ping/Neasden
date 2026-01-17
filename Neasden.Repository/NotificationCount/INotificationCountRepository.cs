@@ -8,4 +8,5 @@ public interface INotificationCountRepository
     Task<int> GetUserNotificationCountAsync(Guid userId);
     Task<Result> AddToCountAsync(UnReadNotification unReadNotification);
     Task<Result> RemoveFromCountAsync(Guid notificationId);
+    Task<bool> NotificationReadAsync(Guid id);
 }

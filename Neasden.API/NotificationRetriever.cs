@@ -3,6 +3,7 @@ using Neasden.API.Dto;
 using Neasden.Library.Clients;
 using Neasden.Models;
 using Neasden.Repository;
+using Neasden.Repository.NotificationCount;
 using Neasden.Repository.Read;
 
 namespace Neasden.API;
@@ -13,12 +14,14 @@ public class NotificationRetriever
     private readonly ILogger<NotificationRetriever> _logger;
     private readonly ReadDisruptionRepository _disruptionRepository;
     private readonly ReadNotificationRepository _notificationRepository;
+    private readonly INotificationCountRepository _notificationCountRepository;
 
     public NotificationRetriever(
         IWaterlooClient waterlooClient,
         ILogger<NotificationRetriever> logger,
         ReadDisruptionRepository disruptionRepository,
-        ReadNotificationRepository notificationRepository)
+        ReadNotificationRepository notificationRepository,
+        INotificationCountRepository notificationCountRepository)
     {
         _waterlooClient = waterlooClient ??
             throw new ArgumentNullException(nameof(waterlooClient));
@@ -31,6 +34,9 @@ public class NotificationRetriever
 
         _notificationRepository = notificationRepository ??
             throw new ArgumentNullException(nameof(notificationRepository));
+
+        _notificationCountRepository = notificationCountRepository ??
+            throw new ArgumentException(nameof(notificationCountRepository));
     }
 
     public async Task<Result<NotificationReturn>> GetNotificiationAsnyc(
@@ -164,6 +170,7 @@ public class NotificationRetriever
             var severityTask = _disruptionRepository.GetDisruptionSeverityByIdAsync(notification.SeverityId);
             var disruptionTask = _disruptionRepository.GetDisruptionByIdAsync(notification.DisruptionId);
             var descriptionTask = _disruptionRepository.GetDisruptionDescriptionByIdAsync(notification.DescriptionId);
+            var notificationReadTask = _notificationCountRepository.NotificationReadAsync(notification.Id);
 
 
             await Task.WhenAll(
@@ -173,7 +180,8 @@ public class NotificationRetriever
                 affectedStationsTask,
                 severityTask,
                 disruptionTask,
-                descriptionTask);
+                descriptionTask,
+                notificationReadTask);
 
             if (severityTask.Result.IsFailure) {
                 return Result.Failure<NotificationReturn>(severityTask.Result.Error);
@@ -233,7 +241,8 @@ public class NotificationRetriever
                notification.SentTime,
                disruption.StartTime,
                disruption.EndTime,
-               descriptionTask.Result.Value.Description
+               descriptionTask.Result.Value.Description,
+               notificationReadTask.Result
            );
 
             return Result.Success(notificationReturn);

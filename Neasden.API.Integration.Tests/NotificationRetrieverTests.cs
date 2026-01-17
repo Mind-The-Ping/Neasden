@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Neasden.Library.Clients;
 using Neasden.Models;
 using Neasden.Repository.Integration.Tests.Read;
+using Neasden.Repository.NotificationCount;
 using Neasden.Repository.Read;
 using Neasden.Repository.Write;
 using NSubstitute;
@@ -45,11 +46,17 @@ public class NotificationRetrieverTests
 
         var notificationReLogger = Substitute.For<ILogger<NotificationRetriever>>();
 
+        var notificationCountRepository = Substitute.For<INotificationCountRepository>();
+
+        notificationCountRepository.NotificationReadAsync(Arg.Any<Guid>())
+            .Returns(Task.FromResult(true));
+
         _notificationRetriever = new NotificationRetriever(
             _waterlooClient,
             notificationReLogger,
             disruptionRepository,
-            notificationRepository);
+            notificationRepository,
+            notificationCountRepository);
 
         var writeOptions = new DbContextOptionsBuilder<WriteDbContext>()
           .UseNpgsql($"Host=localhost;Port=5434;Database={_databaseName};Username=neasdenUser;Password=password12345")
@@ -148,6 +155,7 @@ public class NotificationRetrieverTests
         result.Value.DisruptionStart.Should().BeCloseTo(disruption.StartTime, TimeSpan.FromSeconds(1));
         result.Value.DisruptionEnd.Should().BeCloseTo(disruption.EndTime, TimeSpan.FromSeconds(1));
         result.Value.DisruptionDescription.Should().Be(description.Description);
+        result.Value.NotificationRead.Should().BeTrue();
     }
 
     [Fact]
@@ -246,6 +254,7 @@ public class NotificationRetrieverTests
         result.Value.Items.First().DisruptionStart.Should().BeCloseTo(disruption.StartTime, TimeSpan.FromSeconds(1));
         result.Value.Items.First().DisruptionEnd.Should().BeCloseTo(disruption.EndTime, TimeSpan.FromSeconds(1));
         result.Value.Items.First().DisruptionDescription.Should().Be(description.Description);
+        result.Value.Items.First().NotificationRead.Should().BeTrue();
     }
 
     [Fact]
@@ -355,5 +364,6 @@ public class NotificationRetrieverTests
         result.Value.Items.First().DisruptionStart.Should().BeCloseTo(disruption.StartTime, TimeSpan.FromSeconds(1));
         result.Value.Items.First().DisruptionEnd.Should().BeCloseTo(disruption.EndTime, TimeSpan.FromSeconds(1));
         result.Value.Items.First().DisruptionDescription.Should().Be(description.Description);
+        result.Value.Items.First().NotificationRead.Should().BeTrue();
     }
 }

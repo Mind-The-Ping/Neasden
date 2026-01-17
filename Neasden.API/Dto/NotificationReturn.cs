@@ -14,4 +14,5 @@ public record NotificationReturn(
     DateTime SentDate,
     DateTime DisruptionStart,
     DateTime DisruptionEnd,
-    string DisruptionDescription);
+    string DisruptionDescription,
+    bool NotificationRead);
