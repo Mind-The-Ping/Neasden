@@ -5,6 +5,7 @@ using Neasden.Models;
 using Npgsql;
 
 namespace Neasden.Repository.Write;
+
 public class WriteDisruptionRepository
 {
     private readonly ILogger<WriteDisruptionRepository> _logger;
@@ -12,22 +13,18 @@ public class WriteDisruptionRepository
 
     public WriteDisruptionRepository(
         ILogger<WriteDisruptionRepository> logger,
-                IDbContextFactory<WriteDbContext> contextFactory)
+        IDbContextFactory<WriteDbContext> contextFactory)
     {
-        _logger = logger ??
-            throw new ArgumentNullException(nameof(logger));
-        _contextFactory = contextFactory ??
-            throw new ArgumentNullException(nameof(contextFactory));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _contextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
     }
 
     public async Task<Result> AddDisruptionAsync(Disruption disruption)
     {
         await using var context = _contextFactory.CreateDbContext();
 
-     
-        if (await context.Disruptions.AnyAsync(x => x.Id == disruption.Id)) {
+        if (await context.Disruptions.AnyAsync(x => x.Id == disruption.Id))
             return Result.Success();
-        }
 
         try
         {
@@ -35,10 +32,11 @@ public class WriteDisruptionRepository
             await context.SaveChangesAsync();
             return Result.Success();
         }
-        catch (Exception ex) when (IsUniqueViolation(ex)) {
+        catch (Exception ex) when (IsDuplicateKeyViolation(ex)) {
             return Result.Success();
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             return LogAndReturnFailure(ex, $"disruption {disruption.Id}");
         }
     }
@@ -63,7 +61,8 @@ public class WriteDisruptionRepository
             await context.SaveChangesAsync();
             return Result.Success();
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             return LogAndReturnFailure(ex, $"disruption end time for {disruption.Id}");
         }
     }
@@ -72,9 +71,8 @@ public class WriteDisruptionRepository
     {
         await using var context = _contextFactory.CreateDbContext();
 
-        if (await context.Severities.AnyAsync(x => x.Id == disruptionSeverity.Id)) {
+        if (await context.Severities.AnyAsync(x => x.Id == disruptionSeverity.Id))
             return Result.Success();
-        }
 
         try
         {
@@ -82,10 +80,11 @@ public class WriteDisruptionRepository
             await context.SaveChangesAsync();
             return Result.Success();
         }
-        catch (Exception ex) when (IsUniqueViolation(ex)) {
+        catch (Exception ex) when (IsDuplicateKeyViolation(ex)) {
             return Result.Success();
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             return LogAndReturnFailure(ex, $"disruption severity {disruptionSeverity.Id}");
         }
     }
@@ -94,9 +93,8 @@ public class WriteDisruptionRepository
     {
         await using var context = _contextFactory.CreateDbContext();
 
-        if (await context.Descriptions.AnyAsync(x => x.Id == description.Id)) {
+        if (await context.Descriptions.AnyAsync(x => x.Id == description.Id))
             return Result.Success();
-        }
 
         description.CreatedAt = DateTime.UtcNow;
 
@@ -106,19 +104,24 @@ public class WriteDisruptionRepository
             await context.SaveChangesAsync();
             return Result.Success();
         }
-        catch (DbUpdateException ex) when (IsUniqueViolation(ex)) {
+        catch (Exception ex) when (IsDuplicateKeyViolation(ex)) {
             return Result.Success();
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             return LogAndReturnFailure(ex, $"disruption description {description.Id}");
         }
     }
-
-    private static bool IsUniqueViolation(Exception ex)
+    private static bool IsDuplicateKeyViolation(Exception? ex)
     {
-        return ex is DbUpdateException dbEx &&
-               dbEx.InnerException is PostgresException pg &&
-               pg.SqlState == PostgresErrorCodes.UniqueViolation;
+        while (ex != null)
+        {
+            if (ex is PostgresException pg && pg.SqlState == PostgresErrorCodes.UniqueViolation) {
+                return true;
+            }
+            ex = ex.InnerException;
+        }
+        return false;
     }
 
     private Result LogAndReturnFailure(Exception ex, string entityInfo)
