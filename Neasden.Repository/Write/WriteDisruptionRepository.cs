@@ -106,19 +106,26 @@ public class WriteDisruptionRepository
             await context.SaveChangesAsync();
             return Result.Success();
         }
-        catch (DbUpdateException ex) when (IsUniqueViolation(ex)) {
-            return Result.Success();
-        }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
+            if (IsDuplicateKeyViolation(ex)) {
+                return Result.Success();
+            }
+
             return LogAndReturnFailure(ex, $"disruption description {description.Id}");
         }
     }
 
-    private static bool IsUniqueViolation(Exception ex)
+    private static bool IsDuplicateKeyViolation(Exception ex)
     {
-        return ex is DbUpdateException dbEx &&
-               dbEx.InnerException is PostgresException pg &&
-               pg.SqlState == PostgresErrorCodes.UniqueViolation;
+        while (ex != null)
+        {
+            if (ex is PostgresException pg && pg.SqlState == "23505") {
+                return true;
+            }
+            ex = ex.InnerException;
+        }
+        return false;
     }
 
     private Result LogAndReturnFailure(Exception ex, string entityInfo)
